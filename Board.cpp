@@ -46,7 +46,7 @@ void Board::generate(const boardFieldT boardSize)
 		for (size_t columnIdx = 0; columnIdx <= getSize(); columnIdx++)
 		{
 			auto& columnSet = columnSets[columnIdx];
-			differenceSetT difference;
+			differenceT difference;
 
 			// ... find which values are available for their intersection
 			std::set_symmetric_difference(rowSet.begin(), rowSet.end(), columnSet.begin(), columnSet.end(), difference.begin());
