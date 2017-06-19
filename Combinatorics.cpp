@@ -70,3 +70,39 @@ factorialMapT Combinatorics::initialize()
 	return retVal;
 }
 
+void Combinatorics::generateAllPermutations(std::vector<int> A)
+{
+	// Based on Heap's algorithm
+	auto n = A.size();
+	std::vector<int> c(n);
+	std::copy(A.begin(), A.end(), std::ostream_iterator<int>(std::cout, " "));
+	std::cout << std::endl;
+
+	int i = 0;
+	while (i < n)
+	{
+		if (c[i] < i)
+		{
+			// Is odd
+			if (i & 1)
+			{
+				std::iter_swap(A.begin() + c[i], A.begin() + i);
+			}
+			// Is even
+			else
+			{
+				std::iter_swap(A.begin(), A.begin() + i);
+			}
+
+			std::copy(A.begin(), A.end(), std::ostream_iterator<int>(std::cout, " "));
+			std::cout << std::endl;
+			c[i]++;
+			i = 0;
+		}
+		else
+		{
+			c[i] = 0;
+			i++;
+		}
+	}
+}

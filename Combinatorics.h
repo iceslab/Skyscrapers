@@ -2,6 +2,11 @@
 #include <concurrent_unordered_map.h>
 #include "macros.h"
 #include <stdexcept>
+#include <vector>
+
+#include <algorithm>
+#include <iterator>
+#include <iostream>
 
 #define PREMEMOIZE_N_FACTORIAL 20
 #ifndef PREMEMOIZE_N_FACTORIAL
@@ -16,6 +21,7 @@ class Combinatorics
 public:
 	static factorialT factorial(factorialT n);
 	static factorialT binomialExpansion(factorialT n, factorialT k);
+	static void generateAllPermutations(std::vector<int> A);
 private:
 	
 	static factorialMapT factorialMemoization;
