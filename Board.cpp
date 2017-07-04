@@ -21,17 +21,17 @@ void Board::generate(const boardFieldT boardSize)
 
 	// Fill first row with values from 1 to board size
 	auto& firstRow = board.front();
-	for (size_t i = 1; i <= getSize(); i++)
+	for (size_t i = 0; i < getSize(); i++)
 	{
-		firstRow[i] = i;
+		firstRow[i] = i + 1;
 	}
 
 	// Randomize first row
 	std::random_shuffle(firstRow.begin(), firstRow.end());
 
 	// Prepare column sets for finding available values
-	std::vector<columnSetT> columnSets;
-	columnSets.reserve(getSize());
+	std::vector<columnSetT> columnSets(getSize());
+	//columnSets.reserve();
 
 	for (size_t i = 0; i < getSize(); i++)
 	{
@@ -39,23 +39,37 @@ void Board::generate(const boardFieldT boardSize)
 	}
 
 	// For each row...
-	for (size_t rowIdx = 1; rowIdx <= getSize(); rowIdx++)
+	for (size_t rowIdx = 1; rowIdx < getSize(); rowIdx++)
 	{
+		// This is full, because every iteration of loop, new row is chosen
+		rowSetT rowSet(firstRow.begin(), firstRow.end());
+
 		// ... and each column...
-		rowSetT rowSet;
-		for (size_t columnIdx = 0; columnIdx <= getSize(); columnIdx++)
+		for (size_t columnIdx = 0; columnIdx < getSize(); columnIdx++)
 		{
 			auto& columnSet = columnSets[columnIdx];
 			differenceT difference;
 
 			// ... find which values are available for their intersection
-			std::set_symmetric_difference(rowSet.begin(), rowSet.end(), columnSet.begin(), columnSet.end(), difference.begin());
+			std::vector<boardFieldT> rowVector(rowSet.begin(), rowSet.end());
+			std::vector<boardFieldT> columnVector(columnSet.begin(), columnSet.end());
+			std::sort(rowVector.begin(), rowVector.end());
+			std::sort(columnVector.begin(), columnVector.end());
+
+			std::set_difference(rowVector.begin(), 
+											rowVector.end(), 
+											columnVector.begin(), 
+											columnVector.end(), 
+											std::back_inserter(difference));
 
 			// Randomly choose one of the values
-			// TODO
+			std::random_shuffle(difference.begin(), difference.end());
+			auto& value = difference.front();
 
 			// Update row and column sets and board itself
-			// TODO
+			rowSet.erase(value);
+			columnSet.insert(value);
+			board[rowIdx][columnIdx] = value;
 		}
 	}
 }
@@ -107,6 +121,49 @@ columnT Board::getColumn(size_t index)
 	}
 
 	return column;
+}
+
+bool Board::checkValidity() const
+{
+	return false;
+}
+
+bool Board::checkValidityWithHints() const
+{
+	return false;
+}
+
+void Board::print() const
+{
+	std::ostream_iterator<std::string> space_it(std::cout, " ");
+	std::ostream_iterator<boardFieldT> field_it(std::cout, " ");
+	std::string space = " ";
+
+	// Free field to align columns
+	std::cout << "  ";
+	// Top hints
+	std::copy(hints[TOP].begin(), hints[TOP].end(), field_it);
+	std::cout << std::endl;
+
+	// Whole board
+	for (size_t rowIdx = 0; rowIdx < getSize(); rowIdx++)
+	{
+		// Left hint field
+		std::copy(hints[LEFT].begin() + rowIdx, hints[LEFT].begin() + rowIdx + 1, field_it);
+		
+		// Board fields
+		std::copy(board[rowIdx].begin(), board[rowIdx].end(), field_it);
+
+		// Right hint field
+		std::copy(hints[RIGHT].begin() + rowIdx, hints[RIGHT].begin() + rowIdx + 1, field_it);
+		std::cout << std::endl;
+	}
+
+	// Free field to align columns
+	std::cout << "  ";
+	// Bottom hints
+	std::copy(hints[BOTTOM].begin(), hints[BOTTOM].end(), field_it);
+	std::cout << std::endl;
 }
 
 void Board::resize(const boardFieldT boardSize)

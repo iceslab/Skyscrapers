@@ -4,6 +4,7 @@
 #include <set>
 #include <algorithm>
 #include <random>
+#include <iostream>
 
 // Typedefs for easier typing
 typedef uint32_t boardFieldT;
@@ -44,6 +45,13 @@ public:
 	rowT& getRow(size_t index);
 
 	columnT getColumn(size_t index);
+
+	// Validators
+	bool checkValidity() const;
+	bool checkValidityWithHints() const;
+
+	// Output
+	void print() const;
 private:
 	static constexpr size_t hintSize = 4;
 	boardT board;
@@ -51,5 +59,8 @@ private:
 
 	void resize(const boardFieldT boardSize);
 	void fillWithZeros();
+
+	// Hints manipulators
+	// TODO: Plan which manipulators are needed
 };
 

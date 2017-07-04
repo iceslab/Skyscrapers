@@ -39,12 +39,19 @@ factorialT Combinatorics::binomialExpansion(factorialT n, factorialT k)
 	}
 	else
 	{
-		// (n)      n!
-		// ( ) = ---------
-		// (k)    k!(n-k)!
+		// (n)      n(n-1)...(n-k+1)
+		// ( ) = ---------------------
+		// (k)        1*2*...*k
 
-		auto numerator = factorial(n);
-		auto denominator = factorial(k) * factorial(n - k);
+		auto numerator = n;
+		auto denominator = 1;
+		for (size_t i = 2; i < k; i++)
+		{
+			numerator *= n - i + 1;
+			denominator *= i;
+		}
+
+		// It will always be integer
 		return numerator / denominator;
 	}
 }
@@ -73,7 +80,7 @@ factorialMapT Combinatorics::initialize()
 void Combinatorics::generateAllPermutations(std::vector<int> A)
 {
 	// Based on Heap's algorithm
-	auto n = A.size();
+	int n = A.size();
 	std::vector<int> c(n);
 	std::copy(A.begin(), A.end(), std::ostream_iterator<int>(std::cout, " "));
 	std::cout << std::endl;
