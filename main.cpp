@@ -13,7 +13,7 @@ int main(int argc, const char** argv)
 
 	//Combinatorics::generateAllPermutations(A);
 
-	Board b(3);
+	board::Board b(3);
 	b.generate();
 	b.print();
 

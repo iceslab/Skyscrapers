@@ -1,5 +1,7 @@
 #include "Board.h"
 
+using namespace board;
+
 Board::Board(const boardFieldT boardSize) : board(boardSize, rowT(boardSize))
 {
 	// Resize hints
@@ -51,16 +53,11 @@ void Board::generate(const boardFieldT boardSize)
 			differenceT difference;
 
 			// ... find which values are available for their intersection
-			std::vector<boardFieldT> rowVector(rowSet.begin(), rowSet.end());
-			std::vector<boardFieldT> columnVector(columnSet.begin(), columnSet.end());
-			std::sort(rowVector.begin(), rowVector.end());
-			std::sort(columnVector.begin(), columnVector.end());
-
-			std::set_difference(rowVector.begin(), 
-											rowVector.end(), 
-											columnVector.begin(), 
-											columnVector.end(), 
-											std::back_inserter(difference));
+			std::set_difference(rowSet.begin(),
+								rowSet.end(),
+								columnSet.begin(),
+								columnSet.end(),
+								std::back_inserter(difference));
 
 			// Randomly choose one of the values
 			std::random_shuffle(difference.begin(), difference.end());
@@ -192,6 +189,33 @@ void Board::fillWithZeros()
 	{
 		std::fill(row.begin(), row.end(), boardFieldT());
 	}
+}
+
+boardFieldT Board::getVisibleBuildings(HintsSide side, size_t rowOrColumn)
+{
+	boardFieldT retVal = 0;
+	auto& row = getRow(rowOrColumn);
+	auto& column = getColumn(rowOrColumn);
+	switch (side)
+	{
+		case TOP:
+			retVal = countVisibility(column.begin(), column.end());
+			break;
+		case RIGHT:
+			retVal = countVisibility(row.rbegin(), row.rend());
+			break;
+		case BOTTOM:
+			retVal = countVisibility(column.rbegin(), column.rend());
+			break;
+		case LEFT:
+			retVal = countVisibility(row.begin(), row.end());
+			break;
+		default:
+			
+			break;
+	}
+
+	return retVal;
 }
 
 

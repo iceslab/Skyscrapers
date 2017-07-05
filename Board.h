@@ -1,10 +1,12 @@
 #pragma once
+#include "macros.h"
 #include <array>
 #include <vector>
 #include <set>
 #include <algorithm>
 #include <random>
 #include <iostream>
+#include <iterator>
 
 // Typedefs for easier typing
 typedef uint32_t boardFieldT;
@@ -16,51 +18,70 @@ typedef std::vector<std::reference_wrapper<boardFieldT>> columnT;
 typedef std::set<boardFieldT> columnSetT;
 typedef std::vector<boardFieldT> differenceT;
 
-// Enum for accessing hints array
-enum HintsSide
+namespace board
 {
-	TOP = 0,
-	RIGHT,
-	BOTTOM,
-	LEFT
-};
 
-class Board
-{
-public:
-	Board(const boardFieldT boardSize);
-	~Board() = default;
+	// Enum for accessing hints array
+	enum HintsSide
+	{
+		TOP = 0,
+		RIGHT,
+		BOTTOM,
+		LEFT
+	};
 
-	void generate();
-	void generate(const boardFieldT boardSize);
+	class Board
+	{
+	public:
+		Board(const boardFieldT boardSize);
+		~Board() = default;
 
-	// Operators
-	bool operator==(const Board &other) const;
-	bool operator!=(const Board &other) const;
+		void generate();
+		void generate(const boardFieldT boardSize);
 
-	// Accessors
-	size_t getSize() const;
+		// Operators
+		bool operator==(const Board &other) const;
+		bool operator!=(const Board &other) const;
 
-	const rowT& getRow(size_t index) const;
-	rowT& getRow(size_t index);
+		// Accessors
+		size_t getSize() const;
 
-	columnT getColumn(size_t index);
+		const rowT& getRow(size_t index) const;
+		rowT& getRow(size_t index);
 
-	// Validators
-	bool checkValidity() const;
-	bool checkValidityWithHints() const;
+		columnT getColumn(size_t index);
 
-	// Output
-	void print() const;
-private:
-	static constexpr size_t hintSize = 4;
-	boardT board;
-	std::array<hintT, hintSize> hints;
+		// Validators
+		bool checkValidity() const;
+		bool checkValidityWithHints() const;
 
-	void resize(const boardFieldT boardSize);
-	void fillWithZeros();
+		// Output
+		void print() const;
+	private:
+		static constexpr size_t hintSize = 4;
+		boardT board;
+		std::array<hintT, hintSize> hints;
 
-	// Hints manipulators
-	// TODO: Plan which manipulators are needed
-};
+		void resize(const boardFieldT boardSize);
+		void fillWithZeros();
 
+		// Hints manipulators
+		boardFieldT getVisibleBuildings(HintsSide side, size_t rowOrColumn);
+		
+			// TODO: Plan which manipulators are needed
+	};
+
+	template<class iterator_type>
+	size_t countVisibility(iterator_type first, iterator_type last)
+	{
+		size_t size = std::abs(first - last);
+		size_t retVal = 0;
+		for (; first != last; first++, retVal++)
+		{
+			if (*first == size)
+				break;
+		}
+
+		return retVal;
+	}
+}
