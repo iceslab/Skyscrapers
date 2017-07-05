@@ -21,6 +21,11 @@ void Board::generate(const boardFieldT boardSize)
 	resize(boardSize);
 	fillWithZeros();
 
+	// Random device init
+	std::random_device r;
+	std::default_random_engine r_engine(r());
+	std::uniform_int_distribution<boardFieldT> uniform_dist(0, getSize() - 1);
+
 	// Fill first row with values from 1 to board size
 	auto& firstRow = board.front();
 	for (size_t i = 0; i < getSize(); i++)
@@ -29,21 +34,21 @@ void Board::generate(const boardFieldT boardSize)
 	}
 
 	// Randomize first row
-	std::random_shuffle(firstRow.begin(), firstRow.end());
+	std::random_shuffle(firstRow.begin(), firstRow.end(), std::bind(uniform_dist, r_engine));
 
 	// Prepare column sets for finding available values
 	std::vector<columnSetT> columnSets(getSize());
-	//columnSets.reserve();
 
 	for (size_t i = 0; i < getSize(); i++)
 	{
-		columnSets[i].insert(firstRow[i]);
+		columnSets[i] = columnSetT(firstRow.begin(), firstRow.end());
+		columnSets[i].erase(firstRow[i]);
 	}
 
 	// For each row...
 	for (size_t rowIdx = 1; rowIdx < getSize(); rowIdx++)
 	{
-		// This is full, because every iteration of loop, new row is chosen
+		// This is full, because on every iteration of loop, new row is chosen
 		rowSetT rowSet(firstRow.begin(), firstRow.end());
 
 		// ... and each column...
@@ -53,21 +58,73 @@ void Board::generate(const boardFieldT boardSize)
 			differenceT difference;
 
 			// ... find which values are available for their intersection
-			std::set_difference(rowSet.begin(),
-								rowSet.end(),
-								columnSet.begin(),
-								columnSet.end(),
-								std::back_inserter(difference));
+			std::set_intersection(rowSet.begin(),
+								  rowSet.end(),
+								  columnSet.begin(),
+								  columnSet.end(),
+								  std::back_inserter(difference));
+			DEBUG_PRINTLN_VERBOSE("rowIdx: %lu, colIdx: %lu", rowIdx, columnIdx);
+			DEBUG_CALL(print());
+			DEBUG_PRINTLN("");
+			DEBUG_PRINT("rowSet: ");
+			for (auto& r : rowSet)
+				DEBUG_PRINT("%lu ", r);
+			DEBUG_PRINTLN("");
+			DEBUG_PRINT("columnSet: ");
+			for (auto& c : columnSet)
+				DEBUG_PRINT("%lu ", c);
+			DEBUG_PRINTLN("");
+			DEBUG_PRINT("difference: ");
+			for (auto& d : difference)
+				DEBUG_PRINT("%lu ", d);
+			DEBUG_PRINTLN("");
+
+			std::uniform_int_distribution<boardFieldT> uniform_dist_diff(0, difference.size() - 1);
 
 			// Randomly choose one of the values
-			std::random_shuffle(difference.begin(), difference.end());
-			auto& value = difference.front();
+			std::random_shuffle(difference.begin(), difference.end(), std::bind(uniform_dist_diff, r_engine));
+			
+			boardFieldT value;
+			//DEBUG_PRINTLN("value after init: %lu\n", value);
+			// Last row - 1 and last column -1
+			if (getSize() >= 2 && rowIdx == getSize() - 2 && columnIdx == getSize() - 2)
+			{
+				value = difference.front();
+				DEBUG_PRINTLN("value front before last: %lu\n", value);
+
+				auto& nextColumnSet = columnSets[columnIdx + 1];
+				DEBUG_PRINTLN("size(): %lu, count(%lu): %lu", nextColumnSet.size(), value, nextColumnSet.count(value));
+				if ((nextColumnSet.size() - nextColumnSet.count(value)) <= 0)
+				{
+					ASSERT_VERBOSE(difference.size() >= 2, "size(): %lu", difference.size());
+					value = difference[1];
+					DEBUG_PRINTLN("value altered: %lu\n", value);
+				}
+			}
+			else
+			{
+				value = difference.front();
+				DEBUG_PRINTLN("value front: %lu\n", value);
+			}
 
 			// Update row and column sets and board itself
 			rowSet.erase(value);
-			columnSet.insert(value);
+			columnSet.erase(value);
 			board[rowIdx][columnIdx] = value;
+			
+			DEBUG_PRINTLN("value: %lu\n", value);
+			DEBUG_CALL(print());
+			DEBUG_PRINTLN("");
 		}
+	}
+
+	// Fill hints for TOP, RIGHT, BOTTOM and LEFT
+	for (size_t i = 0; i < getSize(); i++)
+	{
+		hints[TOP][i] = getVisibleBuildings(TOP, i);
+		hints[RIGHT][i] = getVisibleBuildings(RIGHT, i);
+		hints[BOTTOM][i] = getVisibleBuildings(BOTTOM, i);
+		hints[LEFT][i] = getVisibleBuildings(LEFT, i);
 	}
 }
 
@@ -83,7 +140,7 @@ bool Board::operator==(const Board & other) const
 		if (hints[i] != other.hints[i])
 			return false;
 	}
-	
+
 	return true;
 }
 
@@ -107,7 +164,7 @@ rowT & Board::getRow(size_t index)
 	return board[index];
 }
 
-columnT Board::getColumn(size_t index) 
+columnT Board::getColumn(size_t index)
 {
 	columnT column;
 	column.reserve(getSize());
@@ -147,7 +204,7 @@ void Board::print() const
 	{
 		// Left hint field
 		std::copy(hints[LEFT].begin() + rowIdx, hints[LEFT].begin() + rowIdx + 1, field_it);
-		
+
 		// Board fields
 		std::copy(board[rowIdx].begin(), board[rowIdx].end(), field_it);
 
@@ -211,7 +268,7 @@ boardFieldT Board::getVisibleBuildings(HintsSide side, size_t rowOrColumn)
 			retVal = countVisibility(row.begin(), row.end());
 			break;
 		default:
-			
+
 			break;
 	}
 

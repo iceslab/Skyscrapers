@@ -6,7 +6,7 @@ factorialT Combinatorics::factorial(factorialT n)
 {
 	if (n > determineMaxFactorial<factorialT>())
 	{
-		DEBUG_PRINT(MAX_FACTORIAL_EXCEEDED_MSG);
+		DEBUG_PRINTLN_VERBOSE(MAX_FACTORIAL_EXCEEDED_MSG);
 		throw std::invalid_argument(MAX_FACTORIAL_EXCEEDED_MSG);
 	}
 
@@ -62,7 +62,7 @@ factorialMapT Combinatorics::initialize()
 
 	if (PREMEMOIZE_N_FACTORIAL > determineMaxFactorial<factorialT>())
 	{	
-		DEBUG_PRINT(MAX_FACTORIAL_EXCEEDED_MSG);
+		DEBUG_PRINTLN_VERBOSE(MAX_FACTORIAL_EXCEEDED_MSG);
 		throw std::invalid_argument(MAX_FACTORIAL_EXCEEDED_MSG);
 	}
 

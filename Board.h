@@ -7,6 +7,7 @@
 #include <random>
 #include <iostream>
 #include <iterator>
+#include <functional>
 
 // Typedefs for easier typing
 typedef uint32_t boardFieldT;
@@ -67,19 +68,24 @@ namespace board
 
 		// Hints manipulators
 		boardFieldT getVisibleBuildings(HintsSide side, size_t rowOrColumn);
-		
-			// TODO: Plan which manipulators are needed
 	};
 
 	template<class iterator_type>
 	size_t countVisibility(iterator_type first, iterator_type last)
 	{
 		size_t size = std::abs(first - last);
-		size_t retVal = 0;
-		for (; first != last; first++, retVal++)
+		size_t retVal = 1;
+		size_t currentMax = 0;
+		for (; first != last; first++)
 		{
 			if (*first == size)
 				break;
+			
+			if (currentMax < *first)
+			{
+				currentMax = *first;
+				retVal++;
+			}
 		}
 
 		return retVal;
