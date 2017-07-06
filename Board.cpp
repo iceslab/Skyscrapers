@@ -24,97 +24,134 @@ void Board::generate(const boardFieldT boardSize)
 	// Random device init
 	std::random_device r;
 	std::default_random_engine r_engine(r());
-	std::uniform_int_distribution<boardFieldT> uniform_dist(0, getSize() - 1);
 
 	// Fill first row with values from 1 to board size
-	auto& firstRow = board.front();
-	for (size_t i = 0; i < getSize(); i++)
+	auto& firstRowR = board.front();
+	for (size_t i = 0; i < firstRowR.size(); i++)
 	{
-		firstRow[i] = i + 1;
+		firstRowR[i] = i + 1;
 	}
 
 	// Randomize first row
-	std::random_shuffle(firstRow.begin(), firstRow.end(), std::bind(uniform_dist, r_engine));
+	std::shuffle(firstRowR.begin(), firstRowR.end(), r_engine);
 
 	// Prepare column sets for finding available values
 	std::vector<columnSetT> columnSets(getSize());
 
 	for (size_t i = 0; i < getSize(); i++)
 	{
-		columnSets[i] = columnSetT(firstRow.begin(), firstRow.end());
-		columnSets[i].erase(firstRow[i]);
+		columnSets[i] = columnSetT(firstRowR.begin(), firstRowR.end());
+		columnSets[i].erase(firstRowR[i]);
 	}
 
 	// For each row...
 	for (size_t rowIdx = 1; rowIdx < getSize(); rowIdx++)
 	{
 		// This is full, because on every iteration of loop, new row is chosen
-		rowSetT rowSet(firstRow.begin(), firstRow.end());
+		rowSetT rowSet(firstRowR.begin(), firstRowR.end());
 
 		// ... and each column...
-		for (size_t columnIdx = 0; columnIdx < getSize(); columnIdx++)
+		for (size_t columnIdx = 0; columnIdx < getSize();)
 		{
-			auto& columnSet = columnSets[columnIdx];
-			differenceT difference;
+			if (board[rowIdx][columnIdx] != 0)
+			{
+				columnIdx++;
+				continue;
+			}
+
+			auto& columnSetR = columnSets[columnIdx];
+			std::vector<setIntersectionT> setIntersections(getSize() - columnIdx);
 
 			// ... find which values are available for their intersection
-			std::set_intersection(rowSet.begin(),
-								  rowSet.end(),
-								  columnSet.begin(),
-								  columnSet.end(),
-								  std::back_inserter(difference));
-			DEBUG_PRINTLN_VERBOSE("rowIdx: %lu, colIdx: %lu", rowIdx, columnIdx);
-			DEBUG_CALL(print());
-			DEBUG_PRINTLN("");
-			DEBUG_PRINT("rowSet: ");
-			for (auto& r : rowSet)
-				DEBUG_PRINT("%lu ", r);
-			DEBUG_PRINTLN("");
-			DEBUG_PRINT("columnSet: ");
-			for (auto& c : columnSet)
-				DEBUG_PRINT("%lu ", c);
-			DEBUG_PRINTLN("");
-			DEBUG_PRINT("difference: ");
-			for (auto& d : difference)
-				DEBUG_PRINT("%lu ", d);
-			DEBUG_PRINTLN("");
-
-			std::uniform_int_distribution<boardFieldT> uniform_dist_diff(0, difference.size() - 1);
-
-			// Randomly choose one of the values
-			std::random_shuffle(difference.begin(), difference.end(), std::bind(uniform_dist_diff, r_engine));
-			
-			boardFieldT value;
-			//DEBUG_PRINTLN("value after init: %lu\n", value);
-			// Last row - 1 and last column -1
-			if (getSize() >= 2 && rowIdx == getSize() - 2 && columnIdx == getSize() - 2)
+			for (size_t i = columnIdx; i < getSize(); i++)
 			{
-				value = difference.front();
-				DEBUG_PRINTLN("value front before last: %lu\n", value);
-
-				auto& nextColumnSet = columnSets[columnIdx + 1];
-				DEBUG_PRINTLN("size(): %lu, count(%lu): %lu", nextColumnSet.size(), value, nextColumnSet.count(value));
-				if ((nextColumnSet.size() - nextColumnSet.count(value)) <= 0)
+				std::set_intersection(rowSet.begin(),
+									  rowSet.end(),
+									  columnSets[i].begin(),
+									  columnSets[i].end(),
+									  std::back_inserter(setIntersections[i - columnIdx]));
+			}
+			
+			// Debug prints, braces only for wrapping
+			{
+				DEBUG_PRINTLN_VERBOSE("rowIdx: %lu, colIdx: %lu", rowIdx, columnIdx);
+				DEBUG_CALL(print());
+				DEBUG_PRINTLN("");
+				DEBUG_PRINT("rowSet: ");
+				for (auto& r : rowSet)
+					DEBUG_PRINT("%lu ", r);
+				DEBUG_PRINTLN("");
+				
+				for (size_t i = 0; i < columnSets.size(); i++)
 				{
-					ASSERT_VERBOSE(difference.size() >= 2, "size(): %lu", difference.size());
-					value = difference[1];
-					DEBUG_PRINTLN("value altered: %lu\n", value);
+					DEBUG_PRINT("columnSets[%lu]: ", i);
+					for (auto& c : columnSets[i])
+						DEBUG_PRINT("%lu ", c);
+					DEBUG_PRINTLN("");
+				}
+
+				for (size_t i = 0; i < setIntersections.size(); i++)
+				{
+					DEBUG_PRINT("setIntersections[%lu]: ", i);
+					for (auto& si : setIntersections[i])
+						DEBUG_PRINT("%lu ", si);
+					DEBUG_PRINTLN("");
 				}
 			}
-			else
+
+			auto setIntersectionR = setIntersections.front();
+			ASSERT_VERBOSE(setIntersectionR.empty() == false, "setIntersectionR.size(): %lu", setIntersectionR.size());
+			if (setIntersectionR.size() - 1 > 0)
 			{
-				value = difference.front();
-				DEBUG_PRINTLN("value front: %lu\n", value);
+				// Randomly choose one of the values
+				std::shuffle(setIntersectionR.begin(), setIntersectionR.end(), r_engine);
+			}
+			
+			boardFieldT value = setIntersectionR.front();
+			for (auto& si : setIntersections)
+			{
+				auto& it = std::find(si.begin(), si.end(), value);
+				if (it != si.end())
+				{
+					si.erase(it);
+				}
+			}
+
+			// Debug prints, braces only for wrapping
+			{
+				DEBUG_PRINTLN("After erasure");
+				for (size_t i = 0; i < setIntersections.size(); i++)
+				{
+					DEBUG_PRINT("setIntersections[%lu]: ", i);
+					for (auto& si : setIntersections[i])
+						DEBUG_PRINT("%lu ", si);
+					DEBUG_PRINTLN("");
+				}
+			}
+
+			size_t modifiedColumnIdx = columnIdx;
+			auto& itBegin = setIntersections.rbegin();
+			auto& itEnd = setIntersections.rend();
+			auto it = std::find_if(itBegin, itEnd, [](auto& s) { return s.size() == 1; });
+			if (it != itEnd)
+			{
+				modifiedColumnIdx = getSize() - std::abs(it - itBegin) - 1;
+				value = it->front();
 			}
 
 			// Update row and column sets and board itself
 			rowSet.erase(value);
-			columnSet.erase(value);
-			board[rowIdx][columnIdx] = value;
+			columnSets[modifiedColumnIdx].erase(value);
+			board[rowIdx][modifiedColumnIdx] = value;
 			
 			DEBUG_PRINTLN("value: %lu\n", value);
 			DEBUG_CALL(print());
 			DEBUG_PRINTLN("");
+
+			if (modifiedColumnIdx == columnIdx)
+			{
+				columnIdx++;
+			}
 		}
 	}
 

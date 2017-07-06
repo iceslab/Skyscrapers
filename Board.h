@@ -17,7 +17,7 @@ typedef std::vector<boardFieldT> rowT;
 typedef std::set<boardFieldT> rowSetT;
 typedef std::vector<std::reference_wrapper<boardFieldT>> columnT;
 typedef std::set<boardFieldT> columnSetT;
-typedef std::vector<boardFieldT> differenceT;
+typedef std::vector<boardFieldT> setIntersectionT;
 
 namespace board
 {

@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <climits>
 #include <cassert>
+#include <Windows.h>
 
 #define QUOTE(x) #x
 #define ASSERT(expr) assert(expr);
@@ -36,9 +37,17 @@ do{ \
 
 #define ASSERT_VERBOSE(expr, format, ...) \
 do{ \
-	fprintf(stderr, "Assertion failed: " QUOTE(expr) ", "); \
-	fprintf(stderr, format, __VA_ARGS__); \
-	fprintf(stderr, ", file %s, line %d\n", __FILE__, __LINE__); \
+    if((expr) == false) \
+	{ \
+		fprintf(stderr, "Assertion failed: " QUOTE(expr) ", "); \
+		fprintf(stderr, format, __VA_ARGS__); \
+		fprintf(stderr, ", file %s, line %d\n", __FILE__, __LINE__); \
+		if(IsDebuggerPresent()) \
+		{ \
+			DebugBreak(); \
+		} \
+		abort(); \
+	} \
 } while (false);
 #else
 #define DEBUG_PRINTLN_VERBOSE(format, ...)
