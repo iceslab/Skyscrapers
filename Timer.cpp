@@ -14,52 +14,52 @@ BOOL Timer::isFrequencyInitialized = QueryPerformanceFrequency(&frequency);
 Timer::Timer()
 {
 #ifndef USE_CHRONO
-	memset(&pcStart, 0, sizeof(pcStart));
-	memset(&pcStop, 0, sizeof(pcStop));
+    memset(&pcStart, 0, sizeof(pcStart));
+    memset(&pcStop, 0, sizeof(pcStop));
 #endif
 }
 
 void Timer::start()
 {
 #ifdef USE_CHRONO
-	chStart = std::chrono::high_resolution_clock::now();
-	chStop = chStart;
+    chStart = std::chrono::high_resolution_clock::now();
+    chStop = chStart;
 #else
-	QueryPerformanceCounter(&pcStart);
-	memcpy(&pcStop, &pcStart, sizeof(pcStart));
+    QueryPerformanceCounter(&pcStart);
+    memcpy(&pcStop, &pcStart, sizeof(pcStart));
 #endif // USE_CHRONO
 }
 
 double Timer::stop(Resolution resolution)
 {
 #ifdef USE_CHRONO
-	chStop = std::chrono::high_resolution_clock::now();
+    chStop = std::chrono::high_resolution_clock::now();
 #else
-	QueryPerformanceCounter(&pcStop);
+    QueryPerformanceCounter(&pcStop);
 #endif // USE_CHRONO
-	return getTime();
+    return getTime();
 }
 
 double Timer::getTime(Resolution resolution)
 {
-	auto duration = 0.0;
+    auto duration = 0.0;
 #ifdef USE_CHRONO
-	std::chrono::duration<double, std::nano> elapsedNano = chStop - chStart;
-	duration = elapsedNano.count();
+    std::chrono::duration<double, std::nano> elapsedNano = chStop - chStart;
+    duration = elapsedNano.count();
 #else
-	LARGE_INTEGER elapsedNano;
+    LARGE_INTEGER elapsedNano;
 
-	elapsedNano.QuadPart = pcStop.QuadPart - pcStart.QuadPart;
-	elapsedNano.QuadPart *= SECONDS;
-	duration = static_cast<double>(elapsedNano.QuadPart) / static_cast<double>(frequency.QuadPart);
+    elapsedNano.QuadPart = pcStop.QuadPart - pcStart.QuadPart;
+    elapsedNano.QuadPart *= SECONDS;
+    duration = static_cast<double>(elapsedNano.QuadPart) / static_cast<double>(frequency.QuadPart);
 #endif // USE_CHRONO
-	return convertResolution(NANOSECONDS, resolution, duration);
+    return convertResolution(NANOSECONDS, resolution, duration);
 }
 
 double Timer::convertResolution(Resolution from, Resolution to, double time)
 {
 #ifdef _DEBUG
-	auto d = time * (static_cast<double>(from) / static_cast<double>(to));
+    auto d = time * (static_cast<double>(from) / static_cast<double>(to));
 #endif
-	return time * (static_cast<double>(from) / static_cast<double>(to));
+    return time * (static_cast<double>(from) / static_cast<double>(to));
 }

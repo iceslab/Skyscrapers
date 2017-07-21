@@ -5,7 +5,6 @@
 #include <Windows.h>
 
 #define QUOTE(x) #x
-#define ASSERT(expr) assert(expr);
 
 #ifdef _DEBUG
 #define DEBUG_PRINTLN_VERBOSE(format, ...) \
@@ -35,6 +34,20 @@ do{ \
 	expr; \
 } while (false);
 
+#define ASSERT(expr) \
+do \
+{ \
+	if ((expr) == false) \
+	{ \
+		fprintf(stderr, "Assertion failed: " QUOTE(expr) ", file %s, line %d\n", __FILE__, __LINE__); \
+		if (IsDebuggerPresent()) \
+		{ \
+			DebugBreak(); \
+		} \
+		abort(); \
+	} \
+} while (false);
+
 #define ASSERT_VERBOSE(expr, format, ...) \
 do{ \
     if((expr) == false) \
@@ -57,7 +70,7 @@ do{ \
 #define DEBUG_PRINT(format, ...)
 
 #define DEBUG_CALL(expr)
-
+#define ASSERT(expr)
 #define ASSERT_VERBOSE(expr, format, ...)
 #endif
 
