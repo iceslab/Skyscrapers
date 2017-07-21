@@ -22,6 +22,6 @@ int main(int argc, const char** argv)
     //b.generate();
     //b.print();
 
-    //system("pause");
+    system("pause");
     return 0;
 }

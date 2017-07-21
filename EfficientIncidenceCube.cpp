@@ -19,6 +19,12 @@ EfficientIncidenceCube::EfficientIncidenceCube(int n) : n(n), proper(true)
             xyMatrix[i][j].resize(max);
             yzMatrix[i][j].resize(max);
             xzMatrix[i][j].resize(max);
+            for (int k = 0; k < max; k++)
+            {
+                xyMatrix[i][j][k] = nullInt;
+                yzMatrix[i][j][k] = nullInt;
+                xzMatrix[i][j][k] = nullInt;
+            }
         }
     }
 
@@ -185,13 +191,7 @@ void EfficientIncidenceCube::moveFromProper()
     int z1 = plusOneZCoordOf(t_x, t_y);
     int y1 = plusOneYCoordOf(t_x, t_z);
 
-    std::cout
-        << x1
-        << " "
-        << z1
-        << " "
-        << y1
-        << std::endl;
+    std::cout << "Proper:\n" << printRaw();
 
     doPlusMinus1Move(t, x1, y1, z1);
 
@@ -215,13 +215,9 @@ void EfficientIncidenceCube::moveFromImproper()
     int x1 = choosePlusOneXCoordOf(t_y, t_z);
     int y1 = choosePlusOneYCoordOf(t_x, t_z);
     int z1 = choosePlusOneZCoordOf(t_x, t_y);
-    std::cout
-        << x1
-        << " "
-        << z1
-        << " "
-        << y1
-        << std::endl;
+    
+    std::cout << "Improper:\n" << printRaw();
+    
     doPlusMinus1Move(t, x1, y1, z1);
 
     //this is the only cell that can result -1
