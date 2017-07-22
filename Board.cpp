@@ -19,144 +19,18 @@ void Board::generate()
 void Board::generate(const boardFieldT boardSize)
 {
     resize(boardSize);
-    fillWithZeros();
 
-    // Random device init
-    std::random_device r;
-    std::default_random_engine r_engine(r());
+    // Generate uniformly distributed latin square
+    EfficientIncidenceCube eic(boardSize);
+    eic.shuffle();
 
-    // Fill first row with values from 1 to board size
-    auto& firstRowR = board.front();
-    for (size_t i = 0; i < firstRowR.size(); i++)
+    // Copy contents
+    for (size_t x = 0; x < boardSize; x++)
     {
-        firstRowR[i] = i + 1;
-    }
-
-    // Randomize first row
-    std::shuffle(firstRowR.begin(), firstRowR.end(), r_engine);
-
-    // Prepare column sets for finding available values
-    std::vector<columnSetT> columnSets(getSize());
-
-    for (size_t i = 0; i < getSize(); i++)
-    {
-        columnSets[i] = columnSetT(firstRowR.begin(), firstRowR.end());
-        columnSets[i].erase(firstRowR[i]);
-    }
-
-    // For each row...
-    for (size_t rowIdx = 1; rowIdx < getSize(); rowIdx++)
-    {
-        // This is full, because on every iteration of loop, new row is chosen
-        rowSetT rowSet(firstRowR.begin(), firstRowR.end());
-
-        // ... and each column...
-        for (size_t columnIdx = 0; columnIdx < getSize();)
+        for (size_t y = 0; y < boardSize; y++)
         {
-            if (board[rowIdx][columnIdx] != 0)
-            {
-                columnIdx++;
-                continue;
-            }
-
-            auto& columnSetR = columnSets[columnIdx];
-            std::vector<setIntersectionT> setIntersections(getSize() - columnIdx);
-
-            // ... find which values are available for their intersection
-            for (size_t i = columnIdx; i < getSize(); i++)
-            {
-                std::set_intersection(rowSet.begin(),
-                                      rowSet.end(),
-                                      columnSets[i].begin(),
-                                      columnSets[i].end(),
-                                      std::back_inserter(setIntersections[i - columnIdx]));
-            }
-
-            // Debug prints, braces only for wrapping
-            {
-                DEBUG_PRINTLN_VERBOSE("rowIdx: %lu, colIdx: %lu", rowIdx, columnIdx);
-                DEBUG_CALL(print());
-                DEBUG_PRINTLN("");
-                DEBUG_PRINT("rowSet: ");
-                for (auto& r : rowSet)
-                    DEBUG_PRINT("%lu ", r);
-                DEBUG_PRINTLN("");
-
-                for (size_t i = 0; i < columnSets.size(); i++)
-                {
-                    DEBUG_PRINT("columnSets[%lu]: ", i);
-                    for (auto& c : columnSets[i])
-                        DEBUG_PRINT("%lu ", c);
-                    DEBUG_PRINTLN("");
-                }
-
-                for (size_t i = 0; i < setIntersections.size(); i++)
-                {
-                    DEBUG_PRINT("setIntersections[%lu]: ", i);
-                    for (auto& si : setIntersections[i])
-                        DEBUG_PRINT("%lu ", si);
-                    DEBUG_PRINTLN("");
-                }
-            }
-
-            auto setIntersectionR = setIntersections.front();
-
-            ASSERT_VERBOSE(setIntersectionR.empty() == false, "setIntersectionR.size(): %lu", setIntersectionR.size());
-            // Randomly choose one of the values
-            std::shuffle(setIntersectionR.begin(), setIntersectionR.end(), r_engine);
-
-            boardFieldT value = setIntersectionR.front();
-            for (auto& si : setIntersections)
-            {
-                auto& it = std::find(si.begin(), si.end(), value);
-                if (it != si.end())
-                {
-                    si.erase(it);
-                }
-            }
-
-            // Debug prints, braces only for wrapping
-            {
-                DEBUG_PRINTLN("After erasure");
-                for (size_t i = 0; i < setIntersections.size(); i++)
-                {
-                    DEBUG_PRINT("setIntersections[%lu]: ", i);
-                    for (auto& si : setIntersections[i])
-                        DEBUG_PRINT("%lu ", si);
-                    DEBUG_PRINTLN("");
-                }
-            }
-
-            size_t modifiedColumnIdx = columnIdx;
-            auto& itBegin = setIntersections.rbegin();
-            auto& itEnd = setIntersections.rend();
-            auto it = std::find_if(itBegin, itEnd, [](auto& s) { return s.size() == 1; });
-
-            for (auto it = itBegin; it != itEnd; it++)
-            {
-                auto index = getSize() - std::abs(it - itBegin) - 1;
-                DEBUG_PRINTLN("index: %lu", index);
-                if (it->size() == 1 && board[rowIdx][index] == 0)
-                {
-                    modifiedColumnIdx = index;
-                    value = it->front();
-                    break;
-                }
-            }
-
-            // Update row and column sets and board itself
-            rowSet.erase(value);
-            columnSets[modifiedColumnIdx].erase(value);
-            board[rowIdx][modifiedColumnIdx] = value;
-
-            DEBUG_PRINTLN("modifiedColumnIdx: %lu\nvalue: %lu\n", modifiedColumnIdx, value);
-            DEBUG_CALL(print());
-            DEBUG_PRINTLN("");
-
-            if (modifiedColumnIdx == columnIdx)
-            {
-                columnIdx++;
-            }
+            // Latin square is indexed from 0 to boardSize, it is needed to add 1
+            board[x][y] = eic.plusOneZCoordOf(x, y) + 1;
         }
     }
 
@@ -206,7 +80,20 @@ rowT & Board::getRow(size_t index)
     return board[index];
 }
 
-columnT Board::getColumn(size_t index)
+columnConstT Board::getColumn(size_t index) const
+{
+    columnConstT column;
+    column.reserve(getSize());
+
+    for (auto& row : board)
+    {
+        column.push_back(row[index]);
+    }
+
+    return column;
+}
+
+columnT board::Board::getColumn(size_t index)
 {
     columnT column;
     column.reserve(getSize());
@@ -219,14 +106,53 @@ columnT Board::getColumn(size_t index)
     return column;
 }
 
-bool Board::checkValidity() const
+bool Board::checkIfLatinSquare() const
 {
-    return false;
+    for (size_t i = 0; i < getSize(); i++)
+    {
+        std::vector<bool> rowChecker(getSize(), false);
+        std::vector<bool> columnChecker(getSize(), false);
+        for (size_t j = 0; j < getSize(); j++)
+        {
+            // Check if current fields values were present before
+            auto rowField = board[i][j] - 1;
+            auto columnField = board[j][i] - 1;
+            if (rowChecker[rowField] || columnChecker[columnField])
+            {
+                // If yes, board is not latin square
+                return false;
+            }
+            else
+            {
+                // Else, mark them as present and continue
+                rowChecker[rowField] = true;
+                columnChecker[columnField] = true;
+            }
+        }
+    }
+
+    return true;
 }
 
 bool Board::checkValidityWithHints() const
 {
-    return false;
+    if (!checkIfLatinSquare())
+    {
+        return false;
+    }
+
+    for (size_t i = 0; i < getSize(); i++)
+    {
+        for (auto& enumVal : hintsArray)
+        {
+            if (hints[enumVal][i] != getVisibleBuildings(enumVal, i))
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 void Board::print() const
@@ -290,7 +216,7 @@ void Board::fillWithZeros()
     }
 }
 
-boardFieldT Board::getVisibleBuildings(HintsSide side, size_t rowOrColumn)
+boardFieldT Board::getVisibleBuildings(HintsSide side, size_t rowOrColumn) const
 {
     boardFieldT retVal = 0;
     auto& row = getRow(rowOrColumn);

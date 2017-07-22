@@ -40,10 +40,6 @@ EfficientIncidenceCube::EfficientIncidenceCube(int n) : n(n), proper(true)
     }
 }
 
-EfficientIncidenceCube::~EfficientIncidenceCube()
-{
-}
-
 int EfficientIncidenceCube::shuffle()
 {
     int iterations;
@@ -191,8 +187,6 @@ void EfficientIncidenceCube::moveFromProper()
     int z1 = plusOneZCoordOf(t_x, t_y);
     int y1 = plusOneYCoordOf(t_x, t_z);
 
-    std::cout << "Proper:\n" << printRaw();
-
     doPlusMinus1Move(t, x1, y1, z1);
 
     //check if improper
@@ -215,8 +209,6 @@ void EfficientIncidenceCube::moveFromImproper()
     int x1 = choosePlusOneXCoordOf(t_y, t_z);
     int y1 = choosePlusOneYCoordOf(t_x, t_z);
     int z1 = choosePlusOneZCoordOf(t_x, t_y);
-    
-    std::cout << "Improper:\n" << printRaw();
     
     doPlusMinus1Move(t, x1, y1, z1);
 

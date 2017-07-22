@@ -8,6 +8,7 @@
 #include <iostream>
 #include <iterator>
 #include <functional>
+#include "EfficientIncidenceCube.h"
 
 // Typedefs for easier typing
 typedef uint32_t boardFieldT;
@@ -15,13 +16,13 @@ typedef std::vector<std::vector<boardFieldT>> boardT;
 typedef std::vector<boardFieldT> hintT;
 typedef std::vector<boardFieldT> rowT;
 typedef std::set<boardFieldT> rowSetT;
+typedef std::vector<std::reference_wrapper<const boardFieldT>> columnConstT;
 typedef std::vector<std::reference_wrapper<boardFieldT>> columnT;
 typedef std::set<boardFieldT> columnSetT;
 typedef std::vector<boardFieldT> setIntersectionT;
 
 namespace board
 {
-
     // Enum for accessing hints array
     enum HintsSide
     {
@@ -30,6 +31,8 @@ namespace board
         BOTTOM,
         LEFT
     };
+
+    const std::array<HintsSide, 4> hintsArray;
 
     class Board
     {
@@ -50,10 +53,14 @@ namespace board
         const rowT& getRow(size_t index) const;
         rowT& getRow(size_t index);
 
+        columnConstT getColumn(size_t index)  const;
         columnT getColumn(size_t index);
 
         // Validators
-        bool checkValidity() const;
+
+        // Checks if board is latin square
+        bool checkIfLatinSquare() const;
+        // Checks validity of board in terms of hints 
         bool checkValidityWithHints() const;
 
         // Output
@@ -67,7 +74,7 @@ namespace board
         void fillWithZeros();
 
         // Hints manipulators
-        boardFieldT getVisibleBuildings(HintsSide side, size_t rowOrColumn);
+        boardFieldT getVisibleBuildings(HintsSide side, size_t rowOrColumn) const;
     };
 
     template<class iterator_type>

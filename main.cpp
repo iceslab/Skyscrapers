@@ -14,13 +14,12 @@ int main(int argc, const char** argv)
 
     //Combinatorics::generateAllPermutations(A);
 
-    EfficientIncidenceCube eic(3);
-    eic.shuffle();
-    std::cout << eic.toString() << std::endl;
+    board::Board b(4);
+    b.generate();
+    b.print();
 
-    //board::Board b(4);
-    //b.generate();
-    //b.print();
+    std::cout << "Is Latin square?: " << b.checkIfLatinSquare() << std::endl;
+    std::cout << "Is valid solution?: " << b.checkValidityWithHints() << std::endl;
 
     system("pause");
     return 0;

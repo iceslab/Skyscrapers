@@ -19,7 +19,7 @@ class EfficientIncidenceCube
 {
 public:
     EfficientIncidenceCube(int n);
-    ~EfficientIncidenceCube();
+    ~EfficientIncidenceCube() = default;
 
     int shuffle();
 
@@ -41,6 +41,7 @@ public:
 
     std::string toString();
     std::string printRaw();
+
 protected:
     void xyzStore(int x, int y, int z);
     void xyzRemove(int x, int y, int z);
