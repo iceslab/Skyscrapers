@@ -1,3 +1,8 @@
+// This code is adapted from Java to C++ by Bartosz Ciesla
+// Original Java code released under GPL v3 can be found here:
+// https://github.com/bluemontag/igs-lsgp
+// Author of original: Ignacio Gallego Sagastume
+
 #include "EfficientIncidenceCube.h"
 
 std::random_device EfficientIncidenceCube::r;

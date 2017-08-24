@@ -8,23 +8,24 @@
 #include <iostream>
 #include <iterator>
 #include <functional>
+#include "SquareMatrix.h"
 #include "EfficientIncidenceCube.h"
-
-// Typedefs for easier typing
-typedef uint32_t boardFieldT;
-typedef std::vector<std::vector<boardFieldT>> boardT;
-typedef std::vector<boardFieldT> hintT;
-typedef std::vector<boardFieldT> rowT;
-typedef std::set<boardFieldT> rowSetT;
-typedef std::vector<std::reference_wrapper<const boardFieldT>> columnConstT;
-typedef std::vector<std::reference_wrapper<boardFieldT>> columnT;
-typedef std::set<boardFieldT> columnSetT;
-typedef std::vector<boardFieldT> setIntersectionT;
 
 namespace board
 {
+    // Typedefs for easier typing
+    typedef uint32_t boardFieldT;
+    typedef std::vector<std::vector<boardFieldT>> boardT;
+    typedef std::vector<boardFieldT> hintT;
+    typedef std::vector<boardFieldT> rowT;
+    typedef std::set<boardFieldT> rowSetT;
+    typedef std::vector<std::reference_wrapper<const boardFieldT>> columnConstT;
+    typedef std::vector<std::reference_wrapper<boardFieldT>> columnT;
+    typedef std::set<boardFieldT> columnSetT;
+    typedef std::vector<boardFieldT> setIntersectionT;
+
     // Enum for accessing hints array
-    enum HintsSide
+    enum HintsSideE
     {
         TOP = 0,
         RIGHT,
@@ -32,51 +33,50 @@ namespace board
         LEFT
     };
 
-    const std::array<HintsSide, 4> hintsArray;
+    const std::array<HintsSideE, 4> hintsArray;
 
-    class Board
+    class Board : public matrix::SquareMatrix<boardFieldT>
     {
     public:
         Board(const boardFieldT boardSize);
         ~Board() = default;
 
+        /// Generators
+        
+        // Generates latin square board 
         void generate();
+        // Resizes and generates latin square board 
         void generate(const boardFieldT boardSize);
 
-        // Operators
+        /// Operators
         bool operator==(const Board &other) const;
         bool operator!=(const Board &other) const;
 
-        // Accessors
-        size_t getSize() const;
-
-        const rowT& getRow(size_t index) const;
-        rowT& getRow(size_t index);
-
-        columnConstT getColumn(size_t index)  const;
-        columnT getColumn(size_t index);
-
-        // Validators
+        /// Validators
 
         // Checks if board is latin square
         bool checkIfLatinSquare() const;
         // Checks validity of board in terms of hints 
         bool checkValidityWithHints() const;
 
-        // Output
+        /// Output
         void print() const;
     private:
         static constexpr size_t hintSize = 4;
-        boardT board;
+        static const std::array<HintsSideE, 4> hintsArray;
+        //boardT board;
         std::array<hintT, hintSize> hints;
 
         void resize(const boardFieldT boardSize);
         void fillWithZeros();
 
-        // Hints manipulators
-        boardFieldT getVisibleBuildings(HintsSide side, size_t rowOrColumn) const;
+        /// Hints manipulators
+
+        // <summary>as</summary>
+        boardFieldT getVisibleBuildings(HintsSideE side, size_t rowOrColumn) const;
     };
 
+    // Counts visible buildings from "first" side
     template<class iterator_type>
     size_t countVisibility(iterator_type first, iterator_type last)
     {

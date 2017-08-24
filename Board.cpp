@@ -2,7 +2,9 @@
 
 using namespace board;
 
-Board::Board(const boardFieldT boardSize) : board(boardSize, rowT(boardSize))
+const std::array<HintsSideE, 4> Board::hintsArray = { TOP, RIGHT, BOTTOM, LEFT};
+
+Board::Board(const boardFieldT boardSize) : matrix::SquareMatrix<boardFieldT>(boardSize)
 {
     // Resize hints
     for (auto& h : hints)
@@ -13,7 +15,7 @@ Board::Board(const boardFieldT boardSize) : board(boardSize, rowT(boardSize))
 
 void Board::generate()
 {
-    generate(board.size());
+    generate(size());
 }
 
 void Board::generate(const boardFieldT boardSize)
@@ -30,12 +32,12 @@ void Board::generate(const boardFieldT boardSize)
         for (size_t y = 0; y < boardSize; y++)
         {
             // Latin square is indexed from 0 to boardSize, it is needed to add 1
-            board[x][y] = eic.plusOneZCoordOf(x, y) + 1;
+            (*this)[x][y] = eic.plusOneZCoordOf(x, y) + 1;
         }
     }
 
     // Fill hints for TOP, RIGHT, BOTTOM and LEFT
-    for (size_t i = 0; i < getSize(); i++)
+    for (size_t i = 0; i < size(); i++)
     {
         hints[TOP][i] = getVisibleBuildings(TOP, i);
         hints[RIGHT][i] = getVisibleBuildings(RIGHT, i);
@@ -46,7 +48,8 @@ void Board::generate(const boardFieldT boardSize)
 
 bool Board::operator==(const Board & other) const
 {
-    if (board != other.board)
+    
+    if (!std::equal(this->begin(), this->end(), other.begin()))
     {
         return false;
     }
@@ -65,58 +68,17 @@ bool Board::operator!=(const Board & other) const
     return !(*this == other);
 }
 
-size_t Board::getSize() const
-{
-    return board.size();
-}
-
-const rowT & Board::getRow(size_t index) const
-{
-    return board[index];
-}
-
-rowT & Board::getRow(size_t index)
-{
-    return board[index];
-}
-
-columnConstT Board::getColumn(size_t index) const
-{
-    columnConstT column;
-    column.reserve(getSize());
-
-    for (auto& row : board)
-    {
-        column.push_back(row[index]);
-    }
-
-    return column;
-}
-
-columnT board::Board::getColumn(size_t index)
-{
-    columnT column;
-    column.reserve(getSize());
-
-    for (auto& row : board)
-    {
-        column.push_back(row[index]);
-    }
-
-    return column;
-}
-
 bool Board::checkIfLatinSquare() const
 {
-    for (size_t i = 0; i < getSize(); i++)
+    for (size_t i = 0; i < size(); i++)
     {
-        std::vector<bool> rowChecker(getSize(), false);
-        std::vector<bool> columnChecker(getSize(), false);
-        for (size_t j = 0; j < getSize(); j++)
+        std::vector<bool> rowChecker(size(), false);
+        std::vector<bool> columnChecker(size(), false);
+        for (size_t j = 0; j < size(); j++)
         {
             // Check if current fields values were present before
-            auto rowField = board[i][j] - 1;
-            auto columnField = board[j][i] - 1;
+            auto rowField = (*this)[i][j] - 1;
+            auto columnField = (*this)[j][i] - 1;
             if (rowChecker[rowField] || columnChecker[columnField])
             {
                 // If yes, board is not latin square
@@ -141,7 +103,7 @@ bool Board::checkValidityWithHints() const
         return false;
     }
 
-    for (size_t i = 0; i < getSize(); i++)
+    for (size_t i = 0; i < size(); i++)
     {
         for (auto& enumVal : hintsArray)
         {
@@ -168,13 +130,13 @@ void Board::print() const
     std::cout << std::endl;
 
     // Whole board
-    for (size_t rowIdx = 0; rowIdx < getSize(); rowIdx++)
+    for (size_t rowIdx = 0; rowIdx < size(); rowIdx++)
     {
         // Left hint field
         std::copy(hints[LEFT].begin() + rowIdx, hints[LEFT].begin() + rowIdx + 1, field_it);
 
         // Board fields
-        std::copy(board[rowIdx].begin(), board[rowIdx].end(), field_it);
+        std::copy((*this)[rowIdx].begin(), (*this)[rowIdx].end(), field_it);
 
         // Right hint field
         std::copy(hints[RIGHT].begin() + rowIdx, hints[RIGHT].begin() + rowIdx + 1, field_it);
@@ -190,12 +152,12 @@ void Board::print() const
 
 void Board::resize(const boardFieldT boardSize)
 {
-    if (boardSize == board.size())
+    if (boardSize == size())
         return;
 
     // Resize rows count
-    board.resize(boardSize);
-    for (auto& row : board)
+    (*this).resize(boardSize);
+    for (auto& row : (*this))
     {
         // Resize rows
         row.resize(boardSize);
@@ -210,13 +172,13 @@ void Board::resize(const boardFieldT boardSize)
 
 void Board::fillWithZeros()
 {
-    for (auto& row : board)
+    for (auto& row : (*this))
     {
         std::fill(row.begin(), row.end(), boardFieldT());
     }
 }
 
-boardFieldT Board::getVisibleBuildings(HintsSide side, size_t rowOrColumn) const
+boardFieldT Board::getVisibleBuildings(HintsSideE side, size_t rowOrColumn) const
 {
     boardFieldT retVal = 0;
     auto& row = getRow(rowOrColumn);
