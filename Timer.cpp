@@ -37,7 +37,7 @@ double Timer::stop(Resolution resolution)
 #else
     QueryPerformanceCounter(&pcStop);
 #endif // USE_CHRONO
-    return getTime();
+    return getTime(resolution);
 }
 
 double Timer::getTime(Resolution resolution)

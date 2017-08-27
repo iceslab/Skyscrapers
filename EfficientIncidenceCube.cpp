@@ -67,7 +67,7 @@ int EfficientIncidenceCube::shuffle()
 int EfficientIncidenceCube::getEmptySpace(lowerArrayT& arr)
 {
     auto predicate = [](int el)->auto{ return el == nullInt; };
-    auto& it = std::find_if(arr.begin(), arr.end(), predicate);
+    auto it = std::find_if(arr.begin(), arr.end(), predicate);
     if (it == arr.end())
     {
         return -1;

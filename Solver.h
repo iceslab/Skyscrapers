@@ -7,7 +7,9 @@ namespace solver
     public:
         Solver(const board::Board& board);
         ~Solver() = default;
-    private:
+
+        virtual void solve() = 0;
+    protected:
         board::Board board;
     };
 }

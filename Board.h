@@ -24,20 +24,12 @@ namespace board
     typedef std::set<boardFieldT> columnSetT;
     typedef std::vector<boardFieldT> setIntersectionT;
 
-    // Enum for accessing hints array
-    enum HintsSideE
-    {
-        TOP = 0,
-        RIGHT,
-        BOTTOM,
-        LEFT
-    };
-
-    const std::array<HintsSideE, 4> hintsArray;
-
     class Board : public matrix::SquareMatrix<boardFieldT>
     {
     public:
+        static constexpr size_t hintSize = 4;
+        std::array<hintT, hintSize> hints;
+
         Board(const boardFieldT boardSize);
         ~Board() = default;
 
@@ -59,21 +51,15 @@ namespace board
         // Checks validity of board in terms of hints 
         bool checkValidityWithHints() const;
 
+        /// Hints manipulators
+        boardFieldT getVisibleBuildings(matrix::SideE side, size_t rowOrColumn) const;
+
         /// Output
         void print() const;
     private:
-        static constexpr size_t hintSize = 4;
-        static const std::array<HintsSideE, 4> hintsArray;
-        //boardT board;
-        std::array<hintT, hintSize> hints;
-
+        static const std::array<matrix::SideE, 4> validSides;
+        
         void resize(const boardFieldT boardSize);
-        void fillWithZeros();
-
-        /// Hints manipulators
-
-        // <summary>as</summary>
-        boardFieldT getVisibleBuildings(HintsSideE side, size_t rowOrColumn) const;
     };
 
     // Counts visible buildings from "first" side

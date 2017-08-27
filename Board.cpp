@@ -2,9 +2,16 @@
 
 using namespace board;
 
-const std::array<HintsSideE, 4> Board::hintsArray = { TOP, RIGHT, BOTTOM, LEFT};
+const std::array<matrix::SideE, 4> Board::validSides =
+{
+    matrix::TOP,
+    matrix::RIGHT,
+    matrix::BOTTOM,
+    matrix::LEFT
+};
 
-Board::Board(const boardFieldT boardSize) : matrix::SquareMatrix<boardFieldT>(boardSize)
+Board::Board(const boardFieldT boardSize) : 
+    matrix::SquareMatrix<boardFieldT>(boardSize)
 {
     // Resize hints
     for (auto& h : hints)
@@ -39,16 +46,16 @@ void Board::generate(const boardFieldT boardSize)
     // Fill hints for TOP, RIGHT, BOTTOM and LEFT
     for (size_t i = 0; i < size(); i++)
     {
-        hints[TOP][i] = getVisibleBuildings(TOP, i);
-        hints[RIGHT][i] = getVisibleBuildings(RIGHT, i);
-        hints[BOTTOM][i] = getVisibleBuildings(BOTTOM, i);
-        hints[LEFT][i] = getVisibleBuildings(LEFT, i);
+        for(auto& side : validSides)
+        {
+            hints[side][i] = getVisibleBuildings(side, i);
+        }
     }
 }
 
 bool Board::operator==(const Board & other) const
 {
-    
+
     if (!std::equal(this->begin(), this->end(), other.begin()))
     {
         return false;
@@ -105,7 +112,7 @@ bool Board::checkValidityWithHints() const
 
     for (size_t i = 0; i < size(); i++)
     {
-        for (auto& enumVal : hintsArray)
+        for (auto& enumVal : validSides)
         {
             if (hints[enumVal][i] != getVisibleBuildings(enumVal, i))
             {
@@ -119,34 +126,33 @@ bool Board::checkValidityWithHints() const
 
 void Board::print() const
 {
-    std::ostream_iterator<std::string> space_it(std::cout, " ");
     std::ostream_iterator<boardFieldT> field_it(std::cout, " ");
     std::string space = " ";
 
     // Free field to align columns
     std::cout << "  ";
     // Top hints
-    std::copy(hints[TOP].begin(), hints[TOP].end(), field_it);
+    std::copy(hints[matrix::TOP].begin(), hints[matrix::TOP].end(), field_it);
     std::cout << std::endl;
 
     // Whole board
     for (size_t rowIdx = 0; rowIdx < size(); rowIdx++)
     {
         // Left hint field
-        std::copy(hints[LEFT].begin() + rowIdx, hints[LEFT].begin() + rowIdx + 1, field_it);
+        std::copy(hints[matrix::LEFT].begin() + rowIdx, hints[matrix::LEFT].begin() + rowIdx + 1, field_it);
 
         // Board fields
         std::copy((*this)[rowIdx].begin(), (*this)[rowIdx].end(), field_it);
 
         // Right hint field
-        std::copy(hints[RIGHT].begin() + rowIdx, hints[RIGHT].begin() + rowIdx + 1, field_it);
+        std::copy(hints[matrix::RIGHT].begin() + rowIdx, hints[matrix::RIGHT].begin() + rowIdx + 1, field_it);
         std::cout << std::endl;
     }
 
     // Free field to align columns
     std::cout << "  ";
     // Bottom hints
-    std::copy(hints[BOTTOM].begin(), hints[BOTTOM].end(), field_it);
+    std::copy(hints[matrix::BOTTOM].begin(), hints[matrix::BOTTOM].end(), field_it);
     std::cout << std::endl;
 }
 
@@ -170,35 +176,31 @@ void Board::resize(const boardFieldT boardSize)
     }
 }
 
-void Board::fillWithZeros()
+boardFieldT Board::getVisibleBuildings(matrix::SideE side, size_t rowOrColumn) const
 {
-    for (auto& row : (*this))
-    {
-        std::fill(row.begin(), row.end(), boardFieldT());
-    }
-}
+    ASSERT_VERBOSE(rowOrColumn < size(),
+                   "%u < %u",
+                   rowOrColumn, size());
 
-boardFieldT Board::getVisibleBuildings(HintsSideE side, size_t rowOrColumn) const
-{
     boardFieldT retVal = 0;
     auto& row = getRow(rowOrColumn);
-    auto& column = getColumn(rowOrColumn);
+    auto column = getColumn(rowOrColumn);
     switch (side)
     {
-        case TOP:
+        case matrix::TOP:
             retVal = countVisibility(column.begin(), column.end());
             break;
-        case RIGHT:
+        case matrix::RIGHT:
             retVal = countVisibility(row.rbegin(), row.rend());
             break;
-        case BOTTOM:
+        case matrix::BOTTOM:
             retVal = countVisibility(column.rbegin(), column.rend());
             break;
-        case LEFT:
+        case matrix::LEFT:
             retVal = countVisibility(row.begin(), row.end());
             break;
         default:
-
+            // Nothing to do
             break;
     }
 
