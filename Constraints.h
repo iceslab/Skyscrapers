@@ -11,9 +11,9 @@ namespace constraints
     public:
         Constraints(const board::boardFieldT boardSize);
         Constraints(const board::Board& board);
-        ~Constraints();
+        ~Constraints() = default;
 
-        /// Output
+        // Output
 
         void print() const;
     };

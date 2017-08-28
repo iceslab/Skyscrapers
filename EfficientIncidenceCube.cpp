@@ -214,7 +214,7 @@ void EfficientIncidenceCube::moveFromImproper()
     int x1 = choosePlusOneXCoordOf(t_y, t_z);
     int y1 = choosePlusOneYCoordOf(t_x, t_z);
     int z1 = choosePlusOneZCoordOf(t_x, t_y);
-    
+
     doPlusMinus1Move(t, x1, y1, z1);
 
     //this is the only cell that can result -1

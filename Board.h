@@ -34,7 +34,7 @@ namespace board
         ~Board() = default;
 
         /// Generators
-        
+
         // Generates latin square board 
         void generate();
         // Resizes and generates latin square board 
@@ -51,14 +51,18 @@ namespace board
         // Checks validity of board in terms of hints 
         bool checkValidityWithHints() const;
 
-        /// Hints manipulators
+        // Hints manipulators
         boardFieldT getVisibleBuildings(matrix::SideE side, size_t rowOrColumn) const;
+        // Returns index of building in row which height == size(), if there is none returns size()
+        boardFieldT locateHighestInRow(size_t row) const;
+        // Returns index of building in column which height == size(), if there is none returns size()
+        boardFieldT locateHighestInColumn(size_t column) const;
 
-        /// Output
+        // Output
         void print() const;
     private:
         static const std::array<matrix::SideE, 4> validSides;
-        
+
         void resize(const boardFieldT boardSize);
     };
 

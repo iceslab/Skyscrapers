@@ -10,7 +10,7 @@ const std::array<matrix::SideE, 4> Board::validSides =
     matrix::LEFT
 };
 
-Board::Board(const boardFieldT boardSize) : 
+Board::Board(const boardFieldT boardSize) :
     matrix::SquareMatrix<boardFieldT>(boardSize)
 {
     // Resize hints
@@ -46,7 +46,7 @@ void Board::generate(const boardFieldT boardSize)
     // Fill hints for TOP, RIGHT, BOTTOM and LEFT
     for (size_t i = 0; i < size(); i++)
     {
-        for(auto& side : validSides)
+        for (auto& side : validSides)
         {
             hints[side][i] = getVisibleBuildings(side, i);
         }
@@ -206,5 +206,26 @@ boardFieldT Board::getVisibleBuildings(matrix::SideE side, size_t rowOrColumn) c
 
     return retVal;
 }
+
+boardFieldT board::Board::locateHighestInRow(size_t rowIdx) const
+{
+    ASSERT_VERBOSE(rowIdx < size(),
+                   "%u < %u",
+                   rowIdx, size());
+
+    auto& row = getRow(rowIdx);
+    return std::find(row.begin(), row.end(), size()) - row.begin();
+}
+
+boardFieldT board::Board::locateHighestInColumn(size_t columnIdx) const
+{
+    ASSERT_VERBOSE(columnIdx < size(),
+                   "%u < %u",
+                   columnIdx, size());
+
+    auto column = getColumn(columnIdx);
+    return std::find(column.begin(), column.end(), size()) - column.begin();
+}
+
 
 

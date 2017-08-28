@@ -1,5 +1,7 @@
 #pragma once
 #include <vector>
+#include <functional>
+
 namespace matrix
 {
     // Enum for accessing hints array
@@ -33,8 +35,10 @@ namespace matrix
 
         // Helper methods
 
-        SideE whichEdgeRow(size_t row);
-        SideE whichEdgeColumn(size_t column);
+        SideE whichEdgeRow(size_t row) const;
+        SideE whichEdgeColumn(size_t column) const;
+
+        void forEach(std::function<void(size_t, size_t)> function);
 
         void fill(const T & value);
     };
@@ -75,7 +79,7 @@ namespace matrix
     inline typename SquareMatrix<T>::columnT SquareMatrix<T>::getColumn(size_t index)
     {
         columnT column;
-        column.reserve(getSize());
+        column.reserve(size());
 
         for (auto& row : *this)
         {
@@ -86,7 +90,7 @@ namespace matrix
     }
 
     template<class T>
-    inline SideE SquareMatrix<T>::whichEdgeRow(size_t row)
+    inline SideE SquareMatrix<T>::whichEdgeRow(size_t row) const
     {
         if (row == 0)
         {
@@ -103,7 +107,7 @@ namespace matrix
     }
 
     template<class T>
-    inline SideE SquareMatrix<T>::whichEdgeColumn(size_t column)
+    inline SideE SquareMatrix<T>::whichEdgeColumn(size_t column) const
     {
         if (column == 0)
         {
@@ -116,6 +120,18 @@ namespace matrix
         else
         {
             return NONE;
+        }
+    }
+
+    template<class T>
+    inline void SquareMatrix<T>::forEach(std::function<void(size_t, size_t)> function)
+    {
+        for (size_t row = 0; row < size(); row++)
+        {
+            for (size_t column = 0; column < size(); column++)
+            {
+                function(row, column);
+            }
         }
     }
 

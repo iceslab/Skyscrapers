@@ -19,7 +19,7 @@ int main(int argc, const char** argv)
     std::cout << "Is valid solution?: " << b.checkValidityWithHints() << std::endl;
 
     CpuSolver c(b);
-    
+
     c.solve();
     c.print();
 

@@ -1,21 +1,16 @@
 #include "Constraints.h"
 using namespace constraints;
 
-Constraints::Constraints(const board::boardFieldT boardSize) : 
+Constraints::Constraints(const board::boardFieldT boardSize) :
     matrix::SquareMatrix<constraintsFieldT>(boardSize)
 {
     // Nothing to do
 }
 
-Constraints::Constraints(const board::Board & board) : 
+Constraints::Constraints(const board::Board & board) :
     Constraints(board.size())
 {
     // Nothing to do
-}
-
-
-Constraints::~Constraints()
-{
 }
 
 void Constraints::print() const
@@ -31,7 +26,7 @@ void Constraints::print() const
             // Contents of set
             std::cout << "[";
             std::copy(field.begin(), field.end(), field_it);
-            
+
             // Print empty fields
             for (auto i = field.size(); i < size() - 1; i++)
             {
