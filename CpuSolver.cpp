@@ -9,20 +9,19 @@ CpuSolver::CpuSolver(const board::Board & board) : Solver(board), constraints(bo
 
 void CpuSolver::solve()
 {
-    auto findEdgeConstraintsFn =
-        std::bind(&CpuSolver::findEdgeConstraints,
-                  this,
-                  std::placeholders::_1,
-                  std::placeholders::_2);
+    auto startingTechniques = [this](size_t row, size_t column)->void
+    {
+        findCluesOfOne(row, column);
+        findCluesOfN(row, column);
+        setSatisfiedConstraints(row, column);
+    };
 
-    auto setSatisfiedConstraintsFn =
-        std::bind(&CpuSolver::setSatisfiedConstraints,
-                  this,
-                  std::placeholders::_1,
-                  std::placeholders::_2);
+    auto basicTechniques = [this](size_t row, size_t column)->void
+    {
+        // TODO: write and call basic techniques methods
+    };
 
-    board.forEach(findEdgeConstraintsFn);
-    board.forEach(setSatisfiedConstraintsFn);
+    board.forEach(startingTechniques);
 }
 
 void solver::CpuSolver::print() const
@@ -31,7 +30,7 @@ void solver::CpuSolver::print() const
     board.print();
 }
 
-void CpuSolver::findEdgeConstraints(size_t row, size_t column)
+void solver::CpuSolver::findCluesOfOne(size_t row, size_t column)
 {
     auto rowEdge = board.whichEdgeRow(row);
     auto columnEdge = board.whichEdgeColumn(column);
@@ -42,7 +41,10 @@ void CpuSolver::findEdgeConstraints(size_t row, size_t column)
     {
         constraints[row][column].insert(board.size());
     }
+}
 
+void solver::CpuSolver::findCluesOfN(size_t row, size_t column)
+{
     // All buildings are visible
     if (board.hints[matrix::TOP][column] == board.size())
     {

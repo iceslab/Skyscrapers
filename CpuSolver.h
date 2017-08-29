@@ -22,14 +22,17 @@ namespace solver
         // Collects data about available solutions for given field
         constraints::Constraints constraints;
 
-        // Finders
+        /// Finding techniques
 
-        // Looks for only one visible building
-        void findEdgeConstraints(size_t row, size_t column);
+        // One visible building
+        void findCluesOfOne(size_t row, size_t column);
+        // All buildings are visible
+        void findCluesOfN(size_t row, size_t column);
+
         // Looks for only one visible building after initial search
         void findPhase2Constraints(size_t row, size_t column);
 
-        // Setters
+        /// Setters
 
         // Sets fields if finds that there is only constraint
         void setSatisfiedConstraints(size_t row, size_t column);
