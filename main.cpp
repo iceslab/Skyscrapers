@@ -11,7 +11,7 @@ using solver::CpuSolver;
 
 int main(int argc, const char** argv)
 {
-    Board b(4);
+    Board b(5);
     b.generate();
     b.print();
 

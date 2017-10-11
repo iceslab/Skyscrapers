@@ -16,6 +16,7 @@ namespace constraints
         // Output
 
         void print() const;
+
     };
 }
 

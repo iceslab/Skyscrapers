@@ -9,6 +9,9 @@ CpuSolver::CpuSolver(const board::Board & board) : Solver(board), constraints(bo
 
 void CpuSolver::solve()
 {
+    ASSERT_VERBOSE(board.size() > 0,
+                   "Board size must be greater than 0. Got: %lu",
+                   board.size());
     auto startingTechniques = [this](size_t row, size_t column)->void
     {
         findCluesOfOne(row, column);
@@ -18,16 +21,53 @@ void CpuSolver::solve()
 
     auto basicTechniques = [this](size_t row, size_t column)->void
     {
-        // TODO: write and call basic techniques methods
+        findHighSkyscrapers1(row, column);
+        // TODO: add more basic techniques methods to call
     };
 
-    board.forEach(startingTechniques);
+    auto setConstraints = [this](size_t row, size_t column)->void
+    {
+        setSatisfiedConstraints(row, column);
+    };
+
+    board.forEachCell(startingTechniques);
+    board.forEachVector(basicTechniques);
+    board.forEachCell(setConstraints);
 }
 
 void solver::CpuSolver::print() const
 {
     constraints.print();
     board.print();
+}
+
+bool solver::CpuSolver::setConstraint(size_t row, size_t column, board::boardFieldT value, bool conditionally)
+{
+    if (conditionally)
+        return setConstraintConditionally(row, column, value);
+    return setConstraintUnconditionally(row, column, value);
+}
+
+bool solver::CpuSolver::setConstraintConditionally(size_t row, size_t column, board::boardFieldT value)
+{
+    auto rowVec = board.getRow(row);
+    auto columnVec = board.getColumn(column);
+    auto valueElementsInRow = std::count(rowVec.begin(), rowVec.end(), value);
+    auto valueElementsInColumn = std::count(columnVec.begin(), columnVec.end(), value);
+    ASSERT(valueElementsInRow <= 1 && valueElementsInColumn <= 1);
+
+    if (valueElementsInRow == 0 && valueElementsInColumn == 0)
+    {
+        constraints[row][column].insert(value);
+        return true;
+    }
+    return false;
+}
+
+bool solver::CpuSolver::setConstraintUnconditionally(size_t row, size_t column, board::boardFieldT value)
+{
+    constraints[row][column].insert(value);
+    return true;
 }
 
 void solver::CpuSolver::findCluesOfOne(size_t row, size_t column)
@@ -81,6 +121,43 @@ void solver::CpuSolver::findCluesOfN(size_t row, size_t column)
         {
             it->insert(i);
         }
+    }
+}
+
+void solver::CpuSolver::findHighSkyscrapers1(size_t row, size_t column)
+{
+    const auto highest = board.size();
+    const auto secondHighest = highest - 1;
+    const auto leftHint = board.hints[matrix::LEFT][row];
+    const auto rightHint = board.hints[matrix::RIGHT][row];
+    const auto topHint = board.hints[matrix::TOP][column];
+    const auto bottomHint = board.hints[matrix::BOTTOM][column];
+
+    const auto firstIdx = 0;
+    const auto secondIdx = board.size() > 1 ? firstIdx + 1 : firstIdx;
+    const auto lastIdx = board.size() - 1;
+    // Just to be safe and not get MAX_UINT
+    const auto secondLastIdx = lastIdx > 0 ? lastIdx - 1 : lastIdx;
+
+    if (leftHint == secondHighest)
+    {
+        setConstraint(row, secondLastIdx, highest);
+        setConstraint(row, lastIdx, highest);
+    }
+    else if (rightHint == secondHighest)
+    {
+        setConstraint(row, firstIdx, highest);
+        setConstraint(row, secondIdx, highest);
+    }
+    else if (topHint == secondHighest)
+    {
+        setConstraint(secondLastIdx, column, highest);
+        setConstraint(lastIdx, column, highest);
+    }
+    else if (bottomHint == secondHighest)
+    {
+        setConstraint(firstIdx, column, highest);
+        setConstraint(secondIdx, column, highest);
     }
 }
 

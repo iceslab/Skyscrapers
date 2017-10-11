@@ -38,7 +38,8 @@ namespace matrix
         SideE whichEdgeRow(size_t row) const;
         SideE whichEdgeColumn(size_t column) const;
 
-        void forEach(std::function<void(size_t, size_t)> function);
+        void forEachCell(std::function<void(size_t, size_t)> function);
+        void forEachVector(std::function<void(size_t, size_t)> function);
 
         void fill(const T & value);
     };
@@ -124,7 +125,7 @@ namespace matrix
     }
 
     template<class T>
-    inline void SquareMatrix<T>::forEach(std::function<void(size_t, size_t)> function)
+    inline void SquareMatrix<T>::forEachCell(std::function<void(size_t, size_t)> function)
     {
         for (size_t row = 0; row < size(); row++)
         {
@@ -136,6 +137,16 @@ namespace matrix
     }
 
     template<class T>
+    inline void SquareMatrix<T>::forEachVector(std::function<void(size_t, size_t)> function)
+    {
+        for (size_t rowAndColumn = 0; rowAndColumn < size(); rowAndColumn++)
+        {
+            function(rowAndColumn, rowAndColumn);
+        }
+    }
+
+
+    template<class T>
     inline void SquareMatrix<T>::fill(const T & value)
     {
         for (auto& row : (*this))
@@ -143,4 +154,4 @@ namespace matrix
             std::fill(row.begin(), row.end(), value);
         }
     }
-}
+};
