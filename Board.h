@@ -52,7 +52,12 @@ namespace board
         bool checkValidityWithHints() const;
 
         // Hints manipulators
+        // Gets visible buildings from given side and for given row or column
         boardFieldT getVisibleBuildings(matrix::SideE side, size_t rowOrColumn) const;
+        // Gets visible buildings from given side and for given row or column assuming value at index
+        boardFieldT getVisibleBuildingsIf(matrix::SideE side, size_t rowOrColumn, boardFieldT value, size_t index) const;
+        // Returns if building can be placed in cell in terms of already placed buildings
+        bool isBuildingPlaceable(size_t row, size_t column, boardFieldT building);
         // Returns index of building in row which height == size(), if there is none returns size()
         boardFieldT locateHighestInRow(size_t row) const;
         // Returns index of building in column which height == size(), if there is none returns size()

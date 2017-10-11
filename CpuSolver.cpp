@@ -50,18 +50,13 @@ bool solver::CpuSolver::setConstraint(size_t row, size_t column, board::boardFie
 
 bool solver::CpuSolver::setConstraintConditionally(size_t row, size_t column, board::boardFieldT value)
 {
-    auto rowVec = board.getRow(row);
-    auto columnVec = board.getColumn(column);
-    auto valueElementsInRow = std::count(rowVec.begin(), rowVec.end(), value);
-    auto valueElementsInColumn = std::count(columnVec.begin(), columnVec.end(), value);
-    ASSERT(valueElementsInRow <= 1 && valueElementsInColumn <= 1);
-
-    if (valueElementsInRow == 0 && valueElementsInColumn == 0)
+    auto retVal = board.isBuildingPlaceable(row, column, value);
+    if (retVal)
     {
         constraints[row][column].insert(value);
-        return true;
     }
-    return false;
+
+    return retVal;
 }
 
 bool solver::CpuSolver::setConstraintUnconditionally(size_t row, size_t column, board::boardFieldT value)
@@ -159,6 +154,11 @@ void solver::CpuSolver::findHighSkyscrapers1(size_t row, size_t column)
         setConstraint(firstIdx, column, highest);
         setConstraint(secondIdx, column, highest);
     }
+}
+
+void solver::CpuSolver::findHighSkyscrapers2(size_t row, size_t column)
+{
+
 }
 
 void solver::CpuSolver::findPhase2Constraints(size_t row, size_t column)

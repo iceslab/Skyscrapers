@@ -207,6 +207,51 @@ boardFieldT Board::getVisibleBuildings(matrix::SideE side, size_t rowOrColumn) c
     return retVal;
 }
 
+boardFieldT Board::getVisibleBuildingsIf(matrix::SideE side, size_t rowOrColumn, boardFieldT value, size_t index) const
+{
+    ASSERT_VERBOSE(rowOrColumn < size(),
+                   "%u < %u",
+                   rowOrColumn, size());
+
+    boardFieldT retVal = 0;
+    auto row = getRow(rowOrColumn);
+    auto column = getColumn(rowOrColumn);
+    row[index] = value;
+    column[index] = value;
+    switch (side)
+    {
+        case matrix::TOP:
+            retVal = countVisibility(column.begin(), column.end());
+            break;
+        case matrix::RIGHT:
+            retVal = countVisibility(row.rbegin(), row.rend());
+            break;
+        case matrix::BOTTOM:
+            retVal = countVisibility(column.rbegin(), column.rend());
+            break;
+        case matrix::LEFT:
+            retVal = countVisibility(row.begin(), row.end());
+            break;
+        default:
+            // Nothing to do
+            break;
+    }
+
+    return retVal;
+}
+
+bool board::Board::isBuildingPlaceable(size_t row, size_t column, boardFieldT building)
+{
+    auto rowVec = getRow(row);
+    auto columnVec = getColumn(column);
+    auto valueElementsInRow = std::count(rowVec.begin(), rowVec.end(), building);
+    auto valueElementsInColumn = std::count(columnVec.begin(), columnVec.end(), building);
+
+    ASSERT(valueElementsInRow <= 1 && valueElementsInColumn <= 1);
+
+    return valueElementsInRow == 0 && valueElementsInColumn == 0;
+}
+
 boardFieldT board::Board::locateHighestInRow(size_t rowIdx) const
 {
     ASSERT_VERBOSE(rowIdx < size(),
