@@ -11,6 +11,9 @@ using solver::CpuSolver;
 
 int main(int argc, const char** argv)
 {
+    UNREFERENCED_PARAMETER(argc);
+    UNREFERENCED_PARAMETER(argv);
+
     Board b(5);
     b.generate();
     b.print();

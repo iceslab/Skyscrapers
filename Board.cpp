@@ -179,7 +179,7 @@ void Board::resize(const boardFieldT boardSize)
 boardFieldT Board::getVisibleBuildings(matrix::SideE side, size_t rowOrColumn) const
 {
     ASSERT_VERBOSE(rowOrColumn < size(),
-                   "%u < %u",
+                   "%zu < %zu",
                    rowOrColumn, size());
 
     boardFieldT retVal = 0;
@@ -210,7 +210,7 @@ boardFieldT Board::getVisibleBuildings(matrix::SideE side, size_t rowOrColumn) c
 boardFieldT Board::getVisibleBuildingsIf(matrix::SideE side, size_t rowOrColumn, boardFieldT value, size_t index) const
 {
     ASSERT_VERBOSE(rowOrColumn < size(),
-                   "%u < %u",
+                   "%zu < %zu",
                    rowOrColumn, size());
 
     boardFieldT retVal = 0;
@@ -255,17 +255,17 @@ bool board::Board::isBuildingPlaceable(size_t row, size_t column, boardFieldT bu
 boardFieldT board::Board::locateHighestInRow(size_t rowIdx) const
 {
     ASSERT_VERBOSE(rowIdx < size(),
-                   "%u < %u",
+                   "%zu < %zu",
                    rowIdx, size());
 
     auto& row = getRow(rowIdx);
-    return std::find(row.begin(), row.end(), size()) - row.begin();
+    return static_cast<boardFieldT>(std::find(row.begin(), row.end(), size()) - row.begin());
 }
 
 boardFieldT board::Board::locateHighestInColumn(size_t columnIdx) const
 {
     ASSERT_VERBOSE(columnIdx < size(),
-                   "%u < %u",
+                   "%zu < %zu",
                    columnIdx, size());
 
     auto column = getColumn(columnIdx);

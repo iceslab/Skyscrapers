@@ -129,6 +129,11 @@
     <ClInclude Include="SquareMatrix.h" />
     <ClInclude Include="Solver.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Utilities\Utilities\Utilites.vcxproj">
+      <Project>{5cb4871f-49cc-3730-8b67-97908cd84427}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

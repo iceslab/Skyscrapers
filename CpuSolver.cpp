@@ -10,7 +10,7 @@ CpuSolver::CpuSolver(const board::Board & board) : Solver(board), constraints(bo
 void CpuSolver::solve()
 {
     ASSERT_VERBOSE(board.size() > 0,
-                   "Board size must be greater than 0. Got: %lu",
+                   "Board size must be greater than 0. Got: %zu",
                    board.size());
     auto startingTechniques = [this](size_t row, size_t column)->void
     {
