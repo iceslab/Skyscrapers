@@ -1,12 +1,19 @@
 #pragma once
 #include <concurrent_unordered_map.h>
-#include "macros.h"
+#include "../Utilities/asserts.h"
 #include <stdexcept>
 #include <vector>
 
 #include <algorithm>
 #include <iterator>
 #include <iostream>
+
+#define MAX_FACTORIAL_64 20
+#define MAX_FACTORIAL_32 12
+#define MAX_FACTORIAL_16 8
+#define MAX_FACTORIAL_8 5
+
+#define MAX_FACTORIAL_EXCEEDED_MSG "Result of factorial exceeds max storage value for return type"
 
 #define PREMEMOIZE_N_FACTORIAL 20
 #ifndef PREMEMOIZE_N_FACTORIAL

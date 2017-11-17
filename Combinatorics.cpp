@@ -43,8 +43,8 @@ factorialT Combinatorics::binomialExpansion(factorialT n, factorialT k)
         // ( ) = ---------------------
         // (k)        1*2*...*k
 
-        auto numerator = n;
-        auto denominator = 1;
+        factorialT numerator = n;
+        factorialT denominator = 1;
         for (size_t i = 2; i < k; i++)
         {
             numerator *= n - i + 1;

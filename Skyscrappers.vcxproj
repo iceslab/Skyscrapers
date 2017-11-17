@@ -119,7 +119,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="SquareMatrix.cpp" />
     <ClCompile Include="Solver.cpp" />
-    <ClCompile Include="Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Board.h" />
@@ -127,10 +126,8 @@
     <ClInclude Include="Constraints.h" />
     <ClInclude Include="CpuSolver.h" />
     <ClInclude Include="EfficientIncidenceCube.h" />
-    <ClInclude Include="macros.h" />
     <ClInclude Include="SquareMatrix.h" />
     <ClInclude Include="Solver.h" />
-    <ClInclude Include="Timer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
