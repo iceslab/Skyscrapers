@@ -33,7 +33,7 @@ namespace matrix
         bool readFromFile(const std::string & path);
         bool readFromFile(std::ifstream & stream);
 
-        // Accessors
+        /// Accessors
 
         const rowT& getRow(size_t index) const;
         rowT& getRow(size_t index);
@@ -41,7 +41,12 @@ namespace matrix
         columnConstT getColumn(size_t index)  const;
         columnT getColumn(size_t index);
 
-        // Helper methods
+        const T getCell(size_t row, size_t column) const;
+        T getCell(size_t row, size_t column);
+        
+        void setCell(size_t row, size_t column, T value);
+
+        /// Helper methods
 
         SideE whichEdgeRow(size_t row) const;
         SideE whichEdgeColumn(size_t column) const;
@@ -80,7 +85,7 @@ namespace matrix
             {
                 // Board fields
                 std::copy((*this)[rowIdx].begin(), (*this)[rowIdx].end(), field_it);
-                std::cout << std::endl;
+                stream << std::endl;
             }
         }
 
@@ -101,22 +106,26 @@ namespace matrix
         if (retVal == true)
         {
             clear();
+            std::string line;
+            std::getline(stream, line);
 
             // Read all lines
             while (stream.good())
             {
-                std::string line;
-                auto& lineStream = std::getline(stream, line);
+                std::stringstream lineStream;
+                lineStream << line;
                 std::vector<T> row;
+                T token;
+                lineStream >> token;
 
                 // Read all data from line
                 while (lineStream.good())
                 {
-                    T token;
-                    lineStream >> token;
                     row.emplace_back(token);
+                    lineStream >> token;
                 }
                 emplace_back(row);
+                std::getline(stream, line);
             }
 
             size_t maxSize = size();
@@ -177,6 +186,24 @@ namespace matrix
         }
 
         return column;
+    }
+
+    template<class T>
+    inline const T SquareMatrix<T>::getCell(size_t row, size_t column) const
+    {
+        return (*this)[row][column];
+    }
+
+    template<class T>
+    inline T SquareMatrix<T>::getCell(size_t row, size_t column)
+    {
+        return (*this)[row][column];
+    }
+
+    template<class T>
+    inline void SquareMatrix<T>::setCell(size_t row, size_t column, T value)
+    {
+        (*this)[row][column] = value;
     }
 
     template<class T>

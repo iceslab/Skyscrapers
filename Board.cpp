@@ -287,6 +287,10 @@ boardFieldT Board::getVisibleBuildingsIf(matrix::SideE side, size_t rowOrColumn,
 
 bool board::Board::isBuildingPlaceable(size_t row, size_t column, boardFieldT building)
 {
+    ASSERT(row < size());
+    ASSERT(column < size());
+    ASSERT(building <= size() && building > 0);
+
     if ((*this)[row][column] != 0)
         return false;
 
@@ -300,12 +304,33 @@ bool board::Board::isBuildingPlaceable(size_t row, size_t column, boardFieldT bu
     return valueElementsInRow == 0 && valueElementsInColumn == 0;
 }
 
-bool board::Board::isBuildingPlaceableAndValid(size_t row, size_t column, boardFieldT building)
+bool board::Board::isBoardPartiallyValid(size_t row, size_t column)
 {
-    auto retVal = isBuildingPlaceable(row, column, building);
-    if (retVal)
-    {
+    ASSERT(row < size());
+    ASSERT(column < size());
 
+    const auto rowEdge = whichEdgeRow(row);
+    const auto columnEdge = whichEdgeColumn(column);
+
+    const auto leftVisible = getVisibleBuildings(matrix::LEFT, row);
+    const auto& leftHints = hints[matrix::LEFT][row];
+    const auto topVisible = getVisibleBuildings(matrix::TOP, column);
+    const auto& topHints = hints[matrix::TOP][column];
+
+    auto retVal = (leftVisible <= leftHints) && (topVisible <= topHints);
+
+    if (columnEdge == matrix::RIGHT)
+    {
+        const auto rightVisible = getVisibleBuildings(matrix::RIGHT, row);
+        const auto& rightHints = hints[matrix::RIGHT][row];
+        retVal = retVal && (leftVisible == leftHints) && (rightVisible == rightHints);
+    }
+
+    if (rowEdge == matrix::BOTTOM)
+    {
+        const auto bottomVisible = getVisibleBuildings(matrix::BOTTOM, column);
+        const auto& bottomHints = hints[matrix::BOTTOM][column];
+        retVal = retVal && (topVisible == topHints) && (bottomVisible == bottomHints);
     }
 
     return retVal;
@@ -329,11 +354,6 @@ boardFieldT board::Board::locateHighestInColumn(size_t columnIdx) const
 
     auto column = getColumn(columnIdx);
     return std::find(column.begin(), column.end(), size()) - column.begin();
-}
-
-void board::Board::setCell(size_t row, size_t column, boardFieldT building)
-{
-    (*this)[row][column] = building;
 }
 
 void board::Board::clearCell(size_t row, size_t column)

@@ -216,22 +216,31 @@ void solver::CpuSolver::setSatisfiedConstraints(size_t row, size_t column)
 
 bool solver::CpuSolver::backTracking(size_t level, size_t row, size_t column)
 {
+    std::cout << "level: " << level << " row: " << row << " column: " << column << "\n";
+    DEBUG_CALL(board.print());
     const auto treeRowSize = board.size();
 
     // Check if it is last cell
     const auto cellPair = getNextFreeCell(row, column);
     if (cellPair == lastCellPair)
     {
+        DEBUG_PRINTLN("Last cell");
         for (size_t i = 0; i < treeRowSize; i++)
         {
             const auto consideredBuilding = i + 1;
+
             if (board.isBuildingPlaceable(row, column, consideredBuilding))
             {
                 board.setCell(row, column, consideredBuilding);
-                board.print();
-                return true;
+                if (board.isBoardPartiallyValid(row, column))
+                {
+                    DEBUG_PRINTLN("Found result");
+                    board.print();
+                    return true;
+                }
             }
         }
+        return false;
     }
     else
     {
@@ -241,9 +250,12 @@ bool solver::CpuSolver::backTracking(size_t level, size_t row, size_t column)
             if (board.isBuildingPlaceable(row, column, consideredBuilding))
             {
                 board.setCell(row, column, consideredBuilding);
-                if (backTracking(level + 1, cellPair.first, cellPair.second))
+                if (board.isBoardPartiallyValid(row, column))
                 {
-                    return true;
+                    if (backTracking(level + 1, cellPair.first, cellPair.second))
+                    {
+                        return true;
+                    }
                 }
 
                 board.clearCell(row, column);

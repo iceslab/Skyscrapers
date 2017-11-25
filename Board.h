@@ -67,15 +67,14 @@ namespace board
         boardFieldT getVisibleBuildingsIf(matrix::SideE side, size_t rowOrColumn, boardFieldT value, size_t index) const;
         // Returns if building can be placed in cell in terms of already placed buildings
         bool isBuildingPlaceable(size_t row, size_t column, boardFieldT building);
-        // Returns if building can be placed in cell in terms of already placed buildings and hints
-        bool isBuildingPlaceableAndValid(size_t row, size_t column, boardFieldT building);
+        // Returns if board is valid up tu given row and column in terms of already placed buildings and hints
+        bool isBoardPartiallyValid(size_t row, size_t column);
         // Returns index of building in row which height == size(), if there is none returns size()
         boardFieldT locateHighestInRow(size_t row) const;
         // Returns index of building in column which height == size(), if there is none returns size()
         boardFieldT locateHighestInColumn(size_t column) const;
 
         /// Accessors
-        void setCell(size_t row, size_t column, boardFieldT building);
         void clearCell(size_t row, size_t column);
 
         /// Output
