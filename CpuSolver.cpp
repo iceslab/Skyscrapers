@@ -227,7 +227,7 @@ void solver::CpuSolver::setSatisfiedConstraints(size_t row, size_t column)
     // There is only constraint
     if (constraints[row][column].size() == 1)
     {
-        board[row][column] = *constraints[row][column].begin();
+        board.setCell(row, column, *constraints[row][column].begin());
     }
 }
 

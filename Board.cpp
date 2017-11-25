@@ -10,7 +10,10 @@ const std::array<matrix::SideE, 4> Board::validSides =
     matrix::LEFT
 };
 
-Board::Board(const boardFieldT boardSize) : matrix::SquareMatrix<boardFieldT>(boardSize)
+Board::Board(const boardFieldT boardSize) :
+    matrix::SquareMatrix<boardFieldT>(boardSize),
+    setRows(boardSize, std::vector<bool>(boardSize, false)),
+    setColumns(boardSize, std::vector<bool>(boardSize, false))
 {
     // Resize hints
     for (auto& h : hints)
@@ -56,6 +59,9 @@ bool board::Board::readFromFile(std::ifstream & stream)
         {
             h.resize(size());
         }
+
+        setRows = memoizedSetValuesT(size(), std::vector<bool>(size(), false));
+        setColumns = memoizedSetValuesT(size(), std::vector<bool>(size(), false));
     }
     return retVal;
 }
@@ -167,6 +173,26 @@ bool Board::checkValidityWithHints() const
     }
 
     return true;
+}
+
+size_t board::Board::size() const
+{
+    return SquareMatrix<boardFieldT>::size();
+}
+
+void board::Board::fill(const boardFieldT & value)
+{
+    SquareMatrix<boardFieldT>::fill(value);
+}
+
+matrix::SideE board::Board::whichEdgeRow(size_t row) const
+{
+    return SquareMatrix<boardFieldT>::whichEdgeRow(row);
+}
+
+matrix::SideE board::Board::whichEdgeColumn(size_t column) const
+{
+    return SquareMatrix<boardFieldT>::whichEdgeColumn(column);
 }
 
 void Board::print() const
@@ -293,7 +319,9 @@ bool board::Board::isBuildingPlaceable(size_t row, size_t column, boardFieldT bu
 
     if ((*this)[row][column] != 0)
         return false;
-
+#ifdef ENABLE_MEMOIZATION
+    return setRows[row][building - 1] == 0 && setColumns[column][building - 1] == 0;
+#else
     auto rowVec = getRow(row);
     auto columnVec = getColumn(column);
     auto valueElementsInRow = std::count(rowVec.begin(), rowVec.end(), building);
@@ -302,6 +330,7 @@ bool board::Board::isBuildingPlaceable(size_t row, size_t column, boardFieldT bu
     ASSERT(valueElementsInRow <= 1 && valueElementsInColumn <= 1);
 
     return valueElementsInRow == 0 && valueElementsInColumn == 0;
+#endif // ENABLE_MEMOIZATION
 }
 
 bool board::Board::isBoardPartiallyValid(size_t row, size_t column)
@@ -356,10 +385,42 @@ boardFieldT board::Board::locateHighestInColumn(size_t columnIdx) const
     return std::find(column.begin(), column.end(), size()) - column.begin();
 }
 
+void board::Board::setCell(size_t row, size_t column, boardFieldT value)
+{
+    const auto currentValue = getCell(row, column);
+    // Cell is clear
+    if (currentValue == 0)
+    {
+        // Set that this value is set in rows and columns
+        SquareMatrix<boardFieldT>::setCell(row, column, value);
+    }
+    // Cell has other value than already set
+    else if (currentValue != value)
+    {
+        setRows[row][currentValue - 1] = false;
+        setColumns[column][currentValue - 1] = false;
+        SquareMatrix<boardFieldT>::setCell(row, column, value);
+    }
+
+    if (value != 0 && value != currentValue)
+    {
+        setRows[row][value - 1] = true;
+        setColumns[column][value - 1] = true;
+    }
+}
+
 void board::Board::clearCell(size_t row, size_t column)
 {
     setCell(row, column, 0);
 }
 
+boardFieldT board::Board::getCell(size_t row, size_t column)
+{
+    return SquareMatrix<boardFieldT>::getCell(row, column);
+}
 
+const boardFieldT board::Board::getCell(size_t row, size_t column) const
+{
+    return SquareMatrix<boardFieldT>::getCell(row, column);
+}
 

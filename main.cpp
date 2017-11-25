@@ -7,7 +7,7 @@
 #include "Solver.h"
 #include "CpuSolver.h"
 
-//#define LOAD_FROM_FILE
+#define LOAD_FROM_FILE
 
 using board::Board;
 using solver::CpuSolver;

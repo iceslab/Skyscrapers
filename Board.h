@@ -10,6 +10,8 @@
 #include "SquareMatrix.h"
 #include "EfficientIncidenceCube.h"
 
+#define ENABLE_MEMOIZATION
+
 namespace board
 {
     // Typedefs for easier typing
@@ -22,8 +24,10 @@ namespace board
     typedef std::vector<std::reference_wrapper<boardFieldT>> columnT;
     typedef std::set<boardFieldT> columnSetT;
     typedef std::vector<boardFieldT> setIntersectionT;
+    typedef std::vector<std::vector<bool>> memoizedSetValuesT;
 
-    class Board : public matrix::SquareMatrix<boardFieldT>
+
+    class Board : protected matrix::SquareMatrix<boardFieldT>
     {
     public:
         static constexpr size_t hintSize = 4;
@@ -75,12 +79,27 @@ namespace board
         boardFieldT locateHighestInColumn(size_t column) const;
 
         /// Accessors
+
+        // Sets cell to specific value only when it doesn't violate Latin square rules
+        void setCell(size_t row, size_t column, boardFieldT value);
         void clearCell(size_t row, size_t column);
+
+        boardFieldT getCell(size_t row, size_t column);
+        const boardFieldT getCell(size_t row, size_t column) const;
+
+        size_t size() const;
+        void fill(const boardFieldT & value);
+
+        matrix::SideE whichEdgeRow(size_t row) const;
+        matrix::SideE whichEdgeColumn(size_t column) const;
 
         /// Output
         void print() const;
     private:
         static const std::array<matrix::SideE, 4> validSides;
+        // Contains which values are set in each row and column
+        memoizedSetValuesT setRows;
+        memoizedSetValuesT setColumns;
 
         void resize(const boardFieldT boardSize);
     };
