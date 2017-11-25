@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <random>
 #include <iostream>
-#include <iterator>
 #include <functional>
 #include "SquareMatrix.h"
 #include "EfficientIncidenceCube.h"
@@ -31,7 +30,15 @@ namespace board
         std::array<hintT, hintSize> hints;
 
         Board(const boardFieldT boardSize);
+        Board(const std::string & path);
+        Board(std::ifstream & stream);
         ~Board() = default;
+
+        bool saveToFile(const std::string & path) const;
+        bool saveToFile(std::ofstream & stream) const;
+
+        bool readFromFile(const std::string & path);
+        bool readFromFile(std::ifstream & stream);
 
         /// Generators
 
@@ -39,6 +46,8 @@ namespace board
         void generate();
         // Resizes and generates latin square board 
         void generate(const boardFieldT boardSize);
+        // Calculates hints
+        void calculateHints();
 
         /// Operators
         bool operator==(const Board &other) const;
@@ -51,19 +60,25 @@ namespace board
         // Checks validity of board in terms of hints 
         bool checkValidityWithHints() const;
 
-        // Hints manipulators
+        /// Hints manipulators
         // Gets visible buildings from given side and for given row or column
         boardFieldT getVisibleBuildings(matrix::SideE side, size_t rowOrColumn) const;
         // Gets visible buildings from given side and for given row or column assuming value at index
         boardFieldT getVisibleBuildingsIf(matrix::SideE side, size_t rowOrColumn, boardFieldT value, size_t index) const;
         // Returns if building can be placed in cell in terms of already placed buildings
         bool isBuildingPlaceable(size_t row, size_t column, boardFieldT building);
+        // Returns if building can be placed in cell in terms of already placed buildings and hints
+        bool isBuildingPlaceableAndValid(size_t row, size_t column, boardFieldT building);
         // Returns index of building in row which height == size(), if there is none returns size()
         boardFieldT locateHighestInRow(size_t row) const;
         // Returns index of building in column which height == size(), if there is none returns size()
         boardFieldT locateHighestInColumn(size_t column) const;
 
-        // Output
+        /// Accessors
+        void setCell(size_t row, size_t column, boardFieldT building);
+        void clearCell(size_t row, size_t column);
+
+        /// Output
         void print() const;
     private:
         static const std::array<matrix::SideE, 4> validSides;

@@ -4,6 +4,8 @@
 
 namespace solver
 {
+    typedef std::vector<std::vector<bool>> backTrackingTreeT;
+    typedef std::pair<size_t, size_t> rowAndColumnPairT;
     class CpuSolver :
         public Solver
     {
@@ -20,6 +22,8 @@ namespace solver
 
         // Collects data about available solutions for given field
         constraints::Constraints constraints;
+
+        static const rowAndColumnPairT lastCellPair;
 
         /// Setters
         bool setConstraint(size_t row, size_t column, board::boardFieldT value, bool conditionally = true);
@@ -54,5 +58,9 @@ namespace solver
 
         // Sets fields if finds that there is only constraint
         void setSatisfiedConstraints(size_t row, size_t column);
+
+        /// Backtracking
+        bool backTracking(size_t level = 0, size_t row = 0, size_t column = 0);
+        rowAndColumnPairT getNextFreeCell(size_t row, size_t column) const;
     };
 }

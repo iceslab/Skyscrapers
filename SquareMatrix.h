@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
 #include <functional>
+#include <iterator>
+#include <fstream>
 
 namespace matrix
 {
@@ -22,8 +24,14 @@ namespace matrix
         typedef std::vector<std::reference_wrapper<T>> columnT;
         typedef std::vector<T> setIntersectionT;
 
-        SquareMatrix(const size_t size);
+        SquareMatrix(const size_t size = 0);
         ~SquareMatrix() = default;
+
+        bool saveToFile(const std::string & path) const;
+        bool saveToFile(std::ofstream & stream) const;
+
+        bool readFromFile(const std::string & path);
+        bool readFromFile(std::ifstream & stream);
 
         // Accessors
 
@@ -45,9 +53,90 @@ namespace matrix
     };
 
     template<class T>
-    inline SquareMatrix<T>::SquareMatrix(const size_t size) : std::vector<std::vector<T>>(size, rowT(size))
+    inline SquareMatrix<T>::SquareMatrix(const size_t size) : 
+        std::vector<std::vector<T>>(size, rowT(size))
     {
         // Nothing to do
+    }
+
+    template<class T>
+    bool SquareMatrix<T>::saveToFile(const std::string & path) const
+    {
+        return saveToFile(std::ofstream(path));
+    }
+
+    template<class T>
+    bool SquareMatrix<T>::saveToFile(std::ofstream & stream) const
+    {
+        auto retVal = stream.is_open();
+
+        if (retVal == true)
+        {
+            std::ostream_iterator<boardFieldT> field_it(stream, " ");
+            std::string space = " ";
+
+            // Whole board
+            for (size_t rowIdx = 0; rowIdx < size(); rowIdx++)
+            {
+                // Board fields
+                std::copy((*this)[rowIdx].begin(), (*this)[rowIdx].end(), field_it);
+                std::cout << std::endl;
+            }
+        }
+
+        return retVal;
+    }
+
+    template<class T>
+    bool SquareMatrix<T>::readFromFile(const std::string & path)
+    {
+        return readFromFile(std::ifstream(path));
+    }
+
+    template<class T>
+    bool SquareMatrix<T>::readFromFile(std::ifstream & stream)
+    {
+        auto retVal = stream.is_open();
+
+        if (retVal == true)
+        {
+            clear();
+
+            // Read all lines
+            while (stream.good())
+            {
+                std::string line;
+                auto& lineStream = std::getline(stream, line);
+                std::vector<T> row;
+
+                // Read all data from line
+                while (lineStream.good())
+                {
+                    T token;
+                    lineStream >> token;
+                    row.emplace_back(token);
+                }
+                emplace_back(row);
+            }
+
+            size_t maxSize = size();
+            for (const auto& row : *this)
+            {
+                if (maxSize < row.size())
+                {
+                    maxSize = row.size();
+                }
+            }
+
+            // Ensure that it's square matrix
+            resize(maxSize);
+            for (auto& row : *this)
+            {
+                row.resize(maxSize);
+            }
+        }
+
+        return retVal;
     }
 
     template<class T>
@@ -144,7 +233,6 @@ namespace matrix
             function(rowAndColumn, rowAndColumn);
         }
     }
-
 
     template<class T>
     inline void SquareMatrix<T>::fill(const T & value)

@@ -10,14 +10,54 @@ const std::array<matrix::SideE, 4> Board::validSides =
     matrix::LEFT
 };
 
-Board::Board(const boardFieldT boardSize) :
-    matrix::SquareMatrix<boardFieldT>(boardSize)
+Board::Board(const boardFieldT boardSize) : matrix::SquareMatrix<boardFieldT>(boardSize)
 {
     // Resize hints
     for (auto& h : hints)
     {
         h.resize(boardSize);
     }
+}
+
+board::Board::Board(const std::string & path)
+{
+    readFromFile(path);
+}
+
+board::Board::Board(std::ifstream & stream)
+{
+    readFromFile(stream);
+}
+
+bool board::Board::saveToFile(const std::string & path) const
+{
+    std::ofstream ofs(path);
+    return saveToFile(ofs);
+}
+
+bool board::Board::saveToFile(std::ofstream & stream) const
+{
+    return SquareMatrix<boardFieldT>::saveToFile(stream);
+}
+
+bool board::Board::readFromFile(const std::string & path)
+{
+    std::ifstream ifs(path);
+    return readFromFile(ifs);
+}
+
+bool board::Board::readFromFile(std::ifstream & stream)
+{
+    auto retVal = SquareMatrix<boardFieldT>::readFromFile(stream);
+    if (retVal == true)
+    {
+        // Resize hints
+        for (auto& h : hints)
+        {
+            h.resize(size());
+        }
+    }
+    return retVal;
 }
 
 void Board::generate()
@@ -43,6 +83,11 @@ void Board::generate(const boardFieldT boardSize)
         }
     }
 
+    calculateHints();
+}
+
+void board::Board::calculateHints()
+{
     // Fill hints for TOP, RIGHT, BOTTOM and LEFT
     for (size_t i = 0; i < size(); i++)
     {
@@ -187,21 +232,21 @@ boardFieldT Board::getVisibleBuildings(matrix::SideE side, size_t rowOrColumn) c
     auto column = getColumn(rowOrColumn);
     switch (side)
     {
-        case matrix::TOP:
-            retVal = countVisibility(column.begin(), column.end());
-            break;
-        case matrix::RIGHT:
-            retVal = countVisibility(row.rbegin(), row.rend());
-            break;
-        case matrix::BOTTOM:
-            retVal = countVisibility(column.rbegin(), column.rend());
-            break;
-        case matrix::LEFT:
-            retVal = countVisibility(row.begin(), row.end());
-            break;
-        default:
-            // Nothing to do
-            break;
+    case matrix::TOP:
+        retVal = countVisibility(column.begin(), column.end());
+        break;
+    case matrix::RIGHT:
+        retVal = countVisibility(row.rbegin(), row.rend());
+        break;
+    case matrix::BOTTOM:
+        retVal = countVisibility(column.rbegin(), column.rend());
+        break;
+    case matrix::LEFT:
+        retVal = countVisibility(row.begin(), row.end());
+        break;
+    default:
+        // Nothing to do
+        break;
     }
 
     return retVal;
@@ -220,21 +265,21 @@ boardFieldT Board::getVisibleBuildingsIf(matrix::SideE side, size_t rowOrColumn,
     column[index] = value;
     switch (side)
     {
-        case matrix::TOP:
-            retVal = countVisibility(column.begin(), column.end());
-            break;
-        case matrix::RIGHT:
-            retVal = countVisibility(row.rbegin(), row.rend());
-            break;
-        case matrix::BOTTOM:
-            retVal = countVisibility(column.rbegin(), column.rend());
-            break;
-        case matrix::LEFT:
-            retVal = countVisibility(row.begin(), row.end());
-            break;
-        default:
-            // Nothing to do
-            break;
+    case matrix::TOP:
+        retVal = countVisibility(column.begin(), column.end());
+        break;
+    case matrix::RIGHT:
+        retVal = countVisibility(row.rbegin(), row.rend());
+        break;
+    case matrix::BOTTOM:
+        retVal = countVisibility(column.rbegin(), column.rend());
+        break;
+    case matrix::LEFT:
+        retVal = countVisibility(row.begin(), row.end());
+        break;
+    default:
+        // Nothing to do
+        break;
     }
 
     return retVal;
@@ -242,6 +287,9 @@ boardFieldT Board::getVisibleBuildingsIf(matrix::SideE side, size_t rowOrColumn,
 
 bool board::Board::isBuildingPlaceable(size_t row, size_t column, boardFieldT building)
 {
+    if ((*this)[row][column] != 0)
+        return false;
+
     auto rowVec = getRow(row);
     auto columnVec = getColumn(column);
     auto valueElementsInRow = std::count(rowVec.begin(), rowVec.end(), building);
@@ -250,6 +298,17 @@ bool board::Board::isBuildingPlaceable(size_t row, size_t column, boardFieldT bu
     ASSERT(valueElementsInRow <= 1 && valueElementsInColumn <= 1);
 
     return valueElementsInRow == 0 && valueElementsInColumn == 0;
+}
+
+bool board::Board::isBuildingPlaceableAndValid(size_t row, size_t column, boardFieldT building)
+{
+    auto retVal = isBuildingPlaceable(row, column, building);
+    if (retVal)
+    {
+
+    }
+
+    return retVal;
 }
 
 boardFieldT board::Board::locateHighestInRow(size_t rowIdx) const
@@ -270,6 +329,16 @@ boardFieldT board::Board::locateHighestInColumn(size_t columnIdx) const
 
     auto column = getColumn(columnIdx);
     return std::find(column.begin(), column.end(), size()) - column.begin();
+}
+
+void board::Board::setCell(size_t row, size_t column, boardFieldT building)
+{
+    (*this)[row][column] = building;
+}
+
+void board::Board::clearCell(size_t row, size_t column)
+{
+    setCell(row, column, 0);
 }
 
 

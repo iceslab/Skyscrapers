@@ -19,7 +19,7 @@ int main(int argc, const char** argv)
     b.print();
 
     std::cout << "Is Latin square?: " << b.checkIfLatinSquare() << std::endl;
-    std::cout << "Is valid solution?: " << b.checkValidityWithHints() << std::endl;
+    std::cout << "Is valid solution?: " << b.checkValidityWithHints() << std::endl;                
 
     CpuSolver c(b);
 
