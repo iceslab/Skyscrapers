@@ -12,8 +12,8 @@ CpuSolver::CpuSolver(const board::Board & board) : Solver(board), constraints(bo
 void CpuSolver::solve()
 {
     ASSERT_VERBOSE(board.size() > 0,
-                   "Board size must be greater than 0. Got: %zu",
-                   board.size());
+        "Board size must be greater than 0. Got: %zu",
+        board.size());
     auto startingTechniques = [this](size_t row, size_t column)->void
     {
         findCluesOfOne(row, column);
@@ -42,13 +42,30 @@ void CpuSolver::solve()
     //board.forEachCell(setConstraints);
     //board.forEachCell(basicTechniquesCell);
 
-    backTracking();
+    if (!backTracking())
+    {
+        const auto fileName = "no_solution.txt";
+        DEBUG_PRINTLN_VERBOSE_WARNING("Couldn't find any solutions. Saving...");
+        board.saveToFile(fileName);
+        DEBUG_PRINTLN_VERBOSE_WARNING("Saved as \"%s\"", fileName);
+
+    }
 }
 
 void solver::CpuSolver::print() const
 {
     constraints.print();
     board.print();
+}
+
+bool solver::CpuSolver::checkIfLatinSquare() const
+{
+    return board.checkIfLatinSquare();
+}
+
+bool solver::CpuSolver::checkValidityWithHints() const
+{
+    return board.checkValidityWithHints();
 }
 
 bool solver::CpuSolver::setConstraint(size_t row, size_t column, board::boardFieldT value, bool conditionally)
@@ -216,7 +233,7 @@ void solver::CpuSolver::setSatisfiedConstraints(size_t row, size_t column)
 
 bool solver::CpuSolver::backTracking(size_t level, size_t row, size_t column)
 {
-    std::cout << "level: " << level << " row: " << row << " column: " << column << "\n";
+    DEBUG_CALL(std::cout << "level: " << level << " row: " << row << " column: " << column << "\n";);
     DEBUG_CALL(board.print());
     const auto treeRowSize = board.size();
 
@@ -224,7 +241,7 @@ bool solver::CpuSolver::backTracking(size_t level, size_t row, size_t column)
     const auto cellPair = getNextFreeCell(row, column);
     if (cellPair == lastCellPair)
     {
-        DEBUG_PRINTLN("Last cell");
+        DEBUG_PRINTLN_VERBOSE_INFO("Last cell");
         for (size_t i = 0; i < treeRowSize; i++)
         {
             const auto consideredBuilding = i + 1;
@@ -234,10 +251,11 @@ bool solver::CpuSolver::backTracking(size_t level, size_t row, size_t column)
                 board.setCell(row, column, consideredBuilding);
                 if (board.isBoardPartiallyValid(row, column))
                 {
-                    DEBUG_PRINTLN("Found result");
+                    DEBUG_PRINTLN_VERBOSE_INFO("Found result");
                     board.print();
                     return true;
                 }
+                board.clearCell(row, column);
             }
         }
         return false;
@@ -285,7 +303,7 @@ rowAndColumnPairT solver::CpuSolver::getNextFreeCell(size_t row, size_t column) 
     // If row is too big return max values
     if (row >= maxSize)
     {
-        DEBUG_PRINTLN("Returning max values for pair");
+        DEBUG_PRINTLN_VERBOSE_INFO("Returning max values for pair");
         const auto maxVal = std::numeric_limits<size_t>::max();
         row = maxVal;
         column = maxVal;
@@ -293,5 +311,3 @@ rowAndColumnPairT solver::CpuSolver::getNextFreeCell(size_t row, size_t column) 
 
     return rowAndColumnPairT(row, column);
 }
-
-

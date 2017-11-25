@@ -14,10 +14,13 @@ namespace solver
         void solve();
         ~CpuSolver() = default;
 
-        // Output
+        /// Output
 
         void print() const;
-
+        // Checks if board is latin square
+        bool checkIfLatinSquare() const;
+        // Checks validity of board in terms of hints 
+        bool checkValidityWithHints() const;
     private:
 
         // Collects data about available solutions for given field
