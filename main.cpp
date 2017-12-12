@@ -43,6 +43,6 @@ int main(int argc, const char** argv)
 
     //c.print();
 
-    system("pause");
+    //system("pause");
     return 0;
 }

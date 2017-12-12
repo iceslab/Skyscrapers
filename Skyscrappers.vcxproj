@@ -121,6 +121,7 @@
     <ClCompile Include="CpuSolver.cpp" />
     <ClCompile Include="EfficientIncidenceCube.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ParalellCpuSolver.cpp" />
     <ClCompile Include="SquareMatrix.cpp" />
     <ClCompile Include="Solver.cpp" />
   </ItemGroup>
@@ -130,6 +131,7 @@
     <ClInclude Include="Constraints.h" />
     <ClInclude Include="CpuSolver.h" />
     <ClInclude Include="EfficientIncidenceCube.h" />
+    <ClInclude Include="ParalellCpuSolver.h" />
     <ClInclude Include="SquareMatrix.h" />
     <ClInclude Include="Solver.h" />
   </ItemGroup>

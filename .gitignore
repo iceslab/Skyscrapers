@@ -6,6 +6,9 @@
 # Text files
 *.txt
 
+# Diagnostics
+*.diagsession
+
 # User-specific files
 *.suo
 *.user

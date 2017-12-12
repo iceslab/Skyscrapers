@@ -21,7 +21,7 @@ namespace solver
         bool checkIfLatinSquare() const;
         // Checks validity of board in terms of hints 
         bool checkValidityWithHints() const;
-    private:
+    protected:
 
         // Collects data about available solutions for given field
         constraints::Constraints constraints;
