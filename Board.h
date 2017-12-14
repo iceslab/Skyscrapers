@@ -1,5 +1,5 @@
 #pragma once
-#include "../Utilities/asserts.h"
+#include "asserts.h"
 #include <array>
 #include <vector>
 #include <set>

@@ -227,6 +227,8 @@ void solver::CpuSolver::findPhase2Constraints(size_t row, size_t column)
     auto distanceInRow = column > highestInRow ? column - highestInRow : highestInRow - column;
     auto distanceInColumn = row > highestInColumn ? row - highestInColumn : highestInColumn - row;
 
+    UNREFERENCED_PARAMETER(distanceInRow);
+    UNREFERENCED_PARAMETER(distanceInColumn);
 
     if (highestInRow < board.size())
     {
