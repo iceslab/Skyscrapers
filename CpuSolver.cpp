@@ -2,18 +2,23 @@
 
 using namespace solver;
 const rowAndColumnPairT CpuSolver::lastCellPair = std::make_pair(std::numeric_limits<size_t>::max(),
-    std::numeric_limits<size_t>::max());
+                                                                 std::numeric_limits<size_t>::max());
 
 CpuSolver::CpuSolver(const board::Board & board) : Solver(board), constraints(board.size())
 {
     this->board.fill(board::boardFieldT());
 }
 
-void CpuSolver::solve()
+solver::CpuSolver::CpuSolver(board::Board && board) : Solver(board), constraints(board.size())
+{
+    // Nothing to do
+}
+
+std::vector<board::Board> CpuSolver::solve()
 {
     ASSERT_VERBOSE(board.size() > 0,
-        "Board size must be greater than 0. Got: %zu",
-        board.size());
+                   "Board size must be greater than 0. Got: %zu",
+                   board.size());
     auto startingTechniques = [this](size_t row, size_t column)->void
     {
         findCluesOfOne(row, column);
@@ -48,8 +53,11 @@ void CpuSolver::solve()
         DEBUG_PRINTLN_VERBOSE_WARNING("Couldn't find any solutions. Saving...");
         board.saveToFile(fileName);
         DEBUG_PRINTLN_VERBOSE_WARNING("Saved as \"%s\"", fileName);
-
     }
+
+    std::vector<board::Board> retVal;
+    retVal.emplace_back(board);
+    return retVal;
 }
 
 void solver::CpuSolver::print() const
@@ -252,7 +260,7 @@ bool solver::CpuSolver::backTracking(size_t level, size_t row, size_t column)
                 if (board.isBoardPartiallyValid(row, column))
                 {
                     DEBUG_PRINTLN_VERBOSE_INFO("Found result");
-                    board.print();
+                    DEBUG_CALL(board.print());
                     return true;
                 }
                 board.clearCell(row, column);
@@ -288,17 +296,21 @@ rowAndColumnPairT solver::CpuSolver::getNextFreeCell(size_t row, size_t column) 
 {
     const auto maxSize = board.size();
 
-    // Next column
-    if (column < maxSize - 1)
+    // Search till free cell is found
+    do
     {
-        column++;
-    }
-    // Next row
-    else if (column >= maxSize - 1)
-    {
-        column = 0;
-        row++;
-    }
+        // Next column
+        if (column < maxSize - 1)
+        {
+            column++;
+        }
+        // Next row
+        else if (column >= maxSize - 1)
+        {
+            column = 0;
+            row++;
+        }
+    } while (row < maxSize && board.getCell(row, column) != 0);
 
     // If row is too big return max values
     if (row >= maxSize)

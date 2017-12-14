@@ -121,7 +121,7 @@
     <ClCompile Include="CpuSolver.cpp" />
     <ClCompile Include="EfficientIncidenceCube.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="ParalellCpuSolver.cpp" />
+    <ClCompile Include="ParallelCpuSolver.cpp" />
     <ClCompile Include="SquareMatrix.cpp" />
     <ClCompile Include="Solver.cpp" />
   </ItemGroup>
@@ -131,13 +131,13 @@
     <ClInclude Include="Constraints.h" />
     <ClInclude Include="CpuSolver.h" />
     <ClInclude Include="EfficientIncidenceCube.h" />
-    <ClInclude Include="ParalellCpuSolver.h" />
+    <ClInclude Include="ParallelCpuSolver.h" />
     <ClInclude Include="SquareMatrix.h" />
     <ClInclude Include="Solver.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Utilities\Utilities\Utilites.vcxproj">
-      <Project>{aba715d0-6470-360f-9ca7-6b032ed7e3f0}</Project>
+      <Project>{e3cd9b7e-45ae-3e59-a4d2-24b8f051f9d7}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

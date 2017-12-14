@@ -24,6 +24,12 @@ namespace matrix
         typedef std::vector<std::reference_wrapper<T>> columnT;
         typedef std::vector<T> setIntersectionT;
 
+        SquareMatrix(const SquareMatrix & matrix) = default;
+        SquareMatrix(SquareMatrix && matrix) = default;
+
+        SquareMatrix & operator=(const SquareMatrix & matrix) = default;
+        SquareMatrix & operator=(SquareMatrix && matrix) = default;
+
         SquareMatrix(const size_t size = 0);
         ~SquareMatrix() = default;
 

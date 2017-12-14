@@ -1,5 +1,5 @@
 #pragma once
-#include <concurrent_unordered_map.h>
+#include <unordered_map>
 #include "../Utilities/asserts.h"
 #include <stdexcept>
 #include <vector>
@@ -21,7 +21,7 @@
 #endif
 
 typedef uint64_t factorialT;
-typedef concurrency::concurrent_unordered_map<factorialT, factorialT> factorialMapT;
+typedef std::unordered_map<factorialT, factorialT> factorialMapT;
 
 class Combinatorics
 {

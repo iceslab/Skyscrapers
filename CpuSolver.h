@@ -11,10 +11,10 @@ namespace solver
     {
     public:
         CpuSolver(const board::Board& board);
-        void solve();
+        CpuSolver(board::Board&& board);
         ~CpuSolver() = default;
 
-        /// Output
+        std::vector<board::Board> solve();
 
         void print() const;
         // Checks if board is latin square

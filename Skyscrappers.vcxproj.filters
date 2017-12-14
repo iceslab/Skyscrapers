@@ -39,7 +39,7 @@
     <ClCompile Include="Constraints.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ParalellCpuSolver.cpp">
+    <ClCompile Include="ParallelCpuSolver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -65,7 +65,7 @@
     <ClInclude Include="Constraints.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ParalellCpuSolver.h">
+    <ClInclude Include="ParallelCpuSolver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

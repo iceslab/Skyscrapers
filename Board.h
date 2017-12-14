@@ -33,6 +33,9 @@ namespace board
         static constexpr size_t hintSize = 4;
         std::array<hintT, hintSize> hints;
 
+        Board(const Board & board) = default;
+        Board(Board && board) = default;
+
         Board(const boardFieldT boardSize);
         Board(const std::string & path);
         Board(std::ifstream & stream);
@@ -56,6 +59,9 @@ namespace board
         /// Operators
         bool operator==(const Board &other) const;
         bool operator!=(const Board &other) const;
+
+        Board & operator=(const Board & board) = default;
+        Board & operator=(Board && board) = default;
 
         /// Validators
 

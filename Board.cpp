@@ -134,6 +134,13 @@ bool Board::checkIfLatinSquare() const
         std::vector<bool> columnChecker(size(), false);
         for (size_t j = 0; j < size(); j++)
         {
+
+            // Board is not filled properly so it's not latin square
+            if ((*this)[i][j] == 0 || (*this)[j][i] == 0)
+            {
+                return false;
+            }
+
             // Check if current fields values were present before
             auto rowField = (*this)[i][j] - 1;
             auto columnField = (*this)[j][i] - 1;
