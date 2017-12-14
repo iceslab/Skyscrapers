@@ -1,9 +1,13 @@
 #pragma once
 #include "Solver.h"
 #include "Constraints.h"
+#include <atomic>
 
 namespace solver
 {
+    typedef bool continueBoolT;
+    typedef continueBoolT* continueBoolPtrT;
+
     typedef std::vector<std::vector<bool>> backTrackingTreeT;
     typedef std::pair<size_t, size_t> rowAndColumnPairT;
     class CpuSolver :
@@ -21,7 +25,10 @@ namespace solver
         bool checkIfLatinSquare() const;
         // Checks validity of board in terms of hints 
         bool checkValidityWithHints() const;
+
+        void setContinueBackTrackingPointer(continueBoolPtrT ptr);
     protected:
+        continueBoolPtrT continueBackTracking;
 
         // Collects data about available solutions for given field
         constraints::Constraints constraints;

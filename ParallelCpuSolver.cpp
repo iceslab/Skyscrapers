@@ -15,12 +15,14 @@ namespace solver
     std::vector<board::Board> ParallelCpuSolver::solve()
     {
         std::vector<board::Board> retVal;
-        const auto solvers = prepareSolvers(1);
+        continueBoolT continueBT = true;
+        auto solvers = prepareSolvers(3);
         std::vector<std::future<std::vector<board::Board>>> results;
         results.reserve(solvers.size());
 
         for (auto& solver : solvers)
         {
+            solver.setContinueBackTrackingPointer(&continueBT);
             results.emplace_back(std::async(std::launch::async, &CpuSolver::solve, solver));
         }
 

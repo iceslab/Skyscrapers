@@ -4,12 +4,18 @@ using namespace solver;
 const rowAndColumnPairT CpuSolver::lastCellPair = std::make_pair(std::numeric_limits<size_t>::max(),
                                                                  std::numeric_limits<size_t>::max());
 
-CpuSolver::CpuSolver(const board::Board & board) : Solver(board), constraints(board.size())
+CpuSolver::CpuSolver(const board::Board & board) :
+    Solver(board),
+    continueBackTracking(nullptr),
+    constraints(board.size())
 {
     this->board.fill(board::boardFieldT());
 }
 
-solver::CpuSolver::CpuSolver(board::Board && board) : Solver(board), constraints(board.size())
+solver::CpuSolver::CpuSolver(board::Board && board) :
+    Solver(board),
+    continueBackTracking(nullptr),
+    constraints(board.size())
 {
     // Nothing to do
 }
@@ -47,8 +53,13 @@ std::vector<board::Board> CpuSolver::solve()
     //board.forEachCell(setConstraints);
     //board.forEachCell(basicTechniquesCell);
 
+    auto freeCell = rowAndColumnPairT(0, 0);
+    if (board.getCell(0, 0) != 0)
+    {
+        freeCell = getNextFreeCell(0, 0);
+    }
+
     std::vector<board::Board> retVal;
-    const auto freeCell = getNextFreeCell(0, 0);
     if (backTracking(0, freeCell.first, freeCell.second))
     {
         retVal.emplace_back(board);
@@ -78,6 +89,11 @@ bool solver::CpuSolver::checkIfLatinSquare() const
 bool solver::CpuSolver::checkValidityWithHints() const
 {
     return board.checkValidityWithHints();
+}
+
+void solver::CpuSolver::setContinueBackTrackingPointer(continueBoolPtrT ptr)
+{
+    continueBackTracking = ptr;
 }
 
 bool solver::CpuSolver::setConstraint(size_t row, size_t column, board::boardFieldT value, bool conditionally)
@@ -251,6 +267,11 @@ bool solver::CpuSolver::backTracking(size_t level, size_t row, size_t column)
     DEBUG_CALL(board.print());
     const auto treeRowSize = board.size();
 
+    if (continueBackTracking != nullptr && !continueBackTracking)
+    {
+        return false;
+    }
+
     // Check if it is last cell
     const auto cellPair = getNextFreeCell(row, column);
     if (cellPair == lastCellPair)
@@ -267,6 +288,11 @@ bool solver::CpuSolver::backTracking(size_t level, size_t row, size_t column)
                 {
                     DEBUG_PRINTLN_VERBOSE_INFO("Found result");
                     DEBUG_CALL(board.print());
+                    if (continueBackTracking != nullptr)
+                    {
+                        *continueBackTracking = false;
+                    }
+
                     return true;
                 }
                 board.clearCell(row, column);
