@@ -39,7 +39,7 @@ namespace solver
         std::vector<CpuSolver> retVal;
         retVal.reserve(boards.size());
 
-        for (const auto & el : boards)
+        for (auto & el : boards)
         {
             retVal.emplace_back(std::move(el));
         }

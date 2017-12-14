@@ -47,7 +47,12 @@ std::vector<board::Board> CpuSolver::solve()
     //board.forEachCell(setConstraints);
     //board.forEachCell(basicTechniquesCell);
 
-    if (!backTracking())
+    std::vector<board::Board> retVal;
+    if (backTracking())
+    {
+        retVal.emplace_back(board);
+    }
+    else
     {
         const auto fileName = "no_solution.txt";
         DEBUG_PRINTLN_VERBOSE_WARNING("Couldn't find any solutions. Saving...");
@@ -55,8 +60,6 @@ std::vector<board::Board> CpuSolver::solve()
         DEBUG_PRINTLN_VERBOSE_WARNING("Saved as \"%s\"", fileName);
     }
 
-    std::vector<board::Board> retVal;
-    retVal.emplace_back(board);
     return retVal;
 }
 

@@ -54,10 +54,10 @@ int main(int argc, const char** argv)
     std::cout << "Is result board a valid solution?: " << c.checkValidityWithHints() << std::endl;
     std::cout << "CpuSolver solving time: " << milliseconds << " ms" << std::endl;
 
-    std::cout << "ParallelCpuSolver results: " << std::endl;
+    std::cout << "\nParallelCpuSolver results: " << std::endl;
     Solver::printResults(pcResult);
 
-    std::cout << "CpuSolver results: "<< std::endl;
+    std::cout << "\nCpuSolver results: "<< std::endl;
     Solver::printResults(cResult);
 
     //c.print();

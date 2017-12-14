@@ -14,6 +14,11 @@ solver::Solver::Solver(board::Board && board) : board(board)
 
 void solver::Solver::printResults(const std::vector<board::Board>& results)
 {
+    if (results.empty())
+    {
+        std::cout << "No results" << std::endl;
+    }
+
     for (const auto & board : results)
     {
         board.print();
