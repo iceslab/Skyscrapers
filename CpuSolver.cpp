@@ -48,7 +48,8 @@ std::vector<board::Board> CpuSolver::solve()
     //board.forEachCell(basicTechniquesCell);
 
     std::vector<board::Board> retVal;
-    if (backTracking())
+    const auto freeCell = getNextFreeCell(0, 0);
+    if (backTracking(0, freeCell.first, freeCell.second))
     {
         retVal.emplace_back(board);
     }
