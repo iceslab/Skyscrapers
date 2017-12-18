@@ -60,11 +60,8 @@ std::vector<board::Board> CpuSolver::solve()
     }
 
     std::vector<board::Board> retVal;
-    if (backTracking(0, freeCell.first, freeCell.second))
-    {
-        retVal.emplace_back(board);
-    }
-    else
+    backTracking(retVal, 0, freeCell.first, freeCell.second);
+    if (retVal.empty())
     {
         const auto fileName = "no_solution.txt";
         DEBUG_PRINTLN_VERBOSE_WARNING("Couldn't find any solutions. Saving...");
@@ -94,6 +91,24 @@ bool solver::CpuSolver::checkValidityWithHints() const
 void solver::CpuSolver::setContinueBackTrackingPointer(continueBoolPtrT ptr)
 {
     continueBackTracking = ptr;
+}
+
+void solver::CpuSolver::setContinueBackTracking(bool value)
+{
+    if (continueBackTracking != nullptr)
+    {
+        *continueBackTracking = value;
+    }
+}
+
+bool solver::CpuSolver::getContinueBackTracking() const
+{
+    if (continueBackTracking != nullptr)
+    {
+        return continueBackTracking;
+    }
+
+    return true;
 }
 
 bool solver::CpuSolver::setConstraint(size_t row, size_t column, board::boardFieldT value, bool conditionally)
@@ -261,15 +276,15 @@ void solver::CpuSolver::setSatisfiedConstraints(size_t row, size_t column)
     }
 }
 
-bool solver::CpuSolver::backTracking(size_t level, size_t row, size_t column)
+void solver::CpuSolver::backTracking(std::vector<board::Board> & retVal, size_t level, size_t row, size_t column)
 {
     DEBUG_CALL(std::cout << "level: " << level << " row: " << row << " column: " << column << "\n";);
     DEBUG_CALL(board.print());
     const auto treeRowSize = board.size();
 
-    if (continueBackTracking != nullptr && !continueBackTracking)
+    if (!getContinueBackTracking())
     {
-        return false;
+        return;
     }
 
     // Check if it is last cell
@@ -284,21 +299,16 @@ bool solver::CpuSolver::backTracking(size_t level, size_t row, size_t column)
             if (board.isBuildingPlaceable(row, column, consideredBuilding))
             {
                 board.setCell(row, column, consideredBuilding);
-                if (board.isBoardPartiallyValid(row, column))
+                if (getContinueBackTracking() && board.isBoardPartiallyValid(row, column))
                 {
                     DEBUG_PRINTLN_VERBOSE_INFO("Found result");
                     DEBUG_CALL(board.print());
-                    if (continueBackTracking != nullptr)
-                    {
-                        *continueBackTracking = false;
-                    }
-
-                    return true;
+                    setContinueBackTracking(false);
+                    retVal.emplace_back(board);
                 }
                 board.clearCell(row, column);
             }
         }
-        return false;
     }
     else
     {
@@ -308,19 +318,14 @@ bool solver::CpuSolver::backTracking(size_t level, size_t row, size_t column)
             if (board.isBuildingPlaceable(row, column, consideredBuilding))
             {
                 board.setCell(row, column, consideredBuilding);
-                if (board.isBoardPartiallyValid(row, column))
+                if (getContinueBackTracking() && board.isBoardPartiallyValid(row, column))
                 {
-                    if (backTracking(level + 1, cellPair.first, cellPair.second))
-                    {
-                        return true;
-                    }
+                    backTracking(retVal, level + 1, cellPair.first, cellPair.second);
                 }
 
                 board.clearCell(row, column);
             }
         }
-
-        return false;
     }
 }
 

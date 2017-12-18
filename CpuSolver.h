@@ -27,6 +27,8 @@ namespace solver
         bool checkValidityWithHints() const;
 
         void setContinueBackTrackingPointer(continueBoolPtrT ptr);
+        void setContinueBackTracking(bool value);
+        bool getContinueBackTracking() const;
     protected:
         continueBoolPtrT continueBackTracking;
 
@@ -70,7 +72,7 @@ namespace solver
         void setSatisfiedConstraints(size_t row, size_t column);
 
         /// Backtracking
-        bool backTracking(size_t level = 0, size_t row = 0, size_t column = 0);
+        void backTracking(std::vector<board::Board> & retVal, size_t level = 0, size_t row = 0, size_t column = 0);
         rowAndColumnPairT getNextFreeCell(size_t row, size_t column) const;
     };
 }

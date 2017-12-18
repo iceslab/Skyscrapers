@@ -8,12 +8,17 @@
 #include "CpuSolver.h"
 #include "ParallelCpuSolver.h"
 
-//#define LOAD_FROM_FILE
+#define LOAD_FROM_FILE
 
 using board::Board;
 using solver::Solver;
 using solver::CpuSolver;
 using solver::ParallelCpuSolver;
+
+inline auto boolToString(bool val)
+{
+    return val ? "true" : "false";
+}
 
 int main(int argc, const char** argv)
 {
@@ -21,7 +26,7 @@ int main(int argc, const char** argv)
     UNREFERENCED_PARAMETER(argv);
 
 #ifndef LOAD_FROM_FILE
-    Board b(7);
+    Board b(6);
     b.generate();
 #else
     Board b("input.txt");
@@ -50,17 +55,20 @@ int main(int argc, const char** argv)
     const auto cResult = c.solve();
     milliseconds = time.stop(Resolution::MILLISECONDS);
 
-    std::cout << "Is Latin square?: " << c.checkIfLatinSquare() << std::endl;
-    std::cout << "Is result board a valid solution?: " << c.checkValidityWithHints() << std::endl;
+    std::cout << "Is Latin square?: " << boolToString(c.checkIfLatinSquare()) << std::endl;
+    std::cout << "Is result board a valid solution?: " << boolToString(c.checkValidityWithHints()) << std::endl;
     std::cout << "CpuSolver solving time: " << milliseconds << " ms" << std::endl;
 
-    std::cout << "\nParallelCpuSolver results: " << std::endl;
-    Solver::printResults(pcResult);
+    //std::cout << "\nParallelCpuSolver results: " << std::endl;
+    //Solver::printResults(pcResult);
 
-    std::cout << "\nCpuSolver results: "<< std::endl;
-    Solver::printResults(cResult);
+    //std::cout << "\nCpuSolver results: "<< std::endl;
+    //Solver::printResults(cResult);
 
     //c.print();
+
+    const auto equalSizes = pcResult.size() == cResult.size();
+    std::cout << "Are results sizes equal?: " << boolToString(equalSizes) << std::endl;
 
     system("pause");
     return 0;

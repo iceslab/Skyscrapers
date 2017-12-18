@@ -16,13 +16,14 @@ namespace solver
     {
         std::vector<board::Board> retVal;
         continueBoolT continueBT = true;
-        auto solvers = prepareSolvers(3);
+        auto solvers = prepareSolvers(1);
+        retVal.reserve(solvers.size());
         std::vector<std::future<std::vector<board::Board>>> results;
         results.reserve(solvers.size());
 
         for (auto& solver : solvers)
         {
-            solver.setContinueBackTrackingPointer(&continueBT);
+            //solver.setContinueBackTrackingPointer(&continueBT);
             results.emplace_back(std::async(std::launch::async, &CpuSolver::solve, solver));
         }
 
