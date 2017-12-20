@@ -2,7 +2,7 @@
 
 namespace solver
 {
-    ParallelCpuSolver::ParallelCpuSolver(const board::Board & board) : CpuSolver(board)
+    ParallelCpuSolver::ParallelCpuSolver(const board::Board & board) : SequentialSolver(board)
     {
         // Nothing to do
     }
@@ -24,7 +24,7 @@ namespace solver
         for (auto& solver : solvers)
         {
             //solver.setContinueBackTrackingPointer(&continueBT);
-            results.emplace_back(std::async(std::launch::async, &CpuSolver::solve, solver));
+            results.emplace_back(std::async(std::launch::async, &SequentialSolver::solve, solver));
         }
 
         for (auto& result : results)
@@ -36,10 +36,10 @@ namespace solver
         return retVal;
     }
 
-    std::vector<CpuSolver> ParallelCpuSolver::prepareSolvers(const size_t count)
+    std::vector<SequentialSolver> ParallelCpuSolver::prepareSolvers(const size_t count)
     {
         auto boards = generateBoards(count);
-        std::vector<CpuSolver> retVal;
+        std::vector<SequentialSolver> retVal;
         retVal.reserve(boards.size());
 
         for (auto & el : boards)

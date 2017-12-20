@@ -10,13 +10,13 @@ namespace solver
 
     typedef std::vector<std::vector<bool>> backTrackingTreeT;
     typedef std::pair<size_t, size_t> rowAndColumnPairT;
-    class CpuSolver :
+    class SequentialSolver :
         public Solver
     {
     public:
-        CpuSolver(const board::Board& board);
-        CpuSolver(board::Board&& board);
-        ~CpuSolver() = default;
+        SequentialSolver(const board::Board& board);
+        SequentialSolver(board::Board&& board);
+        ~SequentialSolver() = default;
 
         std::vector<board::Board> solve();
 

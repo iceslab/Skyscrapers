@@ -1,10 +1,10 @@
-#include "CpuSolver.h"
+#include "SequentialSolver.h"
 
 using namespace solver;
-const rowAndColumnPairT CpuSolver::lastCellPair = std::make_pair(std::numeric_limits<size_t>::max(),
+const rowAndColumnPairT SequentialSolver::lastCellPair = std::make_pair(std::numeric_limits<size_t>::max(),
                                                                  std::numeric_limits<size_t>::max());
 
-CpuSolver::CpuSolver(const board::Board & board) :
+SequentialSolver::SequentialSolver(const board::Board & board) :
     Solver(board),
     continueBackTracking(nullptr),
     constraints(board.size())
@@ -12,7 +12,7 @@ CpuSolver::CpuSolver(const board::Board & board) :
     this->board.fill(board::boardFieldT());
 }
 
-solver::CpuSolver::CpuSolver(board::Board && board) :
+solver::SequentialSolver::SequentialSolver(board::Board && board) :
     Solver(board),
     continueBackTracking(nullptr),
     constraints(board.size())
@@ -20,7 +20,7 @@ solver::CpuSolver::CpuSolver(board::Board && board) :
     // Nothing to do
 }
 
-std::vector<board::Board> CpuSolver::solve()
+std::vector<board::Board> SequentialSolver::solve()
 {
     ASSERT_VERBOSE(board.size() > 0,
                    "Board size must be greater than 0. Got: %zu",
@@ -72,28 +72,28 @@ std::vector<board::Board> CpuSolver::solve()
     return retVal;
 }
 
-void solver::CpuSolver::print() const
+void solver::SequentialSolver::print() const
 {
     constraints.print();
     board.print();
 }
 
-bool solver::CpuSolver::checkIfLatinSquare() const
+bool solver::SequentialSolver::checkIfLatinSquare() const
 {
     return board.checkIfLatinSquare();
 }
 
-bool solver::CpuSolver::checkValidityWithHints() const
+bool solver::SequentialSolver::checkValidityWithHints() const
 {
     return board.checkValidityWithHints();
 }
 
-void solver::CpuSolver::setContinueBackTrackingPointer(continueBoolPtrT ptr)
+void solver::SequentialSolver::setContinueBackTrackingPointer(continueBoolPtrT ptr)
 {
     continueBackTracking = ptr;
 }
 
-void solver::CpuSolver::setContinueBackTracking(bool value)
+void solver::SequentialSolver::setContinueBackTracking(bool value)
 {
     if (continueBackTracking != nullptr)
     {
@@ -101,7 +101,7 @@ void solver::CpuSolver::setContinueBackTracking(bool value)
     }
 }
 
-bool solver::CpuSolver::getContinueBackTracking() const
+bool solver::SequentialSolver::getContinueBackTracking() const
 {
     if (continueBackTracking != nullptr)
     {
@@ -111,14 +111,14 @@ bool solver::CpuSolver::getContinueBackTracking() const
     return true;
 }
 
-bool solver::CpuSolver::setConstraint(size_t row, size_t column, board::boardFieldT value, bool conditionally)
+bool solver::SequentialSolver::setConstraint(size_t row, size_t column, board::boardFieldT value, bool conditionally)
 {
     if (conditionally)
         return setConstraintConditionally(row, column, value);
     return setConstraintUnconditionally(row, column, value);
 }
 
-bool solver::CpuSolver::setConstraintConditionally(size_t row, size_t column, board::boardFieldT value)
+bool solver::SequentialSolver::setConstraintConditionally(size_t row, size_t column, board::boardFieldT value)
 {
     auto retVal = board.isBuildingPlaceable(row, column, value);
     if (retVal)
@@ -129,13 +129,13 @@ bool solver::CpuSolver::setConstraintConditionally(size_t row, size_t column, bo
     return retVal;
 }
 
-bool solver::CpuSolver::setConstraintUnconditionally(size_t row, size_t column, board::boardFieldT value)
+bool solver::SequentialSolver::setConstraintUnconditionally(size_t row, size_t column, board::boardFieldT value)
 {
     constraints[row][column].insert(value);
     return true;
 }
 
-void solver::CpuSolver::findCluesOfOne(size_t row, size_t column)
+void solver::SequentialSolver::findCluesOfOne(size_t row, size_t column)
 {
     auto rowEdge = board.whichEdgeRow(row);
     auto columnEdge = board.whichEdgeColumn(column);
@@ -148,7 +148,7 @@ void solver::CpuSolver::findCluesOfOne(size_t row, size_t column)
     }
 }
 
-void solver::CpuSolver::findCluesOfN(size_t row, size_t column)
+void solver::SequentialSolver::findCluesOfN(size_t row, size_t column)
 {
     // All buildings are visible
     if (board.hints[matrix::TOP][column] == board.size())
@@ -189,7 +189,7 @@ void solver::CpuSolver::findCluesOfN(size_t row, size_t column)
     }
 }
 
-void solver::CpuSolver::findHighSkyscrapers1(size_t row, size_t column)
+void solver::SequentialSolver::findHighSkyscrapers1(size_t row, size_t column)
 {
     const auto highest = board.size();
     const auto secondHighest = highest - 1;
@@ -226,7 +226,7 @@ void solver::CpuSolver::findHighSkyscrapers1(size_t row, size_t column)
     }
 }
 
-void solver::CpuSolver::findHighSkyscrapers2(size_t row, size_t column)
+void solver::SequentialSolver::findHighSkyscrapers2(size_t row, size_t column)
 {
     const auto secondHighest = board.size() - 1;
     if (board.isBuildingPlaceable(row, column, secondHighest))
@@ -251,7 +251,7 @@ void solver::CpuSolver::findHighSkyscrapers2(size_t row, size_t column)
     }
 }
 
-void solver::CpuSolver::findPhase2Constraints(size_t row, size_t column)
+void solver::SequentialSolver::findPhase2Constraints(size_t row, size_t column)
 {
     auto highestInRow = board.locateHighestInRow(row);
     auto highestInColumn = board.locateHighestInColumn(column);
@@ -267,7 +267,7 @@ void solver::CpuSolver::findPhase2Constraints(size_t row, size_t column)
     }
 }
 
-void solver::CpuSolver::setSatisfiedConstraints(size_t row, size_t column)
+void solver::SequentialSolver::setSatisfiedConstraints(size_t row, size_t column)
 {
     // There is only constraint
     if (constraints[row][column].size() == 1)
@@ -276,7 +276,7 @@ void solver::CpuSolver::setSatisfiedConstraints(size_t row, size_t column)
     }
 }
 
-void solver::CpuSolver::backTracking(std::vector<board::Board> & retVal, size_t level, size_t row, size_t column)
+void solver::SequentialSolver::backTracking(std::vector<board::Board> & retVal, size_t level, size_t row, size_t column)
 {
     DEBUG_CALL(std::cout << "level: " << level << " row: " << row << " column: " << column << "\n";);
     DEBUG_CALL(board.print());
@@ -329,7 +329,7 @@ void solver::CpuSolver::backTracking(std::vector<board::Board> & retVal, size_t 
     }
 }
 
-rowAndColumnPairT solver::CpuSolver::getNextFreeCell(size_t row, size_t column) const
+rowAndColumnPairT solver::SequentialSolver::getNextFreeCell(size_t row, size_t column) const
 {
     const auto maxSize = board.size();
 

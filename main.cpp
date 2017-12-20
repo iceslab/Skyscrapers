@@ -5,14 +5,14 @@
 #include "Board.h"
 #include "EfficientIncidenceCube.h"
 #include "Solver.h"
-#include "CpuSolver.h"
+#include "SequentialSolver.h"
 #include "ParallelCpuSolver.h"
 
 #define LOAD_FROM_FILE
 
 using board::Board;
 using solver::Solver;
-using solver::CpuSolver;
+using solver::SequentialSolver;
 using solver::ParallelCpuSolver;
 
 inline auto boolToString(bool val)
@@ -38,9 +38,9 @@ int main(int argc, const char** argv)
     b.print();
     std::cout << "==========================" << std::endl;
 
-    std::cout << "Is board a valid solution?: " << b.checkValidityWithHints() << std::endl;
+    std::cout << "Is board a valid solution?: " << boolToString(b.checkValidityWithHints()) << std::endl;
 
-    CpuSolver c(b);
+    SequentialSolver c(b);
     ParallelCpuSolver pc(b);
 
     Timer time;
@@ -57,7 +57,7 @@ int main(int argc, const char** argv)
 
     std::cout << "Is Latin square?: " << boolToString(c.checkIfLatinSquare()) << std::endl;
     std::cout << "Is result board a valid solution?: " << boolToString(c.checkValidityWithHints()) << std::endl;
-    std::cout << "CpuSolver solving time: " << milliseconds << " ms" << std::endl;
+    std::cout << "SequentialSolver solving time: " << milliseconds << " ms" << std::endl;
 
     //std::cout << "\nParallelCpuSolver results: " << std::endl;
     //Solver::printResults(pcResult);

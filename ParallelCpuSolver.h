@@ -1,11 +1,11 @@
 #pragma once
-#include "CpuSolver.h"
+#include "SequentialSolver.h"
 #include <thread>
 #include <future>
 
 namespace solver
 {
-    class ParallelCpuSolver : public CpuSolver
+    class ParallelCpuSolver : public SequentialSolver
     {
     public:
         ParallelCpuSolver(const board::Board& board);
@@ -13,7 +13,7 @@ namespace solver
 
         std::vector<board::Board> solve();
     protected:
-        std::vector<CpuSolver> prepareSolvers(const size_t count);
+        std::vector<SequentialSolver> prepareSolvers(const size_t count);
         std::vector<board::Board> generateBoards(const size_t stopLevel);
         void generateBoards(size_t stopLevel,
                             std::vector<board::Board> & retVal,

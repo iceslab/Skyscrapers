@@ -133,7 +133,7 @@
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="Combinatorics.cpp" />
     <ClCompile Include="Constraints.cpp" />
-    <ClCompile Include="CpuSolver.cpp" />
+    <ClCompile Include="SequentialSolver.cpp" />
     <ClCompile Include="EfficientIncidenceCube.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ParallelCpuSolver.cpp" />
@@ -144,7 +144,7 @@
     <ClInclude Include="Board.h" />
     <ClInclude Include="Combinatorics.h" />
     <ClInclude Include="Constraints.h" />
-    <ClInclude Include="CpuSolver.h" />
+    <ClInclude Include="SequentialSolver.h" />
     <ClInclude Include="EfficientIncidenceCube.h" />
     <ClInclude Include="ParallelCpuSolver.h" />
     <ClInclude Include="SquareMatrix.h" />
