@@ -86,7 +86,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp14</LanguageStandard>
       <PreprocessorDefinitions>VERBOSITY_LEVEL_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -95,7 +95,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp14</LanguageStandard>
       <PreprocessorDefinitions>VERBOSITY_LEVEL_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -106,7 +106,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp14</LanguageStandard>
       <PreprocessorDefinitions>NDEBUG;VERBOSITY_LEVEL_NONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -121,7 +121,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp14</LanguageStandard>
       <PreprocessorDefinitions>NDEBUG;VERBOSITY_LEVEL_NONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -130,25 +130,33 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AMPUtilities.cpp" />
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="Combinatorics.cpp" />
     <ClCompile Include="Constraints.cpp" />
+    <ClCompile Include="ParallelGpuSolver.cpp" />
+    <ClCompile Include="ParallelSolver.cpp" />
     <ClCompile Include="SequentialSolver.cpp" />
     <ClCompile Include="EfficientIncidenceCube.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ParallelCpuSolver.cpp" />
     <ClCompile Include="SquareMatrix.cpp" />
     <ClCompile Include="Solver.cpp" />
+    <ClCompile Include="StackEntry.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AMPUtilities.h" />
     <ClInclude Include="Board.h" />
     <ClInclude Include="Combinatorics.h" />
     <ClInclude Include="Constraints.h" />
+    <ClInclude Include="ParallelGpuSolver.h" />
+    <ClInclude Include="ParallelSolver.h" />
     <ClInclude Include="SequentialSolver.h" />
     <ClInclude Include="EfficientIncidenceCube.h" />
     <ClInclude Include="ParallelCpuSolver.h" />
     <ClInclude Include="SquareMatrix.h" />
     <ClInclude Include="Solver.h" />
+    <ClInclude Include="StackEntry.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Utilities\Utilities\Utilites.vcxproj">

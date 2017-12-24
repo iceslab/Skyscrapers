@@ -7,6 +7,7 @@
 #include "Solver.h"
 #include "SequentialSolver.h"
 #include "ParallelCpuSolver.h"
+#include "ParallelGpuSolver.h"
 
 #define LOAD_FROM_FILE
 
@@ -14,16 +15,15 @@ using board::Board;
 using solver::Solver;
 using solver::SequentialSolver;
 using solver::ParallelCpuSolver;
-
-inline auto boolToString(bool val)
-{
-    return val ? "true" : "false";
-}
+using solver::ParallelGpuSolver;
+using utils::AMPUtilities;
 
 int main(int argc, const char** argv)
 {
     UNREFERENCED_PARAMETER(argc);
     UNREFERENCED_PARAMETER(argv);
+
+    AMPUtilities::listAllAccelerators();
 
 #ifndef LOAD_FROM_FILE
     Board b(6);
@@ -38,25 +38,33 @@ int main(int argc, const char** argv)
     b.print();
     std::cout << "==========================" << std::endl;
 
-    std::cout << "Is board a valid solution?: " << boolToString(b.checkValidityWithHints()) << std::endl;
+    std::cout << "Is board a valid solution?: " << AMPUtilities::boolToString(b.checkValidityWithHints()) << std::endl;
 
     SequentialSolver c(b);
     ParallelCpuSolver pc(b);
+    ParallelGpuSolver pg(b);
 
     Timer time;
     time.start();
-    const auto pcResult = pc.solve();
+    //const auto pcResult = pc.solve();
     auto milliseconds = time.stop(Resolution::MILLISECONDS);
     //std::cout << "Is Latin square?: " << pc.checkIfLatinSquare() << std::endl;
     //std::cout << "Is result board a valid solution?: " << pc.checkValidityWithHints() << std::endl;
     std::cout << "ParallelCpuSolver solving time: " << milliseconds << " ms" << std::endl;
 
     time.start();
+    //const auto pgResult = pg.solve();
+    milliseconds = time.stop(Resolution::MILLISECONDS);
+    //std::cout << "Is Latin square?: " << pc.checkIfLatinSquare() << std::endl;
+    //std::cout << "Is result board a valid solution?: " << pc.checkValidityWithHints() << std::endl;
+    std::cout << "ParallelGpuSolver solving time: " << milliseconds << " ms" << std::endl;
+
+    time.start();
     const auto cResult = c.solve();
     milliseconds = time.stop(Resolution::MILLISECONDS);
 
-    std::cout << "Is Latin square?: " << boolToString(c.checkIfLatinSquare()) << std::endl;
-    std::cout << "Is result board a valid solution?: " << boolToString(c.checkValidityWithHints()) << std::endl;
+    //std::cout << "Is Latin square?: " << AMPUtilities::boolToString(c.checkIfLatinSquare()) << std::endl;
+    //std::cout << "Is result board a valid solution?: " << AMPUtilities::boolToString(c.checkValidityWithHints()) << std::endl;
     std::cout << "SequentialSolver solving time: " << milliseconds << " ms" << std::endl;
 
     //std::cout << "\nParallelCpuSolver results: " << std::endl;
@@ -67,8 +75,12 @@ int main(int argc, const char** argv)
 
     //c.print();
 
-    const auto equalSizes = pcResult.size() == cResult.size();
-    std::cout << "Are results sizes equal?: " << boolToString(equalSizes) << std::endl;
+    //const auto equalSizes = pcResult.size() == cResult.size();
+    //std::cout << "Are results sizes equal?: " << AMPUtilities::boolToString(equalSizes) << std::endl;
+    std::cout << "Sizes: " << std::endl;
+    //std::cout << "ParallelCpuSolver: " << pcResult.size() << std::endl;
+    //std::cout << "ParallelGpuSolver: " << pgResult.size() << std::endl;
+    std::cout << "SequentialSolver: " << cResult.size() << std::endl;
 
     system("pause");
     return 0;

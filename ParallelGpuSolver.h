@@ -1,15 +1,14 @@
 #pragma once
 #include "ParallelSolver.h"
-#include <thread>
-#include <future>
+#include "AMPUtilities.h"
 
 namespace solver
 {
-    class ParallelCpuSolver : public ParallelSolver
+    class ParallelGpuSolver : public ParallelSolver
     {
     public:
-        ParallelCpuSolver(const board::Board& board);
-        ~ParallelCpuSolver() = default;
+        ParallelGpuSolver(const board::Board& board);
+        ~ParallelGpuSolver() = default;
 
         std::vector<board::Board> solve();
     protected:

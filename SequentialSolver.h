@@ -2,14 +2,19 @@
 #include "Solver.h"
 #include "Constraints.h"
 #include <atomic>
+#include "StackEntry.h"
+
+#define BT_WITH_STACK
 
 namespace solver
 {
     typedef bool continueBoolT;
     typedef continueBoolT* continueBoolPtrT;
 
-    typedef std::vector<std::vector<bool>> backTrackingTreeT;
     typedef std::pair<size_t, size_t> rowAndColumnPairT;
+    typedef std::pair<StackEntry, rowAndColumnPairT> stackEntryT;
+    typedef std::vector<stackEntryT> stackT;
+
     class SequentialSolver :
         public Solver
     {
@@ -73,6 +78,7 @@ namespace solver
 
         /// Backtracking
         void backTracking(std::vector<board::Board> & retVal, size_t level = 0, size_t row = 0, size_t column = 0);
+        std::vector<board::Board> backTrackingWithStack();
         rowAndColumnPairT getNextFreeCell(size_t row, size_t column) const;
     };
 }

@@ -2,7 +2,7 @@
 
 using namespace solver;
 const rowAndColumnPairT SequentialSolver::lastCellPair = std::make_pair(std::numeric_limits<size_t>::max(),
-                                                                 std::numeric_limits<size_t>::max());
+                                                                        std::numeric_limits<size_t>::max());
 
 SequentialSolver::SequentialSolver(const board::Board & board) :
     Solver(board),
@@ -53,6 +53,9 @@ std::vector<board::Board> SequentialSolver::solve()
     //board.forEachCell(setConstraints);
     //board.forEachCell(basicTechniquesCell);
 
+#ifdef BT_WITH_STACK
+    auto retVal = backTrackingWithStack();
+#else
     auto freeCell = rowAndColumnPairT(0, 0);
     if (board.getCell(0, 0) != 0)
     {
@@ -61,6 +64,8 @@ std::vector<board::Board> SequentialSolver::solve()
 
     std::vector<board::Board> retVal;
     backTracking(retVal, 0, freeCell.first, freeCell.second);
+#endif // BT_WITH_STACK
+
     if (retVal.empty())
     {
         const auto fileName = "no_solution.txt";
@@ -278,8 +283,6 @@ void solver::SequentialSolver::setSatisfiedConstraints(size_t row, size_t column
 
 void solver::SequentialSolver::backTracking(std::vector<board::Board> & retVal, size_t level, size_t row, size_t column)
 {
-    DEBUG_CALL(std::cout << "level: " << level << " row: " << row << " column: " << column << "\n";);
-    DEBUG_CALL(board.print());
     const auto treeRowSize = board.size();
 
     if (!getContinueBackTracking())
@@ -327,6 +330,75 @@ void solver::SequentialSolver::backTracking(std::vector<board::Board> & retVal, 
             }
         }
     }
+}
+
+std::vector<board::Board> solver::SequentialSolver::backTrackingWithStack()
+{
+    std::vector<board::Board> retVal;
+    stackT stack;
+    stack.reserve(board.size());
+
+    auto initialCellPair = rowAndColumnPairT(0, 0);
+    if (board.getCell(0, 0) != 0)
+    {
+        initialCellPair = getNextFreeCell(0, 0);
+    }
+
+    const auto stackEntrySize = board.size();
+    stack.emplace_back(stackEntrySize, initialCellPair);
+
+    do
+    {
+        auto & entry = stack.back().first;
+        auto & stackCell = stack.back().second;
+
+        const auto & row = stackCell.first;
+        const auto & column = stackCell.second;
+
+        auto idx = entry.firstZero();
+        if (idx != StackEntry::badIndex)
+        {
+            entry.setBit(idx);
+
+            const auto consideredBuilding = idx + 1;
+            if (board.isBuildingPlaceable(row, column, consideredBuilding))
+            {
+                board.setCell(row, column, consideredBuilding);
+                if (board.isBoardPartiallyValid(row, column))
+                {
+                    const auto nextCellPair = getNextFreeCell(row, column);
+                    if (nextCellPair == lastCellPair)
+                    {
+                        DEBUG_PRINTLN_VERBOSE_INFO("Found result");
+                        DEBUG_CALL(board.print());
+                        retVal.emplace_back(board);
+                        board.clearCell(row, column);
+                    }
+                    else
+                    {
+                        stack.emplace_back(stackEntrySize, nextCellPair);
+                    }
+                }
+                else
+                {
+                    board.clearCell(row, column);
+                }
+            }
+        }
+        else
+        {
+            board.clearCell(row, column);
+            stack.pop_back();
+            if (!stack.empty())
+            {
+                const auto & newStackCell = stack.back().second;
+                board.clearCell(newStackCell.first, newStackCell.second);
+            }
+        }
+
+    } while (!stack.empty());
+
+    return retVal;
 }
 
 rowAndColumnPairT solver::SequentialSolver::getNextFreeCell(size_t row, size_t column) const
