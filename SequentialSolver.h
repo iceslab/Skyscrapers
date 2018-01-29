@@ -24,6 +24,7 @@ namespace solver
         ~SequentialSolver() = default;
 
         std::vector<board::Board> solve();
+        std::vector<board::Board> ampSolve();
 
         void print() const;
         // Checks if board is latin square

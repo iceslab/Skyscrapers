@@ -1,6 +1,6 @@
 #include "AMPUtilities.h"
 
-namespace utils
+namespace AMP
 {
     void AMPUtilities::listAllAccelerators()
     {

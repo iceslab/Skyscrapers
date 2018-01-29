@@ -130,10 +130,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AMPBoard.cpp" />
+    <ClCompile Include="AMPSequentialSolver.cpp" />
+    <ClCompile Include="AMPSquareMatrix.cpp" />
     <ClCompile Include="AMPUtilities.cpp" />
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="Combinatorics.cpp" />
     <ClCompile Include="Constraints.cpp" />
+    <ClCompile Include="Pair.cpp" />
     <ClCompile Include="ParallelGpuSolver.cpp" />
     <ClCompile Include="ParallelSolver.cpp" />
     <ClCompile Include="SequentialSolver.cpp" />
@@ -142,13 +146,18 @@
     <ClCompile Include="ParallelCpuSolver.cpp" />
     <ClCompile Include="SquareMatrix.cpp" />
     <ClCompile Include="Solver.cpp" />
+    <ClCompile Include="Stack.cpp" />
     <ClCompile Include="StackEntry.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AMPBoard.h" />
+    <ClInclude Include="AMPSequentialSolver.h" />
+    <ClInclude Include="AMPSquareMatrix.h" />
     <ClInclude Include="AMPUtilities.h" />
     <ClInclude Include="Board.h" />
     <ClInclude Include="Combinatorics.h" />
     <ClInclude Include="Constraints.h" />
+    <ClInclude Include="Pair.h" />
     <ClInclude Include="ParallelGpuSolver.h" />
     <ClInclude Include="ParallelSolver.h" />
     <ClInclude Include="SequentialSolver.h" />
@@ -156,6 +165,7 @@
     <ClInclude Include="ParallelCpuSolver.h" />
     <ClInclude Include="SquareMatrix.h" />
     <ClInclude Include="Solver.h" />
+    <ClInclude Include="Stack.h" />
     <ClInclude Include="StackEntry.h" />
   </ItemGroup>
   <ItemGroup>

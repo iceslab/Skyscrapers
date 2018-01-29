@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 
-namespace utils
+namespace AMP
 {
     class AMPUtilities
     {

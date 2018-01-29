@@ -16,14 +16,14 @@ using solver::Solver;
 using solver::SequentialSolver;
 using solver::ParallelCpuSolver;
 using solver::ParallelGpuSolver;
-using utils::AMPUtilities;
+using AMP::AMPUtilities;
 
 int main(int argc, const char** argv)
 {
     UNREFERENCED_PARAMETER(argc);
     UNREFERENCED_PARAMETER(argv);
 
-    AMPUtilities::listAllAccelerators();
+    //AMPUtilities::listAllAccelerators();
 
 #ifndef LOAD_FROM_FILE
     Board b(6);
@@ -46,7 +46,7 @@ int main(int argc, const char** argv)
 
     Timer time;
     time.start();
-    //const auto pcResult = pc.solve();
+    const auto pcResult = pc.solve();
     auto milliseconds = time.stop(Resolution::MILLISECONDS);
     //std::cout << "Is Latin square?: " << pc.checkIfLatinSquare() << std::endl;
     //std::cout << "Is result board a valid solution?: " << pc.checkValidityWithHints() << std::endl;
@@ -75,10 +75,10 @@ int main(int argc, const char** argv)
 
     //c.print();
 
-    //const auto equalSizes = pcResult.size() == cResult.size();
-    //std::cout << "Are results sizes equal?: " << AMPUtilities::boolToString(equalSizes) << std::endl;
+    const auto equalSizes = pcResult.size() == cResult.size();
+    std::cout << "Are results sizes equal?: " << AMPUtilities::boolToString(equalSizes) << std::endl;
     std::cout << "Sizes: " << std::endl;
-    //std::cout << "ParallelCpuSolver: " << pcResult.size() << std::endl;
+    std::cout << "ParallelCpuSolver: " << pcResult.size() << std::endl;
     //std::cout << "ParallelGpuSolver: " << pgResult.size() << std::endl;
     std::cout << "SequentialSolver: " << cResult.size() << std::endl;
 
