@@ -11,6 +11,7 @@ namespace solver
     {
         std::vector<board::Board> retVal;
         continueBoolT continueBT = true;
+        UNREFERENCED_PARAMETER(continueBT);
         auto solvers = prepareSolvers(1);
         retVal.reserve(solvers.size());
         std::vector<std::future<std::vector<board::Board>>> results;
