@@ -1,7 +1,7 @@
 #include "Constraints.h"
 using namespace constraints;
 
-Constraints::Constraints(const size_t boardSize) :
+Constraints::Constraints(const board::boardFieldT boardSize) :
     matrix::SquareMatrix<constraintsFieldT>(boardSize)
 {
     // Nothing to do

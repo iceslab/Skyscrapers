@@ -9,7 +9,6 @@ namespace solver
         ParallelSolver(const board::Board& board);
         virtual ~ParallelSolver() = default;
 
-    protected:
         std::vector<board::Board> generateBoards(const size_t stopLevel);
         void generateBoards(size_t stopLevel,
                             std::vector<board::Board> & retVal,

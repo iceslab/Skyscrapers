@@ -36,7 +36,7 @@ namespace solver
         {
             for (size_t i = 0; i < treeRowSize; i++)
             {
-                const auto consideredBuilding = i + 1;
+                const auto consideredBuilding = static_cast<board::boardFieldT>(i + 1);
                 if (board.isBuildingPlaceable(row, column, consideredBuilding))
                 {
                     board.setCell(row, column, consideredBuilding);

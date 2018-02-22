@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2003
+VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Skyscrappers", "Skyscrappers.vcxproj", "{E8013ABA-1727-467C-B222-E1083E130C3D}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -40,22 +40,18 @@ Global
 		{E8013ABA-1727-467C-B222-E1083E130C3D}.RelWithDebInfo|x64.Build.0 = Release|x64
 		{E8013ABA-1727-467C-B222-E1083E130C3D}.RelWithDebInfo|x86.ActiveCfg = Release|Win32
 		{E8013ABA-1727-467C-B222-E1083E130C3D}.RelWithDebInfo|x86.Build.0 = Release|Win32
-		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.Debug|x64.ActiveCfg = Debug|Win32
-		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.Debug|x86.ActiveCfg = Debug|Win32
-		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.Debug|x86.Build.0 = Debug|Win32
-		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.Debug|x86.Deploy.0 = Debug|Win32
-		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.MinSizeRel|x64.ActiveCfg = MinSizeRel|Win32
-		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.MinSizeRel|x86.ActiveCfg = MinSizeRel|Win32
-		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.MinSizeRel|x86.Build.0 = MinSizeRel|Win32
-		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.MinSizeRel|x86.Deploy.0 = MinSizeRel|Win32
-		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.Release|x64.ActiveCfg = Release|Win32
-		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.Release|x86.ActiveCfg = Release|Win32
-		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.Release|x86.Build.0 = Release|Win32
-		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.Release|x86.Deploy.0 = Release|Win32
-		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.RelWithDebInfo|x64.ActiveCfg = RelWithDebInfo|Win32
-		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.RelWithDebInfo|x86.ActiveCfg = RelWithDebInfo|Win32
-		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.RelWithDebInfo|x86.Build.0 = RelWithDebInfo|Win32
-		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.RelWithDebInfo|x86.Deploy.0 = RelWithDebInfo|Win32
+		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.Debug|x64.ActiveCfg = Debug|x64
+		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.Debug|x64.Build.0 = Debug|x64
+		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.Debug|x86.ActiveCfg = Debug|x64
+		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.MinSizeRel|x64.ActiveCfg = MinSizeRel|x64
+		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.MinSizeRel|x64.Build.0 = MinSizeRel|x64
+		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.MinSizeRel|x86.ActiveCfg = MinSizeRel|x64
+		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.Release|x64.ActiveCfg = Release|x64
+		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.Release|x64.Build.0 = Release|x64
+		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.Release|x86.ActiveCfg = Release|x64
+		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.RelWithDebInfo|x64.ActiveCfg = RelWithDebInfo|x64
+		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.RelWithDebInfo|x64.Build.0 = RelWithDebInfo|x64
+		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.RelWithDebInfo|x86.ActiveCfg = RelWithDebInfo|x64
 		{682B9801-1309-4C9E-97B1-BDE0C205FDF4}.Debug|x64.ActiveCfg = Debug|x64
 		{682B9801-1309-4C9E-97B1-BDE0C205FDF4}.Debug|x64.Build.0 = Debug|x64
 		{682B9801-1309-4C9E-97B1-BDE0C205FDF4}.Debug|x86.ActiveCfg = Debug|x64

@@ -15,8 +15,6 @@ namespace cuda
         LEFT
     };
 
-    constexpr const size_t validSidesNumber = 4;
-
     template<class T> class SquareMatrix
     {
     public:
@@ -25,8 +23,8 @@ namespace cuda
         typedef T * columnT;
         typedef T * setIntersectionT;
 
-        SquareMatrix(const SquareMatrix & matrix);
-        SquareMatrix(SquareMatrix && matrix);
+        //SquareMatrix(const SquareMatrix & matrix);
+        //SquareMatrix(SquareMatrix && matrix);
 
         SquareMatrix & operator=(const SquareMatrix & matrix);
         SquareMatrix & operator=(SquareMatrix && matrix);
@@ -36,14 +34,11 @@ namespace cuda
 
         /// Accessors
 
-        CUDA_DEVICE const rowT getRow(size_t index) const;
-        CUDA_DEVICE rowT getRow(size_t index);
+        CUDA_DEVICE rowT getRow(size_t index) const;
 
-        CUDA_DEVICE const columnT getColumn(size_t index)  const;
-        CUDA_DEVICE columnT getColumn(size_t index);
+        CUDA_DEVICE columnT getColumn(size_t index) const;
 
         CUDA_DEVICE const T getCell(size_t row, size_t column) const;
-        CUDA_DEVICE T getCell(size_t row, size_t column);
 
         CUDA_DEVICE void setCell(size_t row, size_t column, T value);
 
@@ -55,8 +50,9 @@ namespace cuda
         CUDA_HOST_DEVICE SideE whichEdgeColumn(size_t column) const;
 
         CUDA_DEVICE void fill(const T & value);
+        CUDA_HOST void clear();
 
-    private:
+    protected:
         T * d_data;
         size_t size;
     };
@@ -75,68 +71,14 @@ namespace cuda
     }
 
     template<class T>
-    inline CUDA_DEVICE const typename SquareMatrix<T>::rowT SquareMatrix<T>::getRow(size_t index) const
+    inline CUDA_DEVICE typename SquareMatrix<T>::rowT SquareMatrix<T>::getRow(size_t index) const
     {
         rowT retVal = d_data + index * size;
         return retVal;
     }
 
     template<class T>
-    inline CUDA_DEVICE typename SquareMatrix<T>::rowT SquareMatrix<T>::getRow(size_t index)
-    {
-        T* retVal = nullptr;
-
-        // Allocate memory for row
-        cudaError_t err = cudaMalloc(reinterpret_cast<void**>(&retVal), size * sizeof(T));
-
-        // In case of error, print and reset pointer
-        if (err != cudaSuccess)
-        {
-            CUDA_PRINT_ERROR("Failed allocation", err);
-            retVal = nullptr;
-        }
-        else
-        {
-            // Copy respective row to newly allocated memory
-            err = cudaMemcpy(retVal, d_data + index * size, size * sizeof(T), cudaMemcpyDeviceToDevice);
-            // In case of error, free memory, print and reset pointer
-            if (err != cudaSuccess)
-            {
-                CUDA_PRINT_ERROR("Failed copy", err);
-                cudaFree(retVal);
-                retVal = nullptr;
-            }
-        }
-        return retVal;
-    }
-
-    template<class T>
-    inline CUDA_DEVICE typename const SquareMatrix<T>::columnT SquareMatrix<T>::getColumn(size_t index) const
-    {
-        T* retVal = nullptr;
-
-        // Allocate memory for column
-        cudaError_t err = cudaMalloc(reinterpret_cast<void**>(&retVal), size * sizeof(T));
-
-        // In case of error, print and reset pointer
-        if (err != cudaSuccess)
-        {
-            CUDA_PRINT_ERROR("Failed allocation", err);
-            retVal = nullptr;
-        }
-        else
-        {
-            // Copy respective column to newly allocated memory
-            for (size_t i = 0; i < size; i++)
-            {
-                retVal[i] = d_data[i * size + index];
-            }
-        }
-        return retVal;
-    }
-
-    template<class T>
-    inline CUDA_DEVICE typename SquareMatrix<T>::columnT SquareMatrix<T>::getColumn(size_t index)
+    inline CUDA_DEVICE typename SquareMatrix<T>::columnT SquareMatrix<T>::getColumn(size_t index) const
     {
         T* retVal = nullptr;
 
@@ -162,12 +104,6 @@ namespace cuda
 
     template<class T>
     inline CUDA_DEVICE const T SquareMatrix<T>::getCell(size_t row, size_t column) const
-    {
-        return d_data[row * size + column];
-    }
-
-    template<class T>
-    inline CUDA_DEVICE T SquareMatrix<T>::getCell(size_t row, size_t column)
     {
         return d_data[row * size + column];
     }
@@ -227,6 +163,16 @@ namespace cuda
         for (T* it = beginIt; it < endIt; it++)
         {
             *it = value;
+        }
+    }
+
+    template<class T>
+    inline CUDA_HOST void SquareMatrix<T>::clear()
+    {
+        cudaError_t err = cudaMemset(reinterpret_cast<void**>(&d_data), 0, size * size * sizeof(T));
+        if (err != cudaSuccess)
+        {
+            CUDA_PRINT_ERROR("Failed memset", err);
         }
     }
 };

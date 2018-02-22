@@ -3,6 +3,8 @@
 #include <functional>
 #include <iterator>
 #include <fstream>
+#include <string>
+#include <sstream>
 
 namespace matrix
 {
@@ -83,7 +85,7 @@ namespace matrix
 
         if (retVal == true)
         {
-            std::ostream_iterator<boardFieldT> field_it(stream, " ");
+            std::ostream_iterator<T> field_it(stream, " ");
             std::string space = " ";
 
             // Whole board

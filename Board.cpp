@@ -10,7 +10,7 @@ const std::array<matrix::SideE, 4> Board::validSides =
     matrix::LEFT
 };
 
-Board::Board(const boardFieldT boardSize) :
+Board::Board(const size_t boardSize) :
     matrix::SquareMatrix<boardFieldT>(boardSize),
     setRows(boardSize, std::vector<bool>(boardSize, false)),
     setColumns(boardSize, std::vector<bool>(boardSize, false))
@@ -71,12 +71,12 @@ void Board::generate()
     generate(size());
 }
 
-void Board::generate(const boardFieldT boardSize)
+void Board::generate(const size_t boardSize)
 {
     resize(boardSize);
 
     // Generate uniformly distributed latin square
-    EfficientIncidenceCube eic(boardSize);
+    EfficientIncidenceCube eic(static_cast<int>(boardSize));
     eic.shuffle();
 
     // Copy contents
@@ -85,7 +85,7 @@ void Board::generate(const boardFieldT boardSize)
         for (size_t y = 0; y < boardSize; y++)
         {
             // Latin square is indexed from 0 to boardSize, it is needed to add 1
-            (*this)[x][y] = eic.plusOneZCoordOf(x, y) + 1;
+            (*this)[x][y] = static_cast<boardFieldT>(eic.plusOneZCoordOf(x, y) + 1);
         }
     }
 
@@ -234,7 +234,7 @@ void Board::print() const
     std::cout << std::endl;
 }
 
-void Board::resize(const boardFieldT boardSize)
+void Board::resize(const size_t boardSize)
 {
     if (boardSize == size())
         return;
@@ -389,7 +389,7 @@ boardFieldT board::Board::locateHighestInColumn(size_t columnIdx) const
                    columnIdx, size());
 
     auto column = getColumn(columnIdx);
-    return std::find(column.begin(), column.end(), size()) - column.begin();
+    return static_cast<boardFieldT>(std::find(column.begin(), column.end(), size()) - column.begin());
 }
 
 void board::Board::setCell(size_t row, size_t column, boardFieldT value)
@@ -421,12 +421,7 @@ void board::Board::clearCell(size_t row, size_t column)
     setCell(row, column, 0);
 }
 
-boardFieldT board::Board::getCell(size_t row, size_t column)
-{
-    return SquareMatrix<boardFieldT>::getCell(row, column);
-}
-
-const boardFieldT board::Board::getCell(size_t row, size_t column) const
+boardFieldT board::Board::getCell(size_t row, size_t column) const
 {
     return SquareMatrix<boardFieldT>::getCell(row, column);
 }

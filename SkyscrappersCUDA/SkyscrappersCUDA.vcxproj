@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -63,6 +63,8 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <Defines>NDEBUG;VERBOSITY_LEVEL_DEBUG;%(Defines)</Defines>
       <CudaRuntime>Shared</CudaRuntime>
+      <PtxAsOptionV>true</PtxAsOptionV>
+      <GenerateRelocatableDeviceCode>false</GenerateRelocatableDeviceCode>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -95,6 +97,10 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="Board.cu" />
+    <CudaCompile Include="Pair.cu" />
+    <CudaCompile Include="ParallelSolver.cu" />
+    <CudaCompile Include="SequentialSolver.cu" />
+    <CudaCompile Include="Solver.cu" />
     <CudaCompile Include="SquareMatrix.cu" />
     <CudaCompile Include="StackEntry.cu" />
   </ItemGroup>
@@ -110,6 +116,16 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="CUDAUtilities.cuh" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="SequentialSolver.cuh" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="Solver.cuh" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Pair.cuh" />
+    <ClInclude Include="ParallelSolver.cuh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

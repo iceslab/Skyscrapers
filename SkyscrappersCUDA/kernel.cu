@@ -1,5 +1,6 @@
 
-#include "CUDAUtilities.cuh"
+
+#include "ParallelSolver.cuh"
 
 #include <stdio.h>
 
@@ -47,12 +48,7 @@ cudaError_t addWithCuda(int *c, const int *a, const int *b, unsigned int size)
     int *dev_c = 0;
     cudaError_t cudaStatus;
 
-    // Choose which GPU to run on, change this on a multi-GPU system.
-    cudaStatus = cudaSetDevice(0);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
-        goto Error;
-    }
+
 
     // Allocate GPU buffers for three vectors (two input, one output)    .
     cudaStatus = cudaMalloc((void**)&dev_c, size * sizeof(int));

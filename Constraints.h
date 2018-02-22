@@ -9,7 +9,7 @@ namespace constraints
     class Constraints : public matrix::SquareMatrix<constraintsFieldT>
     {
     public:
-        Constraints(const board::boardFieldT boardSize);
+        Constraints(const size_t boardSize);
         Constraints(const board::Board& board);
         ~Constraints() = default;
 

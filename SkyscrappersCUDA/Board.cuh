@@ -5,6 +5,12 @@
 #include "asserts.h"
 #include "SquareMatrix.cuh"
 
+// Forward declaration
+namespace board
+{
+    class Board;
+}
+
 #define ENABLE_MEMOIZATION
 
 namespace cuda
@@ -20,16 +26,17 @@ namespace cuda
     typedef bool* memoizedSetValuesT; // Originally double pointer
 
 
-    class Board : protected SquareMatrix<boardFieldT>
+    class Board : public SquareMatrix<boardFieldT>
     {
     public:
         static constexpr size_t hintsSize = 4;
         hintT hints[hintsSize];
 
         Board(const Board & board);
+        Board(const board::Board & board);
         Board(Board && board);
 
-        Board(const boardFieldT boardSize);
+        Board(const size_t boardSize);
         ~Board() = default;
 
         /// Generators
@@ -43,13 +50,6 @@ namespace cuda
 
         Board & operator=(const Board & board) = default;
         Board & operator=(Board && board) = default;
-
-        /// Validators
-
-        // Checks if board is latin square
-        //bool checkIfLatinSquare() const;
-        // Checks validity of board in terms of hints 
-        //bool checkValidityWithHints() const;
 
         /// Hints manipulators
         // Gets visible buildings from given side and for given row or column
@@ -65,11 +65,11 @@ namespace cuda
         CUDA_DEVICE void setCell(size_t row, size_t column, boardFieldT value);
         CUDA_DEVICE void clearCell(size_t row, size_t column);
 
-        CUDA_DEVICE boardFieldT getCell(size_t row, size_t column);
         CUDA_DEVICE boardFieldT getCell(size_t row, size_t column) const;
 
         CUDA_HOST_DEVICE size_t getSize() const;
         CUDA_DEVICE void fill(const boardFieldT & value);
+        CUDA_HOST void clear();
 
         CUDA_HOST_DEVICE SideE whichEdgeRow(size_t row) const;
         CUDA_HOST_DEVICE SideE whichEdgeColumn(size_t column) const;
@@ -77,7 +77,6 @@ namespace cuda
         /// Output
         //void print() const;
     private:
-        static const SideE validSides[validSidesNumber];
         // Contains which values are set in each row and column
         memoizedSetValuesT setRows;
         memoizedSetValuesT setColumns;

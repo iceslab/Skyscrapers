@@ -1,16 +1,9 @@
 #include "Board.cuh"
+#include "../Board.h"
 
 namespace cuda
 {
-    const SideE Board::validSides[validSidesNumber] =
-    {
-        TOP,
-        RIGHT,
-        BOTTOM,
-        LEFT
-    };
-
-    Board::Board(const boardFieldT boardSize) :
+    Board::Board(const size_t boardSize) :
         SquareMatrix<boardFieldT>(boardSize)
     {
         // Alloc and memset setRows
@@ -65,18 +58,15 @@ namespace cuda
         }
     }
 
-    /*void Board::calculateHints()
+    Board::Board(const board::Board & board) : Board(board.size())
     {
-        // Fill hints for TOP, RIGHT, BOTTOM and LEFT
-        for (size_t i = 0; i < getSize(); i++)
+        const auto boardSize = board.size();
+        for (size_t row = 0; row < boardSize; row++)
         {
-            for (size_t side = 0; side < hintsSize; side++)
-            {
-                const auto validSide = validSides[side];
-                hints[side][i] = getVisibleBuildings(validSide, i);
-            }
+            const auto h_data = board.getRow(row).data();
+            cudaMemcpy(d_data + row * boardSize, h_data, sizeof(*d_data) * boardSize, cudaMemcpyHostToDevice);
         }
-    }*/
+    }
 
     CUDA_DEVICE bool Board::operator==(const Board & other) const
     {
@@ -107,62 +97,6 @@ namespace cuda
         return !(*this == other);
     }
 
-    /*bool Board::checkIfLatinSquare() const
-    {
-        for (size_t i = 0; i < getSize(); i++)
-        {
-            std::vector<bool> rowChecker(getSize(), false);
-            std::vector<bool> columnChecker(getSize(), false);
-            for (size_t j = 0; j < getSize(); j++)
-            {
-
-                // Board is not filled properly so it's not latin square
-                if ((*this)[i][j] == 0 || (*this)[j][i] == 0)
-                {
-                    return false;
-                }
-
-                // Check if current fields values were present before
-                auto rowField = (*this)[i][j] - 1;
-                auto columnField = (*this)[j][i] - 1;
-                if (rowChecker[rowField] || columnChecker[columnField])
-                {
-                    // If yes, board is not latin square
-                    return false;
-                }
-                else
-                {
-                    // Else, mark them as present and continue
-                    rowChecker[rowField] = true;
-                    columnChecker[columnField] = true;
-                }
-            }
-        }
-
-        return true;
-    }*/
-
-    /*bool Board::checkValidityWithHints() const
-    {
-        if (!checkIfLatinSquare())
-        {
-            return false;
-        }
-
-        for (size_t i = 0; i < getSize(); i++)
-        {
-            for (auto& enumVal : validSides)
-            {
-                if (hints[enumVal][i] != getVisibleBuildings(enumVal, i))
-                {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }*/
-
     CUDA_HOST_DEVICE size_t Board::getSize() const
     {
         return SquareMatrix<boardFieldT>::getSize();
@@ -171,6 +105,11 @@ namespace cuda
     CUDA_DEVICE void Board::fill(const boardFieldT & value)
     {
         SquareMatrix<boardFieldT>::fill(value);
+    }
+
+    CUDA_HOST void Board::clear()
+    {
+        SquareMatrix<boardFieldT>::clear();
     }
 
     CUDA_HOST_DEVICE SideE Board::whichEdgeRow(size_t row) const
@@ -265,58 +204,6 @@ namespace cuda
         return retVal;
     }
 
-    /*void Board::print() const
-    {
-        std::ostream_iterator<boardFieldT> field_it(std::cout, " ");
-        std::string space = " ";
-
-        // Free field to align columns
-        std::cout << "  ";
-        // Top hints
-        std::copy(hints[TOP].begin(), hints[TOP].end(), field_it);
-        std::cout << std::endl;
-
-        // Whole board
-        for (size_t rowIdx = 0; rowIdx < getSize(); rowIdx++)
-        {
-            // Left hint field
-            std::copy(hints[LEFT].begin() + rowIdx, hints[LEFT].begin() + rowIdx + 1, field_it);
-
-            // Board fields
-            std::copy((*this)[rowIdx].begin(), (*this)[rowIdx].end(), field_it);
-
-            // Right hint field
-            std::copy(hints[RIGHT].begin() + rowIdx, hints[RIGHT].begin() + rowIdx + 1, field_it);
-            std::cout << std::endl;
-        }
-
-        // Free field to align columns
-        std::cout << "  ";
-        // Bottom hints
-        std::copy(hints[BOTTOM].begin(), hints[BOTTOM].end(), field_it);
-        std::cout << std::endl;
-    }*/
-
-    /*void Board::resize(const boardFieldT boardSize)
-    {
-        if (boardSize == size())
-            return;
-
-        // Resize rows count
-        (*this).resize(boardSize);
-        for (auto& row : (*this))
-        {
-            // Resize rows
-            row.resize(boardSize);
-        }
-
-        for (auto& h : hints)
-        {
-            // Resize hints
-            h.resize(boardSize);
-        }
-    }*/
-
     CUDA_DEVICE boardFieldT Board::getVisibleBuildings(SideE side, size_t rowOrColumn) const
     {
         boardFieldT retVal = 0;
@@ -345,7 +232,9 @@ namespace cuda
     CUDA_DEVICE bool Board::isBuildingPlaceable(size_t row, size_t column, boardFieldT building)
     {
         if (getCell(row, column) != 0)
+        {
             return false;
+        }
 #ifdef ENABLE_MEMOIZATION
         return setRows[row * getSize() + building - 1] == 0 && setColumns[column * getSize() + building - 1] == 0;
 #else
@@ -416,11 +305,6 @@ namespace cuda
     CUDA_DEVICE void Board::clearCell(size_t row, size_t column)
     {
         setCell(row, column, 0);
-    }
-
-    CUDA_DEVICE boardFieldT Board::getCell(size_t row, size_t column)
-    {
-        return SquareMatrix<boardFieldT>::getCell(row, column);
     }
 
     CUDA_DEVICE boardFieldT Board::getCell(size_t row, size_t column) const

@@ -149,7 +149,7 @@ void solver::SequentialSolver::findCluesOfOne(size_t row, size_t column)
     if (rowEdge != matrix::NONE && board.hints[rowEdge][column] == 1 ||
         columnEdge != matrix::NONE && board.hints[columnEdge][row] == 1)
     {
-        constraints[row][column].insert(board.size());
+        constraints[row][column].insert(static_cast<board::boardFieldT>(board.size()));
     }
 }
 
@@ -196,8 +196,8 @@ void solver::SequentialSolver::findCluesOfN(size_t row, size_t column)
 
 void solver::SequentialSolver::findHighSkyscrapers1(size_t row, size_t column)
 {
-    const auto highest = board.size();
-    const auto secondHighest = highest - 1;
+    const auto highest = static_cast<board::boardFieldT>(board.size());
+    const auto secondHighest = static_cast<board::boardFieldT>(highest - 1);
 
     const auto leftHint = board.hints[matrix::LEFT][row];
     const auto rightHint = board.hints[matrix::RIGHT][row];
@@ -233,7 +233,7 @@ void solver::SequentialSolver::findHighSkyscrapers1(size_t row, size_t column)
 
 void solver::SequentialSolver::findHighSkyscrapers2(size_t row, size_t column)
 {
-    const auto secondHighest = board.size() - 1;
+    const auto secondHighest = static_cast<board::boardFieldT>(board.size() - 1);
     if (board.isBuildingPlaceable(row, column, secondHighest))
     {
         const auto leftHint = board.hints[matrix::LEFT][row];
@@ -297,7 +297,7 @@ void solver::SequentialSolver::backTracking(std::vector<board::Board> & retVal, 
         DEBUG_PRINTLN_VERBOSE_INFO("Last cell");
         for (size_t i = 0; i < treeRowSize; i++)
         {
-            const auto consideredBuilding = i + 1;
+            const auto consideredBuilding = static_cast<board::boardFieldT>(i + 1);
 
             if (board.isBuildingPlaceable(row, column, consideredBuilding))
             {
@@ -317,7 +317,7 @@ void solver::SequentialSolver::backTracking(std::vector<board::Board> & retVal, 
     {
         for (size_t i = 0; i < treeRowSize; i++)
         {
-            const auto consideredBuilding = i + 1;
+            const auto consideredBuilding = static_cast<board::boardFieldT>(i + 1);
             if (board.isBuildingPlaceable(row, column, consideredBuilding))
             {
                 board.setCell(row, column, consideredBuilding);
@@ -360,7 +360,7 @@ std::vector<board::Board> solver::SequentialSolver::backTrackingWithStack()
         {
             entry.setBit(idx);
 
-            const auto consideredBuilding = idx + 1;
+            const auto consideredBuilding = static_cast<board::boardFieldT>(idx + 1);
             if (board.isBuildingPlaceable(row, column, consideredBuilding))
             {
                 board.setCell(row, column, consideredBuilding);

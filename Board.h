@@ -27,7 +27,7 @@ namespace board
     typedef std::vector<std::vector<bool>> memoizedSetValuesT;
 
 
-    class Board : protected matrix::SquareMatrix<boardFieldT>
+    class Board : public matrix::SquareMatrix<boardFieldT>
     {
     public:
         static constexpr size_t hintSize = 4;
@@ -36,7 +36,7 @@ namespace board
         Board(const Board & board) = default;
         Board(Board && board) = default;
 
-        Board(const boardFieldT boardSize);
+        Board(const size_t boardSize);
         Board(const std::string & path);
         Board(std::ifstream & stream);
         ~Board() = default;
@@ -52,7 +52,7 @@ namespace board
         // Generates latin square board 
         void generate();
         // Resizes and generates latin square board 
-        void generate(const boardFieldT boardSize);
+        void generate(const size_t boardSize);
         // Calculates hints
         void calculateHints();
 
@@ -90,8 +90,7 @@ namespace board
         void setCell(size_t row, size_t column, boardFieldT value);
         void clearCell(size_t row, size_t column);
 
-        boardFieldT getCell(size_t row, size_t column);
-        const boardFieldT getCell(size_t row, size_t column) const;
+        boardFieldT getCell(size_t row, size_t column) const;
 
         size_t size() const;
         void fill(const boardFieldT & value);
@@ -107,12 +106,12 @@ namespace board
         memoizedSetValuesT setRows;
         memoizedSetValuesT setColumns;
 
-        void resize(const boardFieldT boardSize);
+        void resize(const size_t boardSize);
     };
 
     // Counts visible buildings from "first" side
     template<class iterator_type>
-    size_t countVisibility(iterator_type first, iterator_type last)
+    boardFieldT countVisibility(iterator_type first, iterator_type last)
     {
         size_t size = std::abs(first - last);
         size_t retVal = 1;
@@ -129,6 +128,6 @@ namespace board
             }
         }
 
-        return retVal;
+        return static_cast<boardFieldT>(retVal);
     }
 }
