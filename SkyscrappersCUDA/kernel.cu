@@ -20,8 +20,12 @@ int main(int argc, const char** argv)
     const auto boards = ps.generateBoards(4);
     size_t generatedSolversCount = 0;
 
+    // Host vector for solvers - needed to properly execute destructors
+    // It's lifetime ensures that pointers on device are valid during kernel execution
+    std::vector<cuda::solver::SequentialSolver> h_solvers;
+
     // Allocating memory
-    auto d_solvers = cuda::solver::prepareSolvers(boards, generatedSolversCount);
+    auto d_solvers = cuda::solver::prepareSolvers(boards, h_solvers, generatedSolversCount);
     auto d_outputBoards = cuda::solver::prepareResultArray(generatedSolversCount);
     auto d_outputBoardsSizes = cuda::solver::prepareResultArraySizes(generatedSolversCount);
     auto d_stack = cuda::solver::prepareStack(b.getSize(), generatedSolversCount);
@@ -33,6 +37,8 @@ int main(int argc, const char** argv)
                                                                               d_outputBoards,
                                                                               d_outputBoardsSizes,
                                                                               d_stack);
+        cudaDeviceSynchronize();
+
     }
 
     // Dellocating memory (in reverse order)

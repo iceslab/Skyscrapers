@@ -32,11 +32,10 @@ namespace cuda
         static constexpr size_t hintsSize = 4;
         hintT hints[hintsSize];
 
+        Board(const size_t boardSize);
         Board(const Board & board);
         Board(const board::Board & board);
-
-        Board(const size_t boardSize);
-        ~Board() = default;
+        ~Board();
 
         /// Generators
 

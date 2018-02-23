@@ -61,12 +61,19 @@ namespace cuda
     inline SquareMatrix<T>::SquareMatrix(const size_t size)
     {
         this->size = size;
-        const cudaError_t err = cudaMalloc(&d_data, size * size * sizeof(T));
-        if (err != cudaSuccess)
+        if(size > 0)
         {
-            CUDA_PRINT_ERROR("Failed allocation", err);
-            this->size = 0;
-            d_data = nullptr;
+            const cudaError_t err = cudaMalloc(&d_data, size * size * sizeof(T));
+            if (err != cudaSuccess)
+            {
+                CUDA_PRINT_ERROR("Failed allocation", err);
+                this->size = 0;
+                d_data = nullptr;
+            }
+            else
+            {
+                clear();
+            }
         }
     }
 
@@ -177,7 +184,7 @@ namespace cuda
     template<class T>
     inline CUDA_HOST void SquareMatrix<T>::clear()
     {
-        cudaError_t err = cudaMemset(reinterpret_cast<void**>(&d_data), 0, size * size * sizeof(T));
+        cudaError_t err = cudaMemset(reinterpret_cast<void*>(d_data), 0, size * size * sizeof(T));
         if (err != cudaSuccess)
         {
             CUDA_PRINT_ERROR("Failed memset", err);

@@ -23,10 +23,15 @@ namespace cuda
 
         // Generates solvers for boards till given tree level (count)
         // Solvers count is then placed in count variable
-        CUDA_HOST kernelInputT prepareSolvers(const std::vector<board::Board> & boards, size_t & count);
+        CUDA_HOST kernelInputT prepareSolvers(const std::vector<board::Board> & boards,
+                                              std::vector<SequentialSolver> & h_solvers,
+                                              size_t & count);
         CUDA_HOST kernelOutputT prepareResultArray(size_t solversCount);
         CUDA_HOST kernelOutputSizesT prepareResultArraySizes(size_t solversCount);
         CUDA_HOST stackT prepareStack(size_t boardSize, size_t solversCount);
+
+        CUDA_HOST kernelOutputT prepareHostResultArray(size_t solversCount);
+        CUDA_HOST kernelOutputSizesT prepareHostResultArraySizes(size_t solversCount);
 
         // Complementary function to free solver array
         CUDA_HOST void freeSolvers(kernelInputT & d_solvers);
@@ -36,6 +41,11 @@ namespace cuda
         CUDA_HOST void freeResultArraySizes(kernelOutputSizesT & d_outputBoardsSizes);
         // Complementary function to free stack
         CUDA_HOST void freeStack(stackT & d_stack);
+
+        // Complementary function to free results array
+        CUDA_HOST void freeHostResultArray(kernelOutputT & d_outputBoards);
+        // Complementary function to free results array sizes
+        CUDA_HOST void freeHostResultArraySizes(kernelOutputSizesT & d_outputBoardsSizes);
 
         CUDA_HOST bool verifyAllocation(kernelInputT & d_solvers,
                                         kernelOutputT & d_outputBoards,

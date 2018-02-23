@@ -22,6 +22,11 @@ do{ \
     fprintf(stderr, "%s %s: %s\n", __FUNCSIG__, description, cudaGetErrorString(errorCode)); \
 } while (false);
 
+#define HOST_PRINT_ERROR(description) \
+do{ \
+    fprintf(stderr, "%s %s\n", __FUNCSIG__, description); \
+} while (false);
+
 #define CUDA_SOFT_ASSERT(expr) \
 do{ \
     if(!(expr)) \

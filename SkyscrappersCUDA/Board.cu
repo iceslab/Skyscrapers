@@ -6,53 +6,56 @@ namespace cuda
     Board::Board(const size_t boardSize) :
         SquareMatrix<boardFieldT>(boardSize)
     {
-        // Alloc and memset setRows
-        cudaError_t err = cudaMalloc(reinterpret_cast<void**>(&setRows), boardSize * sizeof(boardFieldT));
-        if (err != cudaSuccess)
+        if (boardSize > 0)
         {
-            CUDA_PRINT_ERROR("Failed allocation setRows", err);
-            setRows = nullptr;
-        }
-        else
-        {
-            err = cudaMemset(reinterpret_cast<void**>(&setRows), 0, boardSize * sizeof(boardFieldT));
+            // Alloc and memset setRows
+            cudaError_t err = cudaMalloc(reinterpret_cast<void**>(&setRows), boardSize * sizeof(boardFieldT));
             if (err != cudaSuccess)
             {
-                CUDA_PRINT_ERROR("Failed memset setRows", err);
-            }
-        }
-
-        // Alloc and memset setColumns
-        err = cudaMalloc(reinterpret_cast<void**>(&setColumns), boardSize * sizeof(boardFieldT));
-        if (err != cudaSuccess)
-        {
-            CUDA_PRINT_ERROR("Failed allocation setColumns", err);
-            setColumns = nullptr;
-        }
-        else
-        {
-            err = cudaMemset(reinterpret_cast<void**>(&setColumns), 0, boardSize * sizeof(boardFieldT));
-            if (err != cudaSuccess)
-            {
-                CUDA_PRINT_ERROR("Failed memset setColumns", err);
-            }
-        }
-
-        // Alloc and memset hints
-        for (size_t side = 0; side < hintsSize; side++)
-        {
-            err = cudaMalloc(reinterpret_cast<void**>(&hints[side]), boardSize * sizeof(boardFieldT));
-            if (err != cudaSuccess)
-            {
-                CUDA_PRINT_ERROR("Failed allocation hints[side]", err);
-                hints[side] = nullptr;
+                CUDA_PRINT_ERROR("Failed allocation setRows", err);
+                setRows = nullptr;
             }
             else
             {
-                err = cudaMemset(reinterpret_cast<void**>(&hints[side]), 0, boardSize * sizeof(boardFieldT));
+                err = cudaMemset(reinterpret_cast<void*>(setRows), 0, boardSize * sizeof(boardFieldT));
                 if (err != cudaSuccess)
                 {
-                    CUDA_PRINT_ERROR("Failed memset hints[side]", err);
+                    CUDA_PRINT_ERROR("Failed memset setRows", err);
+                }
+            }
+
+            // Alloc and memset setColumns
+            err = cudaMalloc(reinterpret_cast<void**>(&setColumns), boardSize * sizeof(boardFieldT));
+            if (err != cudaSuccess)
+            {
+                CUDA_PRINT_ERROR("Failed allocation setColumns", err);
+                setColumns = nullptr;
+            }
+            else
+            {
+                err = cudaMemset(reinterpret_cast<void*>(setColumns), 0, boardSize * sizeof(boardFieldT));
+                if (err != cudaSuccess)
+                {
+                    CUDA_PRINT_ERROR("Failed memset setColumns", err);
+                }
+            }
+
+            // Alloc and memset hints
+            for (size_t side = 0; side < hintsSize; side++)
+            {
+                err = cudaMalloc(reinterpret_cast<void**>(&hints[side]), boardSize * sizeof(boardFieldT));
+                if (err != cudaSuccess)
+                {
+                    CUDA_PRINT_ERROR("Failed allocation hints[side]", err);
+                    hints[side] = nullptr;
+                }
+                else
+                {
+                    err = cudaMemset(reinterpret_cast<void*>(hints[side]), 0, boardSize * sizeof(boardFieldT));
+                    if (err != cudaSuccess)
+                    {
+                        CUDA_PRINT_ERROR("Failed memset hints[side]", err);
+                    }
                 }
             }
         }
@@ -61,7 +64,11 @@ namespace cuda
     Board::Board(const Board & board) : Board(board.getSize())
     {
         const auto boardSize = board.getSize();
-        cudaMemcpy(d_data, board.d_data, sizeof(*d_data) * boardSize * boardSize, cudaMemcpyDeviceToDevice);
+        cudaError_t err = cudaMemcpy(d_data, board.d_data, sizeof(*d_data) * boardSize * boardSize, cudaMemcpyDeviceToDevice);
+        if (err != cudaSuccess)
+        {
+            CUDA_PRINT_ERROR("Failed memcpy board", err);
+        }
     }
 
     Board::Board(const board::Board & board) : Board(board.size())
@@ -70,7 +77,25 @@ namespace cuda
         for (size_t row = 0; row < boardSize; row++)
         {
             const auto h_data = board.getRow(row).data();
-            cudaMemcpy(d_data + row * boardSize, h_data, sizeof(*d_data) * boardSize, cudaMemcpyHostToDevice);
+            cudaError_t err = cudaMemcpy(d_data + row * boardSize, h_data, sizeof(*d_data) * boardSize, cudaMemcpyHostToDevice);
+            if (err != cudaSuccess)
+            {
+                CUDA_PRINT_ERROR("Failed memcpy row", err);
+            }
+        }
+    }
+
+    Board::~Board()
+    {
+        cudaFree(setRows);
+        setRows = nullptr;
+        cudaFree(setColumns);
+        setColumns = nullptr;
+
+        for (size_t side = 0; side < hintsSize; side++)
+        {
+            cudaFree(hints[side]);
+            hints[side] = nullptr;
         }
     }
 

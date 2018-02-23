@@ -49,11 +49,12 @@ namespace cuda
         //    }
         //}
 
-        CUDA_HOST kernelInputT prepareSolvers(const std::vector<board::Board> & boards, size_t & count)
+        CUDA_HOST kernelInputT prepareSolvers(const std::vector<board::Board> & boards,
+                                              std::vector<SequentialSolver> & h_solvers,
+                                              size_t & count)
         {
             // Create array on host
-            std::vector<solver::SequentialSolver> prepareRetVal;
-            prepareRetVal.reserve(boards.size());
+            h_solvers.reserve(boards.size());
 
             //for (size_t i = 0; i < boards.size(); i++)
             //{
@@ -63,13 +64,13 @@ namespace cuda
 
             for (auto & el : boards)
             {
-                prepareRetVal.push_back(std::move(el));
+                h_solvers.push_back(el);
             }
 
             // Create array on device
             kernelInputT d_retVal = nullptr;
             count = boards.size();
-            cudaError_t err = cudaMalloc(&d_retVal, count * sizeof(*d_retVal));
+            cudaError_t err = cudaMalloc(&d_retVal, count * sizeof(SequentialSolver));
             if (err != cudaSuccess)
             {
                 CUDA_PRINT_ERROR("Failed allocation", err);
@@ -79,7 +80,7 @@ namespace cuda
             else
             {
                 // Copy host array to device
-                err = cudaMemcpy(&d_retVal, prepareRetVal.data(), count * sizeof(*d_retVal), cudaMemcpyHostToDevice);
+                err = cudaMemcpy(d_retVal, h_solvers.data(), count * sizeof(SequentialSolver), cudaMemcpyHostToDevice);
                 if (err != cudaSuccess)
                 {
                     CUDA_PRINT_ERROR("Failed memcpy", err);
@@ -118,6 +119,30 @@ namespace cuda
             return d_retVal;
         }
 
+        CUDA_HOST kernelOutputT prepareHostResultArray(size_t solversCount)
+        {
+            kernelOutputT h_retVal = reinterpret_cast<kernelOutputT>(
+                malloc(solversCount * maxResultsPerThread * sizeof(*h_retVal)));
+            if (h_retVal == nullptr)
+            {
+                HOST_PRINT_ERROR("Failed allocation");
+            }
+
+            return h_retVal;
+        }
+
+        CUDA_HOST kernelOutputSizesT prepareHostResultArraySizes(size_t solversCount)
+        {
+            kernelOutputSizesT h_retVal = reinterpret_cast<kernelOutputSizesT>(
+                malloc(solversCount * sizeof(*h_retVal)));
+            if (h_retVal == nullptr)
+            {
+                HOST_PRINT_ERROR("Failed allocation");
+            }
+
+            return h_retVal;
+        }
+
         CUDA_HOST stackT prepareStack(size_t boardSize, size_t solversCount)
         {
             stackT d_retVal = nullptr;
@@ -153,6 +178,18 @@ namespace cuda
         {
             cudaFree(d_stack);
             d_stack = nullptr;
+        }
+
+        CUDA_HOST void freeHostResultArray(kernelOutputT & h_outputBoards)
+        {
+            free(h_outputBoards);
+            h_outputBoards = nullptr;
+        }
+
+        CUDA_HOST void freeHostResultArraySizes(kernelOutputSizesT & h_outputBoardsSizes)
+        {
+            free(h_outputBoardsSizes);
+            h_outputBoardsSizes = nullptr;
         }
 
         CUDA_HOST bool verifyAllocation(kernelInputT & d_solvers,
