@@ -34,7 +34,6 @@ namespace cuda
 
         Board(const Board & board);
         Board(const board::Board & board);
-        Board(Board && board);
 
         Board(const size_t boardSize);
         ~Board() = default;

@@ -54,6 +54,8 @@ namespace matrix
         
         void setCell(size_t row, size_t column, T value);
 
+        size_t getSize() const;
+
         /// Helper methods
 
         SideE whichEdgeRow(size_t row) const;
@@ -212,6 +214,12 @@ namespace matrix
     inline void SquareMatrix<T>::setCell(size_t row, size_t column, T value)
     {
         (*this)[row][column] = value;
+    }
+
+    template<class T>
+    inline size_t SquareMatrix<T>::getSize() const
+    {
+        return size();
     }
 
     template<class T>

@@ -28,7 +28,6 @@ namespace cuda
 
             CUDA_DEVICE size_t solve(cuda::Board* resultArray, stackT stack);
 
-        protected:
             // Max value for cell
             const size_t maxVal;
             const rowAndColumnPairT lastCellPair;

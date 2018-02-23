@@ -58,6 +58,12 @@ namespace cuda
         }
     }
 
+    Board::Board(const Board & board) : Board(board.getSize())
+    {
+        const auto boardSize = board.getSize();
+        cudaMemcpy(d_data, board.d_data, sizeof(*d_data) * boardSize * boardSize, cudaMemcpyDeviceToDevice);
+    }
+
     Board::Board(const board::Board & board) : Board(board.size())
     {
         const auto boardSize = board.size();

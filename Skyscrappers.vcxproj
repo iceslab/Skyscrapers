@@ -41,7 +41,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -132,7 +132,6 @@
   <ItemGroup>
     <ClCompile Include="AMPUtilities.cpp" />
     <ClCompile Include="Board.cpp" />
-    <ClCompile Include="Combinatorics.cpp" />
     <ClCompile Include="Constraints.cpp" />
     <ClCompile Include="ParallelGpuSolver.cpp" />
     <ClCompile Include="ParallelSolver.cpp" />
@@ -147,7 +146,6 @@
   <ItemGroup>
     <ClInclude Include="AMPUtilities.h" />
     <ClInclude Include="Board.h" />
-    <ClInclude Include="Combinatorics.h" />
     <ClInclude Include="Constraints.h" />
     <ClInclude Include="ParallelGpuSolver.h" />
     <ClInclude Include="ParallelSolver.h" />

@@ -23,8 +23,6 @@ int main(int argc, const char** argv)
     UNREFERENCED_PARAMETER(argc);
     UNREFERENCED_PARAMETER(argv);
 
-    AMPUtilities::listAllAccelerators();
-
 #ifndef LOAD_FROM_FILE
     Board b(6);
     b.generate();

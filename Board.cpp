@@ -57,18 +57,18 @@ bool board::Board::readFromFile(std::ifstream & stream)
         // Resize hints
         for (auto& h : hints)
         {
-            h.resize(size());
+            h.resize(getSize());
         }
 
-        setRows = memoizedSetValuesT(size(), std::vector<bool>(size(), false));
-        setColumns = memoizedSetValuesT(size(), std::vector<bool>(size(), false));
+        setRows = memoizedSetValuesT(getSize(), std::vector<bool>(getSize(), false));
+        setColumns = memoizedSetValuesT(getSize(), std::vector<bool>(getSize(), false));
     }
     return retVal;
 }
 
 void Board::generate()
 {
-    generate(size());
+    generate(getSize());
 }
 
 void Board::generate(const size_t boardSize)
@@ -95,7 +95,7 @@ void Board::generate(const size_t boardSize)
 void board::Board::calculateHints()
 {
     // Fill hints for TOP, RIGHT, BOTTOM and LEFT
-    for (size_t i = 0; i < size(); i++)
+    for (size_t i = 0; i < getSize(); i++)
     {
         for (auto& side : validSides)
         {
@@ -128,11 +128,11 @@ bool Board::operator!=(const Board & other) const
 
 bool Board::checkIfLatinSquare() const
 {
-    for (size_t i = 0; i < size(); i++)
+    for (size_t i = 0; i < getSize(); i++)
     {
-        std::vector<bool> rowChecker(size(), false);
-        std::vector<bool> columnChecker(size(), false);
-        for (size_t j = 0; j < size(); j++)
+        std::vector<bool> rowChecker(getSize(), false);
+        std::vector<bool> columnChecker(getSize(), false);
+        for (size_t j = 0; j < getSize(); j++)
         {
 
             // Board is not filled properly so it's not latin square
@@ -168,7 +168,7 @@ bool Board::checkValidityWithHints() const
         return false;
     }
 
-    for (size_t i = 0; i < size(); i++)
+    for (size_t i = 0; i < getSize(); i++)
     {
         for (auto& enumVal : validSides)
         {
@@ -182,9 +182,9 @@ bool Board::checkValidityWithHints() const
     return true;
 }
 
-size_t board::Board::size() const
+size_t board::Board::getSize() const
 {
-    return SquareMatrix<boardFieldT>::size();
+    return SquareMatrix<boardFieldT>::getSize();
 }
 
 void board::Board::fill(const boardFieldT & value)
@@ -214,7 +214,7 @@ void Board::print() const
     std::cout << std::endl;
 
     // Whole board
-    for (size_t rowIdx = 0; rowIdx < size(); rowIdx++)
+    for (size_t rowIdx = 0; rowIdx < getSize(); rowIdx++)
     {
         // Left hint field
         std::copy(hints[matrix::LEFT].begin() + rowIdx, hints[matrix::LEFT].begin() + rowIdx + 1, field_it);
@@ -236,7 +236,7 @@ void Board::print() const
 
 void Board::resize(const size_t boardSize)
 {
-    if (boardSize == size())
+    if (boardSize == getSize())
         return;
 
     // Resize rows count
@@ -256,9 +256,9 @@ void Board::resize(const size_t boardSize)
 
 boardFieldT Board::getVisibleBuildings(matrix::SideE side, size_t rowOrColumn) const
 {
-    ASSERT_VERBOSE(rowOrColumn < size(),
+    ASSERT_VERBOSE(rowOrColumn < getSize(),
                    "%zu < %zu",
-                   rowOrColumn, size());
+                   rowOrColumn, getSize());
 
     boardFieldT retVal = 0;
     auto& row = getRow(rowOrColumn);
@@ -287,9 +287,9 @@ boardFieldT Board::getVisibleBuildings(matrix::SideE side, size_t rowOrColumn) c
 
 boardFieldT Board::getVisibleBuildingsIf(matrix::SideE side, size_t rowOrColumn, boardFieldT value, size_t index) const
 {
-    ASSERT_VERBOSE(rowOrColumn < size(),
+    ASSERT_VERBOSE(rowOrColumn < getSize(),
                    "%zu < %zu",
-                   rowOrColumn, size());
+                   rowOrColumn, getSize());
 
     boardFieldT retVal = 0;
     auto row = getRow(rowOrColumn);
@@ -320,9 +320,9 @@ boardFieldT Board::getVisibleBuildingsIf(matrix::SideE side, size_t rowOrColumn,
 
 bool board::Board::isBuildingPlaceable(size_t row, size_t column, boardFieldT building)
 {
-    ASSERT(row < size());
-    ASSERT(column < size());
-    ASSERT(building <= size() && building > 0);
+    ASSERT(row < getSize());
+    ASSERT(column < getSize());
+    ASSERT(building <= getSize() && building > 0);
 
     if ((*this)[row][column] != 0)
         return false;
@@ -342,8 +342,8 @@ bool board::Board::isBuildingPlaceable(size_t row, size_t column, boardFieldT bu
 
 bool board::Board::isBoardPartiallyValid(size_t row, size_t column)
 {
-    ASSERT(row < size());
-    ASSERT(column < size());
+    ASSERT(row < getSize());
+    ASSERT(column < getSize());
 
     const auto rowEdge = whichEdgeRow(row);
     const auto columnEdge = whichEdgeColumn(column);
@@ -374,22 +374,22 @@ bool board::Board::isBoardPartiallyValid(size_t row, size_t column)
 
 boardFieldT board::Board::locateHighestInRow(size_t rowIdx) const
 {
-    ASSERT_VERBOSE(rowIdx < size(),
+    ASSERT_VERBOSE(rowIdx < getSize(),
                    "%zu < %zu",
-                   rowIdx, size());
+                   rowIdx, getSize());
 
     auto& row = getRow(rowIdx);
-    return static_cast<boardFieldT>(std::find(row.begin(), row.end(), size()) - row.begin());
+    return static_cast<boardFieldT>(std::find(row.begin(), row.end(), getSize()) - row.begin());
 }
 
 boardFieldT board::Board::locateHighestInColumn(size_t columnIdx) const
 {
-    ASSERT_VERBOSE(columnIdx < size(),
+    ASSERT_VERBOSE(columnIdx < getSize(),
                    "%zu < %zu",
-                   columnIdx, size());
+                   columnIdx, getSize());
 
     auto column = getColumn(columnIdx);
-    return static_cast<boardFieldT>(std::find(column.begin(), column.end(), size()) - column.begin());
+    return static_cast<boardFieldT>(std::find(column.begin(), column.end(), getSize()) - column.begin());
 }
 
 void board::Board::setCell(size_t row, size_t column, boardFieldT value)

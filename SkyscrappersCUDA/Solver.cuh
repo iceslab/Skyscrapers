@@ -12,6 +12,7 @@ namespace cuda
         public:
             Solver(const board::Board& board);
             Solver(board::Board&& board);
+            Solver(const cuda::Board& board);
             ~Solver() = default;
         protected:
             cuda::Board board;

@@ -71,6 +71,14 @@ namespace cuda
     }
 
     template<class T>
+    inline SquareMatrix<T>::~SquareMatrix()
+    {
+        cudaFree(d_data);
+        d_data = nullptr;
+        size = 0;
+    }
+
+    template<class T>
     inline CUDA_DEVICE typename SquareMatrix<T>::rowT SquareMatrix<T>::getRow(size_t index) const
     {
         rowT retVal = d_data + index * size;

@@ -79,9 +79,9 @@ namespace board
         bool isBuildingPlaceable(size_t row, size_t column, boardFieldT building);
         // Returns if board is valid up tu given row and column in terms of already placed buildings and hints
         bool isBoardPartiallyValid(size_t row, size_t column);
-        // Returns index of building in row which height == size(), if there is none returns size()
+        // Returns index of building in row which height == getSize(), if there is none returns getSize()
         boardFieldT locateHighestInRow(size_t row) const;
-        // Returns index of building in column which height == size(), if there is none returns size()
+        // Returns index of building in column which height == getSize(), if there is none returns getSize()
         boardFieldT locateHighestInColumn(size_t column) const;
 
         /// Accessors
@@ -92,7 +92,7 @@ namespace board
 
         boardFieldT getCell(size_t row, size_t column) const;
 
-        size_t size() const;
+        size_t getSize() const;
         void fill(const boardFieldT & value);
 
         matrix::SideE whichEdgeRow(size_t row) const;
