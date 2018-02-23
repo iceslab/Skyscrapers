@@ -24,7 +24,7 @@ int main(int argc, const char** argv)
     auto d_solvers = cuda::solver::prepareSolvers(boards, generatedSolversCount);
     auto d_outputBoards = cuda::solver::prepareResultArray(generatedSolversCount);
     auto d_outputBoardsSizes = cuda::solver::prepareResultArraySizes(generatedSolversCount);
-    auto d_stack = cuda::solver::prepareStack(b.getSize());
+    auto d_stack = cuda::solver::prepareStack(b.getSize(), generatedSolversCount);
 
     // If allocation was successfull launch kernel
     if (cuda::solver::verifyAllocation(d_solvers, d_outputBoards, d_outputBoardsSizes, d_stack))

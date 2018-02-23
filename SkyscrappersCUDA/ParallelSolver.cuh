@@ -26,7 +26,7 @@ namespace cuda
         CUDA_HOST kernelInputT prepareSolvers(const std::vector<board::Board> & boards, size_t & count);
         CUDA_HOST kernelOutputT prepareResultArray(size_t solversCount);
         CUDA_HOST kernelOutputSizesT prepareResultArraySizes(size_t solversCount);
-        CUDA_HOST stackT prepareStack(size_t boardSize);
+        CUDA_HOST stackT prepareStack(size_t boardSize, size_t solversCount);
 
         // Complementary function to free solver array
         CUDA_HOST void freeSolvers(kernelInputT & d_solvers);

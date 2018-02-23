@@ -118,10 +118,10 @@ namespace cuda
             return d_retVal;
         }
 
-        CUDA_HOST stackT prepareStack(size_t boardSize)
+        CUDA_HOST stackT prepareStack(size_t boardSize, size_t solversCount)
         {
             stackT d_retVal = nullptr;
-            cudaError_t err = cudaMalloc(&d_retVal, boardSize * sizeof(*d_retVal));
+            cudaError_t err = cudaMalloc(&d_retVal, boardSize * boardSize * solversCount * sizeof(*d_retVal));
             if (err != cudaSuccess)
             {
                 CUDA_PRINT_ERROR("Failed allocation", err);
@@ -173,7 +173,7 @@ namespace cuda
         {
             // It denotes thread index and array index
             const auto idx = threadIdx.x;
-            d_outputBoardsSizes[idx] = d_solvers[idx].solve(d_outputBoards + idx * maxResultsPerThread, d_stack);
+            d_outputBoardsSizes[idx] = d_solvers[idx].solve(d_outputBoards + idx * maxResultsPerThread, d_stack + idx);
         }
     }
 }

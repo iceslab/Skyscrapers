@@ -66,6 +66,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <PtxAsOptionV>true</PtxAsOptionV>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
     </CudaCompile>
+    <CudaLink />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -111,6 +112,9 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <CudaCompile Include="StackEntry.cuh" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Skyscrappers.vcxproj">
+      <Project>{e8013aba-1727-467c-b222-e1083e130c3d}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Utilities\Utilities\Utilites.vcxproj">
       <Project>{aba715d0-6470-360f-9ca7-6b032ed7e3f0}</Project>
     </ProjectReference>
