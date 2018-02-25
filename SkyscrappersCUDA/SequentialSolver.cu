@@ -12,11 +12,11 @@ namespace cuda
             this->board.clear();
         }
 
-        CUDA_DEVICE size_t SequentialSolver::solve(cuda::Board* resultArray, stackT stack)
+        CUDA_DEVICE size_t SequentialSolver::solve(cuda::Board* resultArray, stackPtrT stack)
         {
 
 #ifdef BT_WITH_STACK
-            auto retVal = backTrackingWithStack(resultArray, stack);
+            auto retVal = backTrackingWithStack(resultArray);
 #else
             auto freeCell = rowAndColumnPairT(0, 0);
             if (board.getCell(0, 0) != 0)
@@ -77,8 +77,21 @@ namespace cuda
             }
         }
 #else
-        CUDA_DEVICE size_t SequentialSolver::backTrackingWithStack(cuda::Board* resultArray, stackT stack)
+        CUDA_DEVICE size_t SequentialSolver::backTrackingWithStack(cuda::Board* resultArray)
         {
+            CUDA_PRINT("%s: BEGIN\n", __FUNCTION__);
+            const auto boardCellsCount = board.getSize() * board.getSize();
+            stackPtrT stack = new stackT[boardCellsCount];
+            if (stack != nullptr)
+            {
+                CUDA_PRINT("%s: Stack allocated successfully\n", __FUNCTION__);
+            }
+            else
+            {
+                CUDA_PRINT("%s: Stack allocation failed. Returning...\n", __FUNCTION__);
+                return 0;
+            }
+
             size_t resultsCount = 0;
             size_t stackSize = 0;
 
@@ -115,11 +128,13 @@ namespace cuda
                             {
                                 if (resultsCount < maxResultsPerThread)
                                 {
+                                    CUDA_PRINT("%s: Found a result, copying to global memory\n", __FUNCTION__);
                                     memcpy(resultArray + resultsCount++, &board, sizeof(board));
                                 }
                                 else
                                 {
-                                    // Found a result, but it doesn't fit inside array
+                                    CUDA_PRINT("%s: Found a result, but it doesn't fit inside array\n", __FUNCTION__);
+                                    
                                 }
                                 board.clearCell(row, column);
                             }
@@ -137,6 +152,7 @@ namespace cuda
                 }
                 else
                 {
+                    CUDA_PRINT("%s: Searched through all variants. Popping stack...\n", __FUNCTION__);
                     board.clearCell(row, column);
                     --stackSize;
                     if (stackSize > 0)
@@ -146,8 +162,13 @@ namespace cuda
                     }
                 }
 
+                CUDA_PRINT("%s: stackSize %u\n", __FUNCTION__, stackSize);
             } while (stackSize > 0);
 
+            delete[] stack;
+            stack = nullptr;
+
+            CUDA_PRINT("%s: END\n", __FUNCTION__);
             return resultsCount;
         }
 #endif // !BT_WITH_STACK

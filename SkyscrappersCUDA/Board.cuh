@@ -4,6 +4,7 @@
 #include "CUDAUtilities.cuh"
 #include "asserts.h"
 #include "SquareMatrix.cuh"
+#include <vector>
 
 // Forward declaration
 namespace board
@@ -72,6 +73,7 @@ namespace cuda
         CUDA_HOST_DEVICE SideE whichEdgeRow(size_t row) const;
         CUDA_HOST_DEVICE SideE whichEdgeColumn(size_t column) const;
 
+        CUDA_HOST std::vector<boardFieldT> getHostVector();
         /// Output
         //void print() const;
     private:

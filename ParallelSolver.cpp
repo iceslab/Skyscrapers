@@ -22,8 +22,8 @@ namespace solver
                                         size_t column)
     {
         ASSERT(stopLevel > 0 && stopLevel <= board.size());
-        DEBUG_CALL(std::cout << "level: " << level << " row: " << row << " column: " << column << "\n";);
-        DEBUG_CALL(board.print());
+        //DEBUG_CALL(std::cout << "level: " << level << " row: " << row << " column: " << column << "\n";);
+        //DEBUG_CALL(board.print());
         const auto treeRowSize = board.size();
 
         // Check if it is last cell

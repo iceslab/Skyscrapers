@@ -17,7 +17,8 @@ namespace cuda
         typedef cuda::Pair<size_t, size_t> rowAndColumnPairT;
         typedef StackEntry<maxStackEntrySize> stackEntryT;
         typedef cuda::Pair<stackEntryT, rowAndColumnPairT> stackPairT;
-        typedef stackPairT* stackT;
+        typedef stackPairT stackT;
+        typedef stackT* stackPtrT;
 
         class SequentialSolver :
             public Solver
@@ -26,7 +27,7 @@ namespace cuda
             SequentialSolver(const board::Board& board);
             ~SequentialSolver() = default;
 
-            CUDA_DEVICE size_t solve(cuda::Board* resultArray, stackT stack);
+            CUDA_DEVICE size_t solve(cuda::Board* resultArray, stackPtrT stack);
 
             // Max value for cell
             const size_t maxVal;
@@ -36,7 +37,7 @@ namespace cuda
 #ifndef BT_WITH_STACK
             void backTracking(std::vector<cuda::Board> & retVal, size_t level = 0, size_t row = 0, size_t column = 0);
 #else
-            CUDA_DEVICE size_t backTrackingWithStack(cuda::Board* resultArray, stackT stack);
+            CUDA_DEVICE size_t backTrackingWithStack(cuda::Board* resultArray);
 #endif // !BT_WITH_STACK
             CUDA_DEVICE rowAndColumnPairT getNextFreeCell(size_t row, size_t column) const;
         };

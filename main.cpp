@@ -40,7 +40,6 @@ int main(int argc, const char** argv)
 
     SequentialSolver c(b);
     ParallelCpuSolver pc(b);
-    ParallelGpuSolver pg(b);
 
     Timer time;
     time.start();
@@ -49,13 +48,6 @@ int main(int argc, const char** argv)
     //std::cout << "Is Latin square?: " << pc.checkIfLatinSquare() << std::endl;
     //std::cout << "Is result board a valid solution?: " << pc.checkValidityWithHints() << std::endl;
     std::cout << "ParallelCpuSolver solving time: " << milliseconds << " ms" << std::endl;
-
-    time.start();
-    //const auto pgResult = pg.solve();
-    milliseconds = time.stop(Resolution::MILLISECONDS);
-    //std::cout << "Is Latin square?: " << pc.checkIfLatinSquare() << std::endl;
-    //std::cout << "Is result board a valid solution?: " << pc.checkValidityWithHints() << std::endl;
-    std::cout << "ParallelGpuSolver solving time: " << milliseconds << " ms" << std::endl;
 
     time.start();
     const auto cResult = c.solve();

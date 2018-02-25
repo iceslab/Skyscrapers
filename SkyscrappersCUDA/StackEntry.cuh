@@ -14,15 +14,29 @@ namespace cuda
         class StackEntry
         {
         public:
-            CUDA_HOST StackEntry();
-            CUDA_HOST ~StackEntry();
+            //CUDA_HOST StackEntry();
+            //CUDA_HOST ~StackEntry();
 
+            // Device constructors
+            CUDA_DEVICE StackEntry();
+            CUDA_DEVICE StackEntry(const StackEntry<size> & other);
+            CUDA_DEVICE StackEntry(StackEntry<size> && other);
+            CUDA_DEVICE ~StackEntry();
+
+            // Device operators
+            CUDA_DEVICE StackEntry<size>& operator=(StackEntry<size> other);
+            CUDA_DEVICE StackEntry<size>& operator=(StackEntry<size> && other);
+            CUDA_DEVICE void swap(StackEntry<size> & first, StackEntry<size> & second);
+
+            // Constant due to CUDA limitations
             const size_t badIndex;
 
+            // Bit info methods
             CUDA_DEVICE bool all() const;
             CUDA_DEVICE bool any() const;
             CUDA_DEVICE bool none() const;
 
+            // Manipulation methods
             CUDA_DEVICE bool getBit(const size_t pos) const;
             CUDA_DEVICE void setBit(const size_t pos, bool val = true);
             CUDA_DEVICE void resetBit(const size_t pos);
@@ -42,17 +56,51 @@ namespace cuda
             stackLineT line;
         };
 
+//        template <size_t size>
+//        StackEntry<size>::StackEntry() : badIndex(std::numeric_limits<size_t>::max()), setBitsCount(0)
+//        {
+//#ifdef BIT_BASED_STACK
+//            line = 0;
+//#else
+//            // Allocate memory for row
+//            cudaError_t err = cudaMalloc(reinterpret_cast<void**>(&line), size * sizeof(*line));
+//
+//            // In case of error, print and reset pointer
+//            if (err != cudaSuccess)
+//            {
+//                CUDA_PRINT_ERROR("Failed allocation", err);
+//                line = nullptr;
+//            }
+//            else
+//            {
+//                clearAll();
+//            }
+//#endif // BIT_BASED_STACK
+//        }
+//
+//        template <size_t size>
+//        StackEntry<size>::~StackEntry()
+//        {
+//#ifdef BIT_BASED_STACK
+//            // Nothing to do
+//#else
+//            cudaFree(line);
+//            line = nullptr;
+//            setBitsCount = 0;
+//#endif // BIT_BASED_STACK
+//        }
+
         template <size_t size>
-        StackEntry<size>::StackEntry() : badIndex(std::numeric_limits<size_t>::max()), setBitsCount(0)
+        CUDA_DEVICE StackEntry<size>::StackEntry() : badIndex(std::numeric_limits<size_t>::max()), setBitsCount(0)
         {
 #ifdef BIT_BASED_STACK
             line = 0;
 #else
             // Allocate memory for row
-            cudaError_t err = cudaMalloc(reinterpret_cast<void**>(&line), size * sizeof(*line));
+            line = reinterpret_cast<stackLineT>(malloc(size * sizeof(*line)));
 
             // In case of error, print and reset pointer
-            if (err != cudaSuccess)
+            if (line == nullptr)
             {
                 CUDA_PRINT_ERROR("Failed allocation", err);
                 line = nullptr;
@@ -64,16 +112,73 @@ namespace cuda
 #endif // BIT_BASED_STACK
         }
 
+        template<size_t size>
+        CUDA_DEVICE StackEntry<size>::StackEntry(const StackEntry<size> & other) :
+            badIndex(badIndex), setBitsCount(setBitsCount)
+        {
+#ifdef BIT_BASED_STACK
+            line = other.line;
+#else
+            // Allocate memory for row
+            line = reinterpret_cast<stackLineT>(malloc(size * sizeof(*line)));
+
+            // In case of error, print and reset pointer
+            if (line == nullptr)
+            {
+                CUDA_PRINT_ERROR("Failed allocation", err);
+                line = nullptr;
+                setBitsCount = 0;
+            }
+            else
+            {
+                memcpy(line, other.line, size * sizeof(*line));
+            }
+#endif // BIT_BASED_STACK
+        }
+
+        template<size_t size>
+        CUDA_DEVICE StackEntry<size>::StackEntry(StackEntry<size> && other) :
+            badIndex(badIndex), setBitsCount(0), line(0)
+        {
+            swap(*this, other);
+        }
+
         template <size_t size>
-        StackEntry<size>::~StackEntry()
+        CUDA_DEVICE StackEntry<size>::~StackEntry()
         {
 #ifdef BIT_BASED_STACK
             // Nothing to do
 #else
-            cudaFree(line);
+            free(line);
             line = nullptr;
             setBitsCount = 0;
 #endif // BIT_BASED_STACK
+        }
+
+        template<size_t size>
+        CUDA_DEVICE StackEntry<size> & StackEntry<size>::operator=(StackEntry<size> other)
+        {
+            swap(*this, other);
+            return *this;
+        }
+
+        template<size_t size>
+        CUDA_DEVICE StackEntry<size> & StackEntry<size>::operator=(StackEntry<size> && other)
+        {
+            swap(*this, other);
+            return *this;
+        }
+
+        template<size_t size>
+        CUDA_DEVICE void StackEntry<size>::swap(StackEntry<size> & first, StackEntry<size> & second)
+        {
+            size_t tmp_setBitsCount = first.setBitsCount;
+            stackLineT tmp_line = first.line;
+            first.setBitsCount = second.setBitsCount;
+            first.line = second.line;
+            second.setBitsCount = tmp_setBitsCount;
+            second.line = tmp_line;
+            
         }
 
         template <size_t size>

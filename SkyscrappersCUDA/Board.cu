@@ -153,6 +153,23 @@ namespace cuda
         return SquareMatrix<boardFieldT>::whichEdgeColumn(column);
     }
 
+    CUDA_HOST std::vector<boardFieldT> Board::getHostVector()
+    {
+        const auto boardElementsCount = getSize() * getSize();
+        std::vector<boardFieldT> h_retVal(boardElementsCount, 0);
+
+        cudaError_t err = cudaMemcpy(h_retVal.data(),
+                                     d_data,
+                                     boardElementsCount * sizeof(boardFieldT),
+                                     cudaMemcpyDeviceToHost);
+        if (err != cudaSuccess)
+        {
+            CUDA_PRINT_ERROR("Failed memcpy", err);
+        }
+
+        return h_retVal;
+    }
+
     CUDA_DEVICE size_t Board::countRowVisibility(size_t row) const
     {
         size_t retVal = 1;

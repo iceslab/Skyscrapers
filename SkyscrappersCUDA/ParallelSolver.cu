@@ -4,63 +4,12 @@ namespace cuda
 {
     namespace solver
     {
-
-        //CUDA_HOST std::vector<board::Board> generateBoards(const board::Board & board, const size_t stopLevel)
-        //{
-        //    std::vector<board::Board> retVal;
-        //    generateBoards(board, stopLevel, retVal);
-        //    return retVal;
-        //}
-
-        //CUDA_HOST void generateBoards(const board::Board & board,
-        //                              size_t stopLevel,
-        //                              std::vector<board::Board> & retVal,
-        //                              size_t level,
-        //                              size_t row,
-        //                              size_t column)
-        //{
-        //    ASSERT(stopLevel > 0 && stopLevel <= board.size());
-        //    DEBUG_CALL(std::cout << "level: " << level << " row: " << row << " column: " << column << "\n";);
-        //    DEBUG_CALL(board.print());
-        //    const auto treeRowSize = board.size();
-
-        //    // Check if it is last cell
-        //    const auto cellPair = getNextFreeCell(row, column);
-        //    if (level == stopLevel || cellPair == lastCellPair)
-        //    {
-        //        retVal.emplace_back(board);
-        //    }
-        //    else
-        //    {
-        //        for (size_t i = 0; i < treeRowSize; i++)
-        //        {
-        //            const auto consideredBuilding = static_cast<board::boardFieldT>(i + 1);
-        //            if (board.isBuildingPlaceable(row, column, consideredBuilding))
-        //            {
-        //                board.setCell(row, column, consideredBuilding);
-        //                if (board.isBoardPartiallyValid(row, column))
-        //                {
-        //                    generateBoards(stopLevel, retVal, level + 1, cellPair.first, cellPair.second);
-        //                }
-
-        //                board.clearCell(row, column);
-        //            }
-        //        }
-        //    }
-        //}
-
         CUDA_HOST kernelInputT prepareSolvers(const std::vector<board::Board> & boards,
                                               std::vector<SequentialSolver> & h_solvers,
                                               size_t & count)
         {
             // Create array on host
             h_solvers.reserve(boards.size());
-
-            //for (size_t i = 0; i < boards.size(); i++)
-            //{
-            //    auto & el = boards[i];
-            //    prepareRetVal.push_back(std::move(el));
-            //}
 
             for (auto & el : boards)
             {
@@ -102,6 +51,15 @@ namespace cuda
                 CUDA_PRINT_ERROR("Failed allocation", err);
                 d_retVal = nullptr;
             }
+            else
+            {
+                // Zero out allocated memory
+                err = cudaMemset(d_retVal, 0, solversCount * maxResultsPerThread * sizeof(*d_retVal));
+                if (err != cudaSuccess)
+                {
+                    CUDA_PRINT_ERROR("Failed memset", err);
+                }
+            }
 
             return d_retVal;
         }
@@ -115,6 +73,15 @@ namespace cuda
                 CUDA_PRINT_ERROR("Failed allocation", err);
                 d_retVal = nullptr;
             }
+            else
+            {
+                // Zero out allocated memory
+                err = cudaMemset(d_retVal, 0, solversCount * sizeof(*d_retVal));
+                if (err != cudaSuccess)
+                {
+                    CUDA_PRINT_ERROR("Failed memset", err);
+                }
+            }
 
             return d_retVal;
         }
@@ -122,10 +89,10 @@ namespace cuda
         CUDA_HOST kernelOutputT prepareHostResultArray(size_t solversCount)
         {
             kernelOutputT h_retVal = reinterpret_cast<kernelOutputT>(
-                malloc(solversCount * maxResultsPerThread * sizeof(*h_retVal)));
+                calloc(solversCount * maxResultsPerThread, sizeof(*h_retVal)));
             if (h_retVal == nullptr)
             {
-                HOST_PRINT_ERROR("Failed allocation");
+                HOST_PRINT_ERROR("Failed calloc");
             }
 
             return h_retVal;
@@ -134,25 +101,33 @@ namespace cuda
         CUDA_HOST kernelOutputSizesT prepareHostResultArraySizes(size_t solversCount)
         {
             kernelOutputSizesT h_retVal = reinterpret_cast<kernelOutputSizesT>(
-                malloc(solversCount * sizeof(*h_retVal)));
+                calloc(solversCount, sizeof(*h_retVal)));
             if (h_retVal == nullptr)
             {
-                HOST_PRINT_ERROR("Failed allocation");
+                HOST_PRINT_ERROR("Failed calloc");
             }
 
             return h_retVal;
         }
 
-        CUDA_HOST stackT prepareStack(size_t boardSize, size_t solversCount)
+        CUDA_HOST stackPtrT prepareStack(size_t boardSize, size_t solversCount)
         {
-            stackT d_retVal = nullptr;
+            stackPtrT d_retVal = nullptr;
             cudaError_t err = cudaMalloc(&d_retVal, boardSize * boardSize * solversCount * sizeof(*d_retVal));
             if (err != cudaSuccess)
             {
                 CUDA_PRINT_ERROR("Failed allocation", err);
                 d_retVal = nullptr;
             }
-
+            else
+            {
+                // Zero out allocated memory
+                err = cudaMemset(d_retVal, 0, boardSize * boardSize * solversCount * sizeof(*d_retVal));
+                if (err != cudaSuccess)
+                {
+                    CUDA_PRINT_ERROR("Failed memset", err);
+                }
+            }
             return d_retVal;
         }
 
@@ -174,7 +149,7 @@ namespace cuda
             d_outputBoardsSizes = nullptr;
         }
 
-        CUDA_HOST void freeStack(stackT & d_stack)
+        CUDA_HOST void freeStack(stackPtrT & d_stack)
         {
             cudaFree(d_stack);
             d_stack = nullptr;
@@ -192,10 +167,38 @@ namespace cuda
             h_outputBoardsSizes = nullptr;
         }
 
+        CUDA_HOST void copyResultsArray(kernelOutputT h_outputBoards,
+                                        kernelOutputT d_outputBoards,
+                                        size_t solversCount)
+        {
+            cudaError_t err = cudaMemcpy(h_outputBoards,
+                                         d_outputBoards,
+                                         solversCount * maxResultsPerThread * sizeof(*h_outputBoards),
+                                         cudaMemcpyDeviceToHost);
+            if (err != cudaSuccess)
+            {
+                CUDA_PRINT_ERROR("Failed memcpy", err);
+            }
+        }
+
+        CUDA_HOST void copyResultsArraySizes(kernelOutputSizesT h_outputBoardsSizes,
+                                             kernelOutputSizesT d_outputBoardsSizes,
+                                             size_t solversCount)
+        {
+            cudaError_t err = cudaMemcpy(h_outputBoardsSizes,
+                                         d_outputBoardsSizes,
+                                         solversCount * sizeof(*h_outputBoardsSizes),
+                                         cudaMemcpyDeviceToHost);
+            if (err != cudaSuccess)
+            {
+                CUDA_PRINT_ERROR("Failed memcpy", err);
+            }
+        }
+
         CUDA_HOST bool verifyAllocation(kernelInputT & d_solvers,
                                         kernelOutputT & d_outputBoards,
                                         kernelOutputSizesT & d_outputBoardsSizes,
-                                        stackT & d_stack)
+                                        stackPtrT & d_stack)
         {
             return d_solvers != nullptr &&
                 d_outputBoards != nullptr &&
@@ -203,14 +206,15 @@ namespace cuda
                 d_stack != nullptr;
         }
 
-        CUDA_GLOBAL void parallelBoardSolving(const kernelInputT & d_solvers,
-                                              kernelOutputT & d_outputBoards,
-                                              kernelOutputSizesT & d_outputBoardsSizes,
-                                              stackT & d_stack)
-        {
-            // It denotes thread index and array index
-            const auto idx = threadIdx.x;
-            d_outputBoardsSizes[idx] = d_solvers[idx].solve(d_outputBoards + idx * maxResultsPerThread, d_stack + idx);
-        }
+        //CUDA_GLOBAL void parallelBoardSolving(kernelInputT d_solvers,
+        //                                      kernelOutputT d_outputBoards,
+        //                                      kernelOutputSizesT d_outputBoardsSizes,
+        //                                      stackT d_stack)
+        //{
+        //    // It denotes thread index and array index
+        //    const auto idx = threadIdx.x;
+        //    printf("Thread idx: %u\n");
+        //    //d_outputBoardsSizes[idx] = d_solvers[idx].solve(d_outputBoards + idx * maxResultsPerThread, d_stack + idx);
+        //}
     }
 }

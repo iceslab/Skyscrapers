@@ -15,7 +15,7 @@
 namespace board
 {
     // Typedefs for easier typing
-    typedef uint32_t boardFieldT;
+    typedef unsigned int boardFieldT;
     typedef std::vector<std::vector<boardFieldT>> boardT;
     typedef std::vector<boardFieldT> hintT;
     typedef std::vector<boardFieldT> rowT;
@@ -35,6 +35,8 @@ namespace board
 
         Board(const Board & board) = default;
         Board(Board && board) = default;
+
+        Board(const std::vector<boardFieldT> & fieldVector);
 
         Board(const size_t boardSize);
         Board(const std::string & path);
