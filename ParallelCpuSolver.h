@@ -11,7 +11,7 @@ namespace solver
         ParallelCpuSolver(const board::Board& board);
         ~ParallelCpuSolver() = default;
 
-        std::vector<board::Board> solve();
+        std::vector<board::Board> solve(const size_t stopLevel);
     protected:
         std::vector<SequentialSolver> prepareSolvers(const size_t count);
     };

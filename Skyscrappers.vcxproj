@@ -45,9 +45,9 @@
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -133,7 +133,6 @@
     <ClCompile Include="AMPUtilities.cpp" />
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="Constraints.cpp" />
-    <ClCompile Include="ParallelGpuSolver.cpp" />
     <ClCompile Include="ParallelSolver.cpp" />
     <ClCompile Include="SequentialSolver.cpp" />
     <ClCompile Include="EfficientIncidenceCube.cpp" />
@@ -147,7 +146,6 @@
     <ClInclude Include="AMPUtilities.h" />
     <ClInclude Include="Board.h" />
     <ClInclude Include="Constraints.h" />
-    <ClInclude Include="ParallelGpuSolver.h" />
     <ClInclude Include="ParallelSolver.h" />
     <ClInclude Include="SequentialSolver.h" />
     <ClInclude Include="EfficientIncidenceCube.h" />

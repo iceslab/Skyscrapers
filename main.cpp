@@ -7,7 +7,6 @@
 #include "Solver.h"
 #include "SequentialSolver.h"
 #include "ParallelCpuSolver.h"
-#include "ParallelGpuSolver.h"
 
 #define LOAD_FROM_FILE
 
@@ -15,8 +14,6 @@ using board::Board;
 using solver::Solver;
 using solver::SequentialSolver;
 using solver::ParallelCpuSolver;
-using solver::ParallelGpuSolver;
-using utils::AMPUtilities;
 
 int main(int argc, const char** argv)
 {
@@ -35,8 +32,6 @@ int main(int argc, const char** argv)
     std::cout << "Expected result" << std::endl;
     b.print();
     std::cout << "==========================" << std::endl;
-
-    std::cout << "Is board a valid solution?: " << AMPUtilities::boolToString(b.checkValidityWithHints()) << std::endl;
 
     SequentialSolver c(b);
     ParallelCpuSolver pc(b);

@@ -7,12 +7,12 @@ namespace solver
         // Nothing to do
     }
 
-    std::vector<board::Board> ParallelCpuSolver::solve()
+    std::vector<board::Board> ParallelCpuSolver::solve(const size_t stopLevel)
     {
         std::vector<board::Board> retVal;
         continueBoolT continueBT = true;
         UNREFERENCED_PARAMETER(continueBT);
-        auto solvers = prepareSolvers(1);
+        auto solvers = prepareSolvers(stopLevel);
         retVal.reserve(solvers.size());
         std::vector<std::future<std::vector<board::Board>>> results;
         results.reserve(solvers.size());

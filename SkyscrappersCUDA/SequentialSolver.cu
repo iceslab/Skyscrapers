@@ -77,9 +77,9 @@ namespace cuda
 #else
         CUDA_DEVICE size_t SequentialSolver::backTrackingWithStack(cuda::Board* resultArray, size_t threadIdx)
         {
-            CUDA_PRINT("%llu: %s: BEGIN\n",
-                       threadIdx,
-                       __FUNCTION__);
+            //CUDA_PRINT("%llu: %s: BEGIN\n",
+            //           threadIdx,
+            //           __FUNCTION__);
             const auto boardCellsCount = board.getSize() * board.getSize();
             size_t* stack = reinterpret_cast<size_t*>(malloc(boardCellsCount * sizeof(size_t)));
             size_t* stackRows = reinterpret_cast<size_t*>(malloc(boardCellsCount * sizeof(size_t)));
@@ -88,9 +88,9 @@ namespace cuda
                 stackRows != nullptr &&
                 stackColumns != nullptr)
             {
-                CUDA_PRINT("%llu: %s: Stack arrays allocated successfully\n",
-                           threadIdx,
-                           __FUNCTION__);
+                //CUDA_PRINT("%llu: %s: Stack arrays allocated successfully\n",
+                //           threadIdx,
+                //           __FUNCTION__);
                 memset(stack, 0, boardCellsCount * sizeof(size_t));
                 memset(stackRows, 0, boardCellsCount * sizeof(size_t));
                 memset(stackColumns, 0, boardCellsCount * sizeof(size_t));
@@ -103,7 +103,7 @@ namespace cuda
             }
             else
             {
-                CUDA_PRINT("%llu: %s: Stack arrays allocation failed. Returning...\n", threadIdx, __FUNCTION__);
+                //CUDA_PRINT("%llu: %s: Stack arrays allocation failed. Returning...\n", threadIdx, __FUNCTION__);
                 free(stack);
                 free(stackRows);
                 free(stackColumns);
@@ -133,7 +133,7 @@ namespace cuda
             //CUDA_PRINT("%llu: %s: stackSize=%llu\n", threadIdx, __FUNCTION__, stackSize);
             do
             {
-                board.print(threadIdx);
+                //board.print(threadIdx);
                 auto & entry = stack[stackSize - 1];
                 auto & row = stackRows[stackSize - 1];
                 auto & column = stackColumns[stackSize - 1];
@@ -172,16 +172,16 @@ namespace cuda
                             {
                                 if (resultsCount < maxResultsPerThread)
                                 {
-                                    CUDA_PRINT("%llu: %s: Found a result, copying to global memory\n",
-                                               threadIdx,
-                                               __FUNCTION__);
+                                    //CUDA_PRINT("%llu: %s: Found a result, copying to global memory\n",
+                                    //           threadIdx,
+                                    //           __FUNCTION__);
                                     board.copyInto(resultArray[resultsCount++]);
                                 }
                                 else
                                 {
-                                    CUDA_PRINT("%llu: %s: Found a result, but it doesn't fit inside array\n",
-                                               threadIdx,
-                                               __FUNCTION__);
+                                    //CUDA_PRINT("%llu: %s: Found a result, but it doesn't fit inside array\n",
+                                    //           threadIdx,
+                                    //           __FUNCTION__);
                                 }
                                 board.clearCell(row, column);
                             }
@@ -235,9 +235,9 @@ namespace cuda
             stackRows = nullptr;
             stackColumns = nullptr;
 
-            CUDA_PRINT("%llu: %s: END\n",
-                       threadIdx,
-                       __FUNCTION__);
+            //CUDA_PRINT("%llu: %s: END\n",
+            //           threadIdx,
+            //           __FUNCTION__);
             return resultsCount;
         }
 #endif // !BT_WITH_STACK

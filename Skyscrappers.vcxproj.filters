@@ -42,9 +42,6 @@
     <ClCompile Include="AMPUtilities.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ParallelGpuSolver.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ParallelSolver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -75,9 +72,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AMPUtilities.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ParallelGpuSolver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ParallelSolver.h">
