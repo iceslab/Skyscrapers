@@ -9,7 +9,7 @@ namespace cuda
     struct Pair
     {
         CUDA_HOST_DEVICE Pair(T first = T(), U second = U());
-        ~Pair() = default;
+        CUDA_DEVICE ~Pair() = default;
 
         CUDA_HOST_DEVICE Pair & operator=(const Pair & other);
 
@@ -24,6 +24,12 @@ namespace cuda
     {
         // Nothing to do
     }
+
+    //template<typename T, typename U>
+    //CUDA_HOST_DEVICE Pair<T, U>::~Pair()
+    //{
+    //    // Nothing to do
+    //}
 
     template<typename T, typename U>
     CUDA_HOST_DEVICE Pair<T, U> & Pair<T, U>::operator=(const Pair & other)

@@ -9,7 +9,8 @@ namespace cuda
         if (boardSize > 0)
         {
             // Alloc and memset setRows
-            cudaError_t err = cudaMalloc(reinterpret_cast<void**>(&setRows), boardSize * sizeof(boardFieldT));
+            cudaError_t err = cudaMalloc(reinterpret_cast<void**>(&setRows),
+                                         boardSize * sizeof(boardFieldT));
             if (err != cudaSuccess)
             {
                 CUDA_PRINT_ERROR("Failed allocation setRows", err);
@@ -17,7 +18,9 @@ namespace cuda
             }
             else
             {
-                err = cudaMemset(reinterpret_cast<void*>(setRows), 0, boardSize * sizeof(boardFieldT));
+                err = cudaMemset(reinterpret_cast<void*>(setRows),
+                                 0,
+                                 boardSize * sizeof(boardFieldT));
                 if (err != cudaSuccess)
                 {
                     CUDA_PRINT_ERROR("Failed memset setRows", err);
@@ -25,7 +28,8 @@ namespace cuda
             }
 
             // Alloc and memset setColumns
-            err = cudaMalloc(reinterpret_cast<void**>(&setColumns), boardSize * sizeof(boardFieldT));
+            err = cudaMalloc(reinterpret_cast<void**>(&setColumns),
+                             boardSize * sizeof(boardFieldT));
             if (err != cudaSuccess)
             {
                 CUDA_PRINT_ERROR("Failed allocation setColumns", err);
@@ -33,7 +37,9 @@ namespace cuda
             }
             else
             {
-                err = cudaMemset(reinterpret_cast<void*>(setColumns), 0, boardSize * sizeof(boardFieldT));
+                err = cudaMemset(reinterpret_cast<void*>(setColumns),
+                                 0,
+                                 boardSize * sizeof(boardFieldT));
                 if (err != cudaSuccess)
                 {
                     CUDA_PRINT_ERROR("Failed memset setColumns", err);
@@ -43,7 +49,8 @@ namespace cuda
             // Alloc and memset hints
             for (size_t side = 0; side < hintsSize; side++)
             {
-                err = cudaMalloc(reinterpret_cast<void**>(&hints[side]), boardSize * sizeof(boardFieldT));
+                err = cudaMalloc(reinterpret_cast<void**>(&hints[side]),
+                                 boardSize * sizeof(boardFieldT));
                 if (err != cudaSuccess)
                 {
                     CUDA_PRINT_ERROR("Failed allocation hints[side]", err);
@@ -51,7 +58,9 @@ namespace cuda
                 }
                 else
                 {
-                    err = cudaMemset(reinterpret_cast<void*>(hints[side]), 0, boardSize * sizeof(boardFieldT));
+                    err = cudaMemset(reinterpret_cast<void*>(hints[side]),
+                                     0,
+                                     boardSize * sizeof(boardFieldT));
                     if (err != cudaSuccess)
                     {
                         CUDA_PRINT_ERROR("Failed memset hints[side]", err);
@@ -64,10 +73,26 @@ namespace cuda
     Board::Board(const Board & board) : Board(board.getSize())
     {
         const auto boardSize = board.getSize();
-        cudaError_t err = cudaMemcpy(d_data, board.d_data, sizeof(*d_data) * boardSize * boardSize, cudaMemcpyDeviceToDevice);
+        cudaError_t err = cudaMemcpy(d_data,
+                                     board.d_data,
+                                     sizeof(*d_data) * boardSize * boardSize,
+                                     cudaMemcpyDeviceToDevice);
         if (err != cudaSuccess)
         {
             CUDA_PRINT_ERROR("Failed memcpy board", err);
+        }
+
+        // Copy hints
+        for (size_t side = 0; side < hintsSize; side++)
+        {
+            err = cudaMemcpy(hints[side],
+                             board.hints[side],
+                             boardSize * sizeof(boardFieldT),
+                             cudaMemcpyDeviceToDevice);
+            if (err != cudaSuccess)
+            {
+                CUDA_PRINT_ERROR("Failed memcpy hints[side]", err);
+            }
         }
     }
 
@@ -77,10 +102,27 @@ namespace cuda
         for (size_t row = 0; row < boardSize; row++)
         {
             const auto h_data = board.getRow(row).data();
-            cudaError_t err = cudaMemcpy(d_data + row * boardSize, h_data, sizeof(*d_data) * boardSize, cudaMemcpyHostToDevice);
+            cudaError_t err = cudaMemcpy(d_data + row * boardSize,
+                                         h_data,
+                                         sizeof(*d_data) * boardSize,
+                                         cudaMemcpyHostToDevice);
             if (err != cudaSuccess)
             {
                 CUDA_PRINT_ERROR("Failed memcpy row", err);
+            }
+        }
+
+        // Copy hints
+        for (size_t side = 0; side < hintsSize; side++)
+        {
+            cudaError_t err = cudaMemcpy(hints[side],
+                                         board.hints[side].data(),
+                                         boardSize * sizeof(boardFieldT),
+                                         cudaMemcpyHostToDevice);
+            if (err != cudaSuccess)
+            {
+                CUDA_PRINT_ERROR("Failed memcpy hints[side]", err);
+                hints[side] = nullptr;
             }
         }
     }
@@ -153,6 +195,57 @@ namespace cuda
         return SquareMatrix<boardFieldT>::whichEdgeColumn(column);
     }
 
+    CUDA_DEVICE void Board::print(size_t threadIdx) const
+    {
+        const char* formatSpace = "%llu:   ";
+        const char* formatNum = "%llu: ";
+
+        if (threadIdx == CUDA_SIZE_T_MAX)
+        {
+            formatSpace = "  ";
+            formatNum = "";
+        }
+
+        // Free field to align columns
+        printf(formatSpace, threadIdx);
+
+        // Top hints
+        for (size_t i = 0; i < getSize(); i++)
+        {
+            printf("%llu ", hints[matrix::TOP][i]);
+        }
+        printf("\n");
+
+        // Whole board
+        for (size_t rowIdx = 0; rowIdx < getSize(); rowIdx++)
+        {
+            // Thread idx
+            printf(formatNum, threadIdx);
+
+            // Left hint field
+            printf("%llu ", hints[matrix::LEFT][rowIdx]);
+
+            // Board fields
+            for (size_t i = 0; i < getSize(); i++)
+            {
+                printf("%llu ", getCell(rowIdx, i));
+            }
+
+            // Right hint field
+            printf("%llu ", hints[matrix::RIGHT][rowIdx]);
+            printf("\n");
+        }
+
+        // Free field to align columns
+        printf(formatSpace, threadIdx);
+        // Bottom hints
+        for (size_t i = 0; i < getSize(); i++)
+        {
+            printf("%llu ", hints[matrix::BOTTOM][i]);
+        }
+        printf("\n");
+    }
+
     CUDA_HOST std::vector<boardFieldT> Board::getHostVector()
     {
         const auto boardElementsCount = getSize() * getSize();
@@ -168,6 +261,22 @@ namespace cuda
         }
 
         return h_retVal;
+    }
+
+    CUDA_DEVICE void Board::copyInto(cuda::Board & board)
+    {
+        const auto boardSize = board.getSize();
+        memcpy(board.d_data,
+               d_data,
+               sizeof(*d_data) * boardSize * boardSize);
+
+        // Copy hints
+        for (size_t side = 0; side < hintsSize; side++)
+        {
+            memcpy(board.hints[side],
+                   hints[side],
+                   boardSize * sizeof(boardFieldT));
+        }
     }
 
     CUDA_DEVICE size_t Board::countRowVisibility(size_t row) const

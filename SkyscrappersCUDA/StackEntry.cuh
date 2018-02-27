@@ -91,7 +91,7 @@ namespace cuda
 //        }
 
         template <size_t size>
-        CUDA_DEVICE StackEntry<size>::StackEntry() : badIndex(std::numeric_limits<size_t>::max()), setBitsCount(0)
+        CUDA_DEVICE StackEntry<size>::StackEntry() : badIndex(~0), setBitsCount(0)
         {
 #ifdef BIT_BASED_STACK
             line = 0;

@@ -4,12 +4,16 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include <cstdio>
+#include <tuple>
+#include <string>
+#include <vector>
 
 //#ifdef __CUDACC__
 #define CUDA_HOST __host__
 #define CUDA_DEVICE __device__
 #define CUDA_HOST_DEVICE __host__ __device__
 #define CUDA_GLOBAL __global__
+#define CUDA_SHARED __shared__
 //#else
 //#define CUDA_HOST
 //#define CUDA_DEVICE
@@ -58,6 +62,8 @@ namespace cuda
 {
     cudaError_t initDevice();
     cudaError_t deinitDevice();
+
+    std::pair<double, std::string> bytesToHumanReadable(double bytes);
 }
 
 #endif // !__INCLUDED_CUDA_UTILITIES_CUH__

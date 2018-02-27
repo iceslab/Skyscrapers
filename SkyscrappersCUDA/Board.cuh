@@ -6,6 +6,8 @@
 #include "SquareMatrix.cuh"
 #include <vector>
 
+#define CUDA_SIZE_T_MAX (size_t(~0))
+
 // Forward declaration
 namespace board
 {
@@ -73,7 +75,12 @@ namespace cuda
         CUDA_HOST_DEVICE SideE whichEdgeRow(size_t row) const;
         CUDA_HOST_DEVICE SideE whichEdgeColumn(size_t column) const;
 
+        CUDA_DEVICE void print(size_t threadIdx = CUDA_SIZE_T_MAX) const;
+
         CUDA_HOST std::vector<boardFieldT> getHostVector();
+
+        // Method assumes equal sizes and proper allocations of existing fields
+        CUDA_DEVICE void copyInto(cuda::Board & board);
         /// Output
         //void print() const;
     private:

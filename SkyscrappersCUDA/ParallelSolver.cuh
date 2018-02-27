@@ -18,9 +18,10 @@ namespace cuda
         CUDA_HOST kernelInputT prepareSolvers(const std::vector<board::Board> & boards,
                                               std::vector<SequentialSolver> & h_solvers,
                                               size_t & count);
-        CUDA_HOST kernelOutputT prepareResultArray(size_t solversCount);
+        CUDA_HOST kernelOutputT prepareResultArray(std::vector<cuda::Board> & h_boards,
+                                                   size_t solversCount,
+                                                   size_t boardSize);
         CUDA_HOST kernelOutputSizesT prepareResultArraySizes(size_t solversCount);
-        CUDA_HOST stackPtrT prepareStack(size_t boardSize, size_t solversCount);
 
         CUDA_HOST kernelOutputT prepareHostResultArray(size_t solversCount);
         CUDA_HOST kernelOutputSizesT prepareHostResultArraySizes(size_t solversCount);
@@ -32,7 +33,6 @@ namespace cuda
         // Complementary function to free results array sizes
         CUDA_HOST void freeResultArraySizes(kernelOutputSizesT & d_outputBoardsSizes);
         // Complementary function to free stack
-        CUDA_HOST void freeStack(stackPtrT & d_stack);
 
         // Complementary function to free results array
         CUDA_HOST void freeHostResultArray(kernelOutputT & h_outputBoards);
@@ -48,13 +48,7 @@ namespace cuda
 
         CUDA_HOST bool verifyAllocation(kernelInputT & d_solvers,
                                         kernelOutputT & d_outputBoards,
-                                        kernelOutputSizesT & d_outputBoardsSizes,
-                                        stackPtrT & d_stack);
-
-        /*CUDA_GLOBAL void parallelBoardSolving(kernelInputT d_solvers,
-                                              kernelOutputT d_outputBoards,
-                                              kernelOutputSizesT d_outputBoardsSizes,
-                                              stackT d_stack);*/
+                                        kernelOutputSizesT & d_outputBoardsSizes);
     }
 }
 

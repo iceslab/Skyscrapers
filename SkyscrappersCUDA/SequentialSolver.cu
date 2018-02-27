@@ -5,18 +5,16 @@ namespace cuda
     namespace solver
     {
         SequentialSolver::SequentialSolver(const board::Board & board) :
-            Solver(board),
-            maxVal(std::numeric_limits<size_t>::max()),
-            lastCellPair(rowAndColumnPairT(maxVal, maxVal))
+            Solver(board)
         {
-            this->board.clear();
+            // Nothing to do
         }
 
-        CUDA_DEVICE size_t SequentialSolver::solve(cuda::Board* resultArray, stackPtrT stack)
+        CUDA_DEVICE size_t SequentialSolver::solve(cuda::Board* resultArray, size_t threadIdx)
         {
 
 #ifdef BT_WITH_STACK
-            auto retVal = backTrackingWithStack(resultArray);
+            auto retVal = backTrackingWithStack(resultArray, threadIdx);
 #else
             auto freeCell = rowAndColumnPairT(0, 0);
             if (board.getCell(0, 0) != 0)
@@ -77,103 +75,177 @@ namespace cuda
             }
         }
 #else
-        CUDA_DEVICE size_t SequentialSolver::backTrackingWithStack(cuda::Board* resultArray)
+        CUDA_DEVICE size_t SequentialSolver::backTrackingWithStack(cuda::Board* resultArray, size_t threadIdx)
         {
-            CUDA_PRINT("%s: BEGIN\n", __FUNCTION__);
+            CUDA_PRINT("%llu: %s: BEGIN\n",
+                       threadIdx,
+                       __FUNCTION__);
             const auto boardCellsCount = board.getSize() * board.getSize();
-            stackPtrT stack = new stackT[boardCellsCount];
-            if (stack != nullptr)
+            size_t* stack = reinterpret_cast<size_t*>(malloc(boardCellsCount * sizeof(size_t)));
+            size_t* stackRows = reinterpret_cast<size_t*>(malloc(boardCellsCount * sizeof(size_t)));
+            size_t* stackColumns = reinterpret_cast<size_t*>(malloc(boardCellsCount * sizeof(size_t)));
+            if (stack != nullptr &&
+                stackRows != nullptr &&
+                stackColumns != nullptr)
             {
-                CUDA_PRINT("%s: Stack allocated successfully\n", __FUNCTION__);
+                CUDA_PRINT("%llu: %s: Stack arrays allocated successfully\n",
+                           threadIdx,
+                           __FUNCTION__);
+                memset(stack, 0, boardCellsCount * sizeof(size_t));
+                memset(stackRows, 0, boardCellsCount * sizeof(size_t));
+                memset(stackColumns, 0, boardCellsCount * sizeof(size_t));
+
+                //CUDA_PRINT("%s: Stack frames:\n", __FUNCTION__);
+                //for (size_t i = 0; i < boardCellsCount; i++)
+                //{
+                //    CUDA_PRINT("%u: 0x%08llx\n", i, stack[i]);
+                //}
             }
             else
             {
-                CUDA_PRINT("%s: Stack allocation failed. Returning...\n", __FUNCTION__);
+                CUDA_PRINT("%llu: %s: Stack arrays allocation failed. Returning...\n", threadIdx, __FUNCTION__);
+                free(stack);
+                free(stackRows);
+                free(stackColumns);
+                stack = nullptr;
+                stackRows = nullptr;
+                stackColumns = nullptr;
                 return 0;
             }
 
+            // Result boards count
             size_t resultsCount = 0;
+            // Current valid stack frames
             size_t stackSize = 0;
+            // Used for row result from getNextFreeCell()
+            size_t rowRef = 0;
+            // Used for column result from getNextFreeCell()
+            size_t columnRef = 0;
 
-            rowAndColumnPairT initialCellPair(0, 0);
             if (board.getCell(0, 0) != 0)
             {
-                initialCellPair = getNextFreeCell(0, 0);
+                getNextFreeCell(0, 0, rowRef, columnRef);
             }
 
             auto stackEntrySize = board.getSize();
-            stack[stackSize].first.clearAll();
-            stack[stackSize++].second = initialCellPair;
+            stackRows[stackSize] = rowRef;
+            stackColumns[stackSize++] = columnRef;
+            //CUDA_PRINT("%llu: %s: stackSize=%llu\n", threadIdx, __FUNCTION__, stackSize);
             do
             {
-                auto & entry = stack[stackSize - 1].first;
-                auto & stackCell = stack[stackSize - 1].second;
+                board.print(threadIdx);
+                auto & entry = stack[stackSize - 1];
+                auto & row = stackRows[stackSize - 1];
+                auto & column = stackColumns[stackSize - 1];
 
-                const auto & row = stackCell.first;
-                const auto & column = stackCell.second;
-
-                auto idx = entry.firstZero();
-                if (idx != entry.badIndex)
+                auto idx = BitManipulation::firstZero(entry);
+                idx = idx >= board.getSize() ? CUDA_BAD_INDEX : idx; // Make sure index is in range
+                //CUDA_PRINT("%llu: %s: First zero on index: %llu stack[%llu]=0x%08llx\n",
+                //           threadIdx,
+                //           __FUNCTION__,
+                //           idx,
+                //           stackSize - 1,
+                //           entry);
+                if (idx != CUDA_BAD_INDEX)
                 {
-                    entry.setBit(idx);
+                    BitManipulation::setBit(entry, idx);
 
                     const auto consideredBuilding = idx + 1;
                     if (board.isBuildingPlaceable(row, column, consideredBuilding))
                     {
+                        //CUDA_PRINT("%llu: %s: Building %llu is placeable at (%llu, %llu)\n",
+                        //           threadIdx,
+                        //           __FUNCTION__,
+                        //           consideredBuilding,
+                        //           row,
+                        //           column);
                         board.setCell(row, column, consideredBuilding);
                         if (board.isBoardPartiallyValid(row, column))
                         {
-                            const auto nextCellPair = getNextFreeCell(row, column);
-                            if (nextCellPair == lastCellPair)
+                            //CUDA_PRINT("%llu: %s: Board partially VALID till (%llu, %llu)\n",
+                            //           threadIdx,
+                            //           __FUNCTION__,
+                            //           row,
+                            //           column);
+                            getNextFreeCell(row, column, rowRef, columnRef);
+                            if (!isCellValid(rowRef, columnRef))
                             {
                                 if (resultsCount < maxResultsPerThread)
                                 {
-                                    CUDA_PRINT("%s: Found a result, copying to global memory\n", __FUNCTION__);
-                                    memcpy(resultArray + resultsCount++, &board, sizeof(board));
+                                    CUDA_PRINT("%llu: %s: Found a result, copying to global memory\n",
+                                               threadIdx,
+                                               __FUNCTION__);
+                                    board.copyInto(resultArray[resultsCount++]);
                                 }
                                 else
                                 {
-                                    CUDA_PRINT("%s: Found a result, but it doesn't fit inside array\n", __FUNCTION__);
-                                    
+                                    CUDA_PRINT("%llu: %s: Found a result, but it doesn't fit inside array\n",
+                                               threadIdx,
+                                               __FUNCTION__);
                                 }
                                 board.clearCell(row, column);
                             }
                             else
                             {
-                                stack[stackSize].first.clearAll();
-                                stack[stackSize++].second = nextCellPair;
+                                stack[stackSize] = 0;
+                                stackRows[stackSize] = rowRef;
+                                stackColumns[stackSize++] = columnRef;
+                                //CUDA_PRINT("%llu: %s: Next valid cell (%llu, %llu), stackSize: %llu\n",
+                                //           threadIdx,
+                                //           __FUNCTION__,
+                                //           rowRef,
+                                //           columnRef,
+                                //           stackSize);
                             }
                         }
                         else
                         {
+                            //CUDA_PRINT("%llu: %s: Board partially INVALID till (%llu, %llu)\n",
+                            //           threadIdx,
+                            //           __FUNCTION__,
+                            //           row,
+                            //           column);
                             board.clearCell(row, column);
                         }
                     }
                 }
                 else
                 {
-                    CUDA_PRINT("%s: Searched through all variants. Popping stack...\n", __FUNCTION__);
+                    //CUDA_PRINT("%llu: %s: Searched through all variants. Popping stack...\n",
+                    //           threadIdx,
+                    //           __FUNCTION__);
                     board.clearCell(row, column);
                     --stackSize;
                     if (stackSize > 0)
                     {
-                        const auto & newStackCell = stack[stackSize - 1].second;
-                        board.clearCell(newStackCell.first, newStackCell.second);
+                        board.clearCell(stackRows[stackSize - 1], stackColumns[stackSize - 1]);
                     }
                 }
 
-                CUDA_PRINT("%s: stackSize %u\n", __FUNCTION__, stackSize);
+                //CUDA_PRINT("%llu: %s: stackSize %u\n",
+                //           threadIdx,
+                //           __FUNCTION__,
+                //           stackSize);
             } while (stackSize > 0);
 
-            delete[] stack;
+            free(stack);
+            free(stackRows);
+            free(stackColumns);
             stack = nullptr;
+            stackRows = nullptr;
+            stackColumns = nullptr;
 
-            CUDA_PRINT("%s: END\n", __FUNCTION__);
+            CUDA_PRINT("%llu: %s: END\n",
+                       threadIdx,
+                       __FUNCTION__);
             return resultsCount;
         }
 #endif // !BT_WITH_STACK
 
-        CUDA_DEVICE rowAndColumnPairT SequentialSolver::getNextFreeCell(size_t row, size_t column) const
+        CUDA_DEVICE void SequentialSolver::getNextFreeCell(size_t row,
+                                                           size_t column,
+                                                           size_t & rowOut,
+                                                           size_t & columnOut) const
         {
             const auto maxSize = board.getSize();
 
@@ -196,11 +268,21 @@ namespace cuda
             // If row is too big return max values
             if (row >= maxSize)
             {
-                row = maxVal;
-                column = maxVal;
+                row = CUDA_SIZE_T_MAX;
+                column = CUDA_SIZE_T_MAX;
             }
 
-            return rowAndColumnPairT(row, column);
+            rowOut = row;
+            columnOut = column;
+        }
+
+        CUDA_DEVICE bool SequentialSolver::isCellValid(size_t row, size_t column)
+        {
+            return row != CUDA_SIZE_T_MAX && column != CUDA_SIZE_T_MAX;
+        }
+        CUDA_DEVICE const cuda::Board & SequentialSolver::getBoard() const
+        {
+            return board;
         }
     }
 }
