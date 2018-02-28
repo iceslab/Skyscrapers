@@ -43,7 +43,16 @@ int main(int argc, char** argv)
     // CPU solvers
     auto cMilliseconds = std::numeric_limits<double>::quiet_NaN();
     auto pcMilliseconds = std::numeric_limits<double>::quiet_NaN();
+
     auto pgMilliseconds = std::numeric_limits<double>::quiet_NaN();
+
+    auto initMilliseconds = std::numeric_limits<double>::quiet_NaN();
+    auto deinitMilliseconds = std::numeric_limits<double>::quiet_NaN();
+
+    auto generationMilliseconds = std::numeric_limits<double>::quiet_NaN();
+
+    auto allocationMilliseconds = std::numeric_limits<double>::quiet_NaN();
+    auto deallocationMilliseconds = std::numeric_limits<double>::quiet_NaN();
 
     auto kernelLaunchMilliseconds = std::numeric_limits<double>::quiet_NaN();
     auto kernelSyncMilliseconds = std::numeric_limits<double>::quiet_NaN();
@@ -71,15 +80,25 @@ int main(int argc, char** argv)
     if (parallelGpuSolver == true)
     {
         Timer time;
+        Timer timeInit;
+        Timer timeGeneration;
+        Timer timeAllocation;
         time.start();
         // Initialize device
         cuda::initDevice();
+        initMilliseconds = time.stop(Resolution::MILLISECONDS);
+
         solver::ParallelSolver ps(b);
         printf("Generating boards...\n");
+
+        timeGeneration.start();
         const auto boards = ps.generateNBoards(desiredBoards);
+        generationMilliseconds = timeGeneration.stop(Resolution::MILLISECONDS);
+
         printf("Boards generated: %zu\n", boards.size());
         size_t generatedSolversCount = 0;
 
+        timeAllocation.start();
         // Host vector for solvers - needed to properly execute destructors
         // It's lifetime ensures that pointers on device are valid during kernel execution
         std::vector<cuda::solver::SequentialSolver> h_solvers;
@@ -99,6 +118,8 @@ int main(int argc, char** argv)
         auto h_outputBoards = cuda::solver::prepareHostResultArray(generatedSolversCount);
         auto h_outputBoardsSizes = cuda::solver::prepareHostResultArraySizes(generatedSolversCount);
         //printf("Memory allocated\n");
+        allocationMilliseconds = timeAllocation.stop(Resolution::MILLISECONDS);
+
 
         // If allocation was successfull launch kernel
         if (cuda::solver::verifyAllocation(d_solvers, d_outputBoards, d_outputBoardsSizes))
@@ -167,6 +188,8 @@ int main(int argc, char** argv)
             }
         }
 
+
+        timeAllocation.start();
         // Dellocating host memory (in reverse order)
         cuda::solver::freeHostResultArraySizes(h_outputBoardsSizes);
         cuda::solver::freeHostResultArray(h_outputBoards);
@@ -175,9 +198,12 @@ int main(int argc, char** argv)
         cuda::solver::freeResultArraySizes(d_outputBoardsSizes);
         cuda::solver::freeResultArray(d_outputBoards);
         cuda::solver::freeSolvers(d_solvers);
+        deallocationMilliseconds = timeAllocation.stop(Resolution::MILLISECONDS);
 
+        timeInit.start();
         // Deinitialize device
         cuda::deinitDevice();
+        deinitMilliseconds = timeInit.stop(Resolution::MILLISECONDS);
 
         pgMilliseconds = time.stop(Resolution::MILLISECONDS);
     }
@@ -189,8 +215,21 @@ int main(int argc, char** argv)
     std::cout << "SequentialSolver solving time: " << cMilliseconds << " ms" << std::endl;
     std::cout << "ParallelCpuSolver solving time: " << pcMilliseconds << " ms" << std::endl;
     std::cout << "ParallelGpuSolver solving time: " << pgMilliseconds << " ms" << std::endl;
-    std::cout << "Kernel launch time: " << kernelLaunchMilliseconds << " ms" << std::endl;
+
+    std::cout << "\nDevice initialize time: " << initMilliseconds << " ms" << std::endl;
+    std::cout << "Device deinitialize time: " << deinitMilliseconds << " ms" << std::endl;
+
+    std::cout << "\nBoard generation time: " << generationMilliseconds << " ms" << std::endl;
+
+    std::cout << "\nMemory allocation time: " << allocationMilliseconds << " ms" << std::endl;
+    std::cout << "Memory deallocation time: " << deallocationMilliseconds << " ms" << std::endl;
+
+    std::cout << "\nKernel launch time: " << kernelLaunchMilliseconds << " ms" << std::endl;
     std::cout << "Kernel synchronize time: " << kernelSyncMilliseconds << " ms" << std::endl;
+
+    std::cout << "Allocation + synchronize + deallocation time: "
+        << allocationMilliseconds + kernelSyncMilliseconds + deallocationMilliseconds
+        << " ms" << std::endl;
 
     //system("pause");
     return 0;

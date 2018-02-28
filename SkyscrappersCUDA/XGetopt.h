@@ -31,6 +31,7 @@ extern bool parallelCpuSolver;
 extern bool parallelGpuSolver;
 extern size_t boardDimension;
 extern size_t desiredBoards;
+extern size_t desiredFifoSize;
 
 int getopt(int argc, TCHAR *argv[], TCHAR *optstring);
 

@@ -39,7 +39,6 @@
 
 #include "XGetopt.h"
 
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  X G e t o p t . c p p
@@ -230,7 +229,7 @@ bool ProcessCommandLine(int argc, TCHAR *argv[])
 {
     int c;
 
-    while ((c = getopt(argc, argv, _T("f:scgd:b:"))) != EOF)
+    while ((c = getopt(argc, argv, _T("f:scgd:b:p:"))) != EOF)
     {
         switch (c)
         {
@@ -258,6 +257,10 @@ bool ProcessCommandLine(int argc, TCHAR *argv[])
         case _T('b'):
             desiredBoards = std::stoull(optarg);
             printf("Desired boards set to: %zu\n", desiredBoards);
+            break;
+        case _T('p'):
+            desiredFifoSize = std::stoull(optarg);
+            printf("Desired FIFO size set to: %zu bytes\n", desiredFifoSize);
             break;
         case _T('?'):
             printf("ERROR: illegal option %s\n", argv[optind - 1]);

@@ -14,6 +14,9 @@
 #define CUDA_HOST_DEVICE __host__ __device__
 #define CUDA_GLOBAL __global__
 #define CUDA_SHARED __shared__
+
+#define CUDA_DEFAULT_FIFO_SIZE (1 << 20) // default FIFO size in bytes
+
 //#else
 //#define CUDA_HOST
 //#define CUDA_DEVICE
@@ -60,7 +63,7 @@ do{ \
 
 namespace cuda
 {
-    cudaError_t initDevice();
+    cudaError_t initDevice(size_t fifoSize = CUDA_DEFAULT_FIFO_SIZE);
     cudaError_t deinitDevice();
 
     std::pair<double, std::string> bytesToHumanReadable(double bytes);

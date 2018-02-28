@@ -1,8 +1,10 @@
 #include "CUDAUtilities.cuh"
 
+size_t desiredFifoSize = CUDA_DEFAULT_FIFO_SIZE;
+
 namespace cuda
 {
-    cudaError_t initDevice()
+    cudaError_t initDevice(size_t fifoSize)
     {
         // Choose which GPU to run on, change this on a multi-GPU system.
         cudaError_t cudaStatus = cudaSetDevice(0);
@@ -11,22 +13,24 @@ namespace cuda
             fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
         }
 
-        size_t fifoSize = 0;
-        cudaDeviceGetLimit(&fifoSize, cudaLimitPrintfFifoSize);
-        auto converted = bytesToHumanReadable(fifoSize);
-        fprintf(stderr, "FIFO size (printf): %5.1f %s\n", converted.first, converted.second.c_str());
-#ifdef DEBUG
-        fifoSize = (512 << 20);
-#else
-        fifoSize = (10 << 20);
-#endif // DEBUG
-        
-        converted = bytesToHumanReadable(fifoSize);
-        fprintf(stderr, "Setting FIFO size to %5.1f %s\n", converted.first, converted.second.c_str());
-        cudaDeviceSetLimit(cudaLimitPrintfFifoSize, fifoSize);
-        cudaDeviceGetLimit(&fifoSize, cudaLimitPrintfFifoSize);
-        converted = bytesToHumanReadable(fifoSize);
-        fprintf(stderr, "FIFO size (printf): %5.1f %s\n", converted.first, converted.second.c_str());
+        if (fifoSize != CUDA_DEFAULT_FIFO_SIZE)
+        {
+            size_t fifoSizeRef = 0;
+            cudaDeviceGetLimit(&fifoSizeRef, cudaLimitPrintfFifoSize);
+            auto converted = bytesToHumanReadable(fifoSizeRef);
+            fprintf(stderr, "FIFO size (printf): %5.1f %s\n", converted.first, converted.second.c_str());
+            converted = bytesToHumanReadable(fifoSize);
+            fprintf(stderr, "Setting FIFO size to %5.1f %s\n", converted.first, converted.second.c_str());
+            cudaDeviceSetLimit(cudaLimitPrintfFifoSize, fifoSize);
+            cudaDeviceGetLimit(&fifoSizeRef, cudaLimitPrintfFifoSize);
+            converted = bytesToHumanReadable(fifoSizeRef);
+            fprintf(stderr, "FIFO size (printf): %5.1f %s\n", converted.first, converted.second.c_str());
+        }
+        else
+        {
+            auto converted = bytesToHumanReadable(fifoSize);
+            fprintf(stderr, "Default FIFO size (printf): %5.1f %s\n", converted.first, converted.second.c_str());
+        }
 
         return cudaStatus;
     }
