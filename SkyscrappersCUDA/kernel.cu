@@ -6,6 +6,7 @@
 #include "ParallelSolver.cuh"
 #include <stdio.h>
 #include "XGetopt.h"
+#include "Statistics.h"
 
 CUDA_GLOBAL void parallelBoardSolving(cuda::solver::kernelInputT d_solvers,
                                       cuda::solver::kernelOutputT d_outputBoards,
@@ -16,6 +17,10 @@ CUDA_GLOBAL void parallelBoardSolving(cuda::solver::kernelInputT d_solvers,
     d_outputBoardsSizes[idx] =
         d_solvers[idx].solve(d_outputBoards + idx * cuda::solver::maxResultsPerThread, idx);
 }
+
+Statistics launchSequentialSolver(const board::Board & board);
+Statistics launchParallelCpuSolver(const board::Board & board);
+Statistics launchBaseParallelGpuSolver(const board::Board & board);
 
 int main(int argc, char** argv)
 {
@@ -41,9 +46,53 @@ int main(int argc, char** argv)
     fflush(stderr);
 
     // CPU solvers
-    auto cMilliseconds = std::numeric_limits<double>::quiet_NaN();
-    auto pcMilliseconds = std::numeric_limits<double>::quiet_NaN();
+    const auto sStats = launchSequentialSolver(b);
+    const auto pcStats = launchParallelCpuSolver(b);
+    const auto bpgStats = launchBaseParallelGpuSolver(b);
 
+    sStats.print();
+    pcStats.print();
+    bpgStats.print();
+
+    //system("pause");
+    return 0;
+}
+
+Statistics launchSequentialSolver(const board::Board & board)
+{
+    Statistics retVal;
+    auto cMilliseconds = std::numeric_limits<double>::quiet_NaN();
+    if (sequentialSolver == true)
+    {
+        solver::SequentialSolver c(board);
+        Timer time;
+        time.start();
+        const auto cResult = c.solve();
+        cMilliseconds = time.stop(Resolution::MILLISECONDS);
+    }
+    retVal.emplace_back("SequentialSolver solving time: ", cMilliseconds);
+    return retVal;
+}
+
+Statistics launchParallelCpuSolver(const board::Board & board)
+{
+    Statistics retVal;
+    auto pcMilliseconds = std::numeric_limits<double>::quiet_NaN();
+    if (parallelCpuSolver == true)
+    {
+        solver::ParallelCpuSolver pc(board);
+        Timer time;
+        time.start();
+        const auto pcResult = pc.solve(desiredBoards);
+        pcMilliseconds = time.stop(Resolution::MILLISECONDS);
+    }
+    retVal.emplace_back("ParallelCpuSolver solving time: ", pcMilliseconds);
+    return retVal;
+}
+
+Statistics launchBaseParallelGpuSolver(const board::Board & board)
+{
+    Statistics retVal;
     auto pgMilliseconds = std::numeric_limits<double>::quiet_NaN();
 
     auto initMilliseconds = std::numeric_limits<double>::quiet_NaN();
@@ -57,26 +106,6 @@ int main(int argc, char** argv)
     auto kernelLaunchMilliseconds = std::numeric_limits<double>::quiet_NaN();
     auto kernelSyncMilliseconds = std::numeric_limits<double>::quiet_NaN();
 
-    if (parallelCpuSolver == true)
-    {
-        solver::ParallelCpuSolver pc(b);
-        Timer time;
-        time.start();
-        const auto pcResult = pc.solve(desiredBoards);
-        pcMilliseconds = time.stop(Resolution::MILLISECONDS);
-    }
-
-    if (sequentialSolver == true)
-    {
-        solver::SequentialSolver c(b);
-        Timer time;
-        time.start();
-        const auto cResult = c.solve();
-        cMilliseconds = time.stop(Resolution::MILLISECONDS);
-    }
-    // CPU solvers end
-
-    // GPU solver
     if (parallelGpuSolver == true)
     {
         Timer time;
@@ -88,7 +117,7 @@ int main(int argc, char** argv)
         cuda::initDevice();
         initMilliseconds = time.stop(Resolution::MILLISECONDS);
 
-        solver::ParallelSolver ps(b);
+        solver::ParallelSolver ps(board);
         printf("Generating boards...\n");
 
         timeGeneration.start();
@@ -204,34 +233,18 @@ int main(int argc, char** argv)
         // Deinitialize device
         cuda::deinitDevice();
         deinitMilliseconds = timeInit.stop(Resolution::MILLISECONDS);
-
         pgMilliseconds = time.stop(Resolution::MILLISECONDS);
     }
-    // GPU solvers end
 
-    fflush(stdout);
-    fflush(stderr);
-
-    std::cout << "SequentialSolver solving time: " << cMilliseconds << " ms" << std::endl;
-    std::cout << "ParallelCpuSolver solving time: " << pcMilliseconds << " ms" << std::endl;
-    std::cout << "ParallelGpuSolver solving time: " << pgMilliseconds << " ms" << std::endl;
-
-    std::cout << "\nDevice initialize time: " << initMilliseconds << " ms" << std::endl;
-    std::cout << "Device deinitialize time: " << deinitMilliseconds << " ms" << std::endl;
-
-    std::cout << "\nBoard generation time: " << generationMilliseconds << " ms" << std::endl;
-
-    std::cout << "\nMemory allocation time: " << allocationMilliseconds << " ms" << std::endl;
-    std::cout << "Memory deallocation time: " << deallocationMilliseconds << " ms" << std::endl;
-
-    std::cout << "\nKernel launch time: " << kernelLaunchMilliseconds << " ms" << std::endl;
-    std::cout << "Kernel synchronize time: " << kernelSyncMilliseconds << " ms" << std::endl;
-
-    std::cout << "Allocation + synchronize + deallocation time: "
-        << allocationMilliseconds + kernelSyncMilliseconds + deallocationMilliseconds
-        << " ms" << std::endl;
-
-    //system("pause");
-    return 0;
+    retVal.emplace_back("ParallelGpuSolver solving time: ", pgMilliseconds);
+    retVal.emplace_back("\nDevice initialize time: ", initMilliseconds);
+    retVal.emplace_back("Device deinitialize time: ", deinitMilliseconds);
+    retVal.emplace_back("\nBoard generation time: ", generationMilliseconds);
+    retVal.emplace_back("\nMemory allocation time: ", allocationMilliseconds);
+    retVal.emplace_back("Memory deallocation time: ", deallocationMilliseconds);
+    retVal.emplace_back("\nKernel launch time: ", kernelLaunchMilliseconds);
+    retVal.emplace_back("Kernel synchronize time: ", kernelSyncMilliseconds);
+    retVal.emplace_back("Allocation + synchronize + deallocation time: ",
+                        allocationMilliseconds + kernelSyncMilliseconds + deallocationMilliseconds);
+    return retVal;
 }
-
