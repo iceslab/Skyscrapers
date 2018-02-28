@@ -15,7 +15,12 @@ namespace cuda
         cudaDeviceGetLimit(&fifoSize, cudaLimitPrintfFifoSize);
         auto converted = bytesToHumanReadable(fifoSize);
         fprintf(stderr, "FIFO size (printf): %5.1f %s\n", converted.first, converted.second.c_str());
+#ifdef DEBUG
         fifoSize = (512 << 20);
+#else
+        fifoSize = (10 << 20);
+#endif // DEBUG
+        
         converted = bytesToHumanReadable(fifoSize);
         fprintf(stderr, "Setting FIFO size to %5.1f %s\n", converted.first, converted.second.c_str());
         cudaDeviceSetLimit(cudaLimitPrintfFifoSize, fifoSize);

@@ -10,6 +10,7 @@ namespace solver
         virtual ~ParallelSolver() = default;
 
         std::vector<board::Board> generateBoards(const size_t stopLevel);
+        std::vector<board::Board> generateNBoards(const size_t desiredBoards);
         void generateBoards(size_t stopLevel,
                             std::vector<board::Board> & retVal,
                             size_t level = 0,

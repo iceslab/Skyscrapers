@@ -129,6 +129,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <CudaCompile Include="Solver.cuh" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="XGetopt.h" />
     <CudaCompile Include="BitManipulation.cuh" />
     <ClInclude Include="ParallelSolver.cuh" />
   </ItemGroup>
@@ -136,6 +137,9 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <CudaCompile Include="BitManipulation.cu">
       <FileType>Document</FileType>
     </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="XGetopt.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

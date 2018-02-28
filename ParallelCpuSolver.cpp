@@ -34,7 +34,7 @@ namespace solver
 
     std::vector<SequentialSolver> ParallelCpuSolver::prepareSolvers(const size_t count)
     {
-        auto boards = generateBoards(count);
+        auto boards = generateNBoards(count);
         std::vector<SequentialSolver> retVal;
         retVal.reserve(boards.size());
 

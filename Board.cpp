@@ -272,6 +272,18 @@ namespace board
             // Resize hints
             h.resize(boardSize);
         }
+
+        setRows.resize(boardSize);
+        for (auto& set : setRows)
+        {
+            set.resize(boardSize);
+        }
+        
+        setColumns.resize(boardSize);
+        for (auto& set : setColumns)
+        {
+            set.resize(boardSize);
+        }
     }
 
     boardFieldT Board::getVisibleBuildings(matrix::SideE side, size_t rowOrColumn) const
