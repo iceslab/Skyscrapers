@@ -15,7 +15,7 @@ CUDA_GLOBAL void parallelBoardSolving(cuda::solver::kernelInputT d_solvers,
     // It denotes thread index and array index
     const auto idx = threadIdx.x;
     d_outputBoardsSizes[idx] =
-        d_solvers[idx].solve(d_outputBoards + idx * cuda::solver::maxResultsPerThread, idx);
+        d_solvers[idx].solve(d_outputBoards + idx * CUDA_MAX_RESULTS_PER_THREAD, idx);
 }
 
 Statistics launchSequentialSolver(const board::Board & board);

@@ -17,6 +17,14 @@
 
 #define CUDA_DEFAULT_FIFO_SIZE (1 << 20) // default FIFO size in bytes
 
+namespace cuda
+{
+    typedef signed int int32T;
+    typedef unsigned int uint32T;
+    typedef signed long long int int64T;
+    typedef unsigned long long int uint64T;
+}
+
 //#else
 //#define CUDA_HOST
 //#define CUDA_DEVICE

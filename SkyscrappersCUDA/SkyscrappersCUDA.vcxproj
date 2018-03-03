@@ -104,6 +104,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <CudaCompile Include="SequentialSolver.cu" />
     <CudaCompile Include="Solver.cu" />
     <CudaCompile Include="SquareMatrix.cu" />
+    <CudaCompile Include="Stack.cu" />
     <CudaCompile Include="StackEntry.cu" />
   </ItemGroup>
   <ItemGroup>
@@ -129,6 +130,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <CudaCompile Include="Solver.cuh" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Stack.cuh" />
     <ClInclude Include="Statistics.h" />
     <ClInclude Include="XGetopt.h" />
     <CudaCompile Include="BitManipulation.cuh" />

@@ -10,80 +10,22 @@ namespace cuda
             // Nothing to do
         }
 
-        CUDA_DEVICE size_t SequentialSolver::solve(cuda::Board* resultArray, size_t threadIdx)
+        CUDA_DEVICE uint32T SequentialSolver::solve(cuda::Board* resultArray, uint32T threadIdx)
         {
 
-#ifdef BT_WITH_STACK
-            auto retVal = backTrackingWithStack(resultArray, threadIdx);
-#else
-            auto freeCell = rowAndColumnPairT(0, 0);
-            if (board.getCell(0, 0) != 0)
-            {
-                freeCell = getNextFreeCell(0, 0);
-            }
-
-            std::vector<board::Board> retVal;
-            backTracking(retVal, 0, freeCell.first, freeCell.second);
-#endif // BT_WITH_STACK
-
+            auto retVal = backTrackingBase(resultArray, threadIdx);
             return retVal;
         }
 
-#ifndef BT_WITH_STACK
-        void solver::SequentialSolver::backTracking(std::vector<board::Board> & retVal, size_t level, size_t row, size_t column)
-        {
-            const auto treeRowSize = board.size();
-
-            // Check if it is last cell
-            const auto cellPair = getNextFreeCell(row, column);
-            if (cellPair == lastCellPair)
-            {
-                DEBUG_PRINTLN_VERBOSE_INFO("Last cell");
-                for (size_t i = 0; i < treeRowSize; i++)
-                {
-                    const auto consideredBuilding = i + 1;
-
-                    if (board.isBuildingPlaceable(row, column, consideredBuilding))
-                    {
-                        board.setCell(row, column, consideredBuilding);
-                        if (board.isBoardPartiallyValid(row, column))
-                        {
-                            DEBUG_PRINTLN_VERBOSE_INFO("Found result");
-                            DEBUG_CALL(board.print());
-                            retVal.emplace_back(board);
-                        }
-                        board.clearCell(row, column);
-                    }
-                }
-            }
-            else
-            {
-                for (size_t i = 0; i < treeRowSize; i++)
-                {
-                    const auto consideredBuilding = i + 1;
-                    if (board.isBuildingPlaceable(row, column, consideredBuilding))
-                    {
-                        board.setCell(row, column, consideredBuilding);
-                        if (board.isBoardPartiallyValid(row, column))
-                        {
-                            backTracking(retVal, level + 1, cellPair.first, cellPair.second);
-                        }
-
-                        board.clearCell(row, column);
-                    }
-                }
-            }
-        }
-#else
-        CUDA_DEVICE size_t SequentialSolver::backTrackingWithStack(cuda::Board* resultArray, size_t threadIdx)
+        CUDA_DEVICE uint32T SequentialSolver::backTrackingBase(cuda::Board* resultArray, uint32T threadIdx)
         {
             //CUDA_PRINT("%llu: %s: BEGIN\n",
             //           threadIdx,
             //           __FUNCTION__);
             const auto boardCellsCount = board.getSize() * board.getSize();
-            size_t* stack = reinterpret_cast<size_t*>(malloc(boardCellsCount * sizeof(size_t)));
-            size_t* stackRows = reinterpret_cast<size_t*>(malloc(boardCellsCount * sizeof(size_t)));
-            size_t* stackColumns = reinterpret_cast<size_t*>(malloc(boardCellsCount * sizeof(size_t)));
+            uint32T* stack = reinterpret_cast<uint32T*>(malloc(boardCellsCount * sizeof(uint32T)));
+            uint32T* stackRows = reinterpret_cast<uint32T*>(malloc(boardCellsCount * sizeof(uint32T)));
+            uint32T* stackColumns = reinterpret_cast<uint32T*>(malloc(boardCellsCount * sizeof(uint32T)));
             if (stack != nullptr &&
                 stackRows != nullptr &&
                 stackColumns != nullptr)
@@ -114,13 +56,13 @@ namespace cuda
             }
 
             // Result boards count
-            size_t resultsCount = 0;
+            uint32T resultsCount = 0;
             // Current valid stack frames
-            size_t stackSize = 0;
+            uint32T stackSize = 0;
             // Used for row result from getNextFreeCell()
-            size_t rowRef = 0;
+            uint32T rowRef = 0;
             // Used for column result from getNextFreeCell()
-            size_t columnRef = 0;
+            uint32T columnRef = 0;
 
             if (board.getCell(0, 0) != 0)
             {
@@ -170,7 +112,7 @@ namespace cuda
                             getNextFreeCell(row, column, rowRef, columnRef);
                             if (!isCellValid(rowRef, columnRef))
                             {
-                                if (resultsCount < maxResultsPerThread)
+                                if (resultsCount < CUDA_MAX_RESULTS_PER_THREAD)
                                 {
                                     //CUDA_PRINT("%llu: %s: Found a result, copying to global memory\n",
                                     //           threadIdx,
@@ -240,12 +182,25 @@ namespace cuda
             //           __FUNCTION__);
             return resultsCount;
         }
-#endif // !BT_WITH_STACK
 
-        CUDA_DEVICE void SequentialSolver::getNextFreeCell(size_t row,
-                                                           size_t column,
-                                                           size_t & rowOut,
-                                                           size_t & columnOut) const
+        CUDA_DEVICE uint32T SequentialSolver::backTrackingAOSStack(cuda::Board * resultArray,
+                                                                   uint32T threadIdx,
+                                                                   stackAOST * stack)
+        {
+            return uint32T();
+        }
+
+        CUDA_DEVICE uint32T SequentialSolver::backTrackingSOAStack(cuda::Board * resultArray,
+                                                                   uint32T threadIdx,
+                                                                   stackSOAT * stack)
+        {
+            return uint32T();
+        }
+
+        CUDA_DEVICE void SequentialSolver::getNextFreeCell(uint32T row,
+                                                           uint32T column,
+                                                           uint32T & rowOut,
+                                                           uint32T & columnOut) const
         {
             const auto maxSize = board.getSize();
 
@@ -268,17 +223,17 @@ namespace cuda
             // If row is too big return max values
             if (row >= maxSize)
             {
-                row = CUDA_SIZE_T_MAX;
-                column = CUDA_SIZE_T_MAX;
+                row = CUDA_UINT32_T_MAX;
+                column = CUDA_UINT32_T_MAX;
             }
 
             rowOut = row;
             columnOut = column;
         }
 
-        CUDA_DEVICE bool SequentialSolver::isCellValid(size_t row, size_t column)
+        CUDA_DEVICE bool SequentialSolver::isCellValid(uint32T row, uint32T column)
         {
-            return row != CUDA_SIZE_T_MAX && column != CUDA_SIZE_T_MAX;
+            return row != CUDA_UINT32_T_MAX && column != CUDA_UINT32_T_MAX;
         }
         CUDA_DEVICE const cuda::Board & SequentialSolver::getBoard() const
         {

@@ -3,7 +3,8 @@
 
 #include "CUDAUtilities.cuh"
 
-#define CUDA_BAD_INDEX (size_t(~0))
+#define USE_INTEGER_INTRINSICS
+#define CUDA_BAD_INDEX (cuda::uint32T(~0))
 
 namespace cuda
 {
@@ -15,16 +16,16 @@ namespace cuda
             BitManipulation() = delete;
             ~BitManipulation() = delete;
 
-            static CUDA_DEVICE bool all(size_t number);
-            static CUDA_DEVICE bool any(size_t number);
-            static CUDA_DEVICE bool none(size_t number);
+            static CUDA_DEVICE bool all(uint32T number);
+            static CUDA_DEVICE bool any(uint32T number);
+            static CUDA_DEVICE bool none(uint32T number);
 
-            static CUDA_DEVICE bool getBit(const size_t & number, const size_t pos);
-            static CUDA_DEVICE void setBit(size_t & number, const size_t pos, bool val = true);
-            static CUDA_DEVICE void resetBit(size_t & number, const size_t pos);
-            static CUDA_DEVICE void flipBit(size_t & number, const size_t pos);
+            static CUDA_DEVICE bool getBit(const uint32T & number, const uint32T pos);
+            static CUDA_DEVICE void setBit(uint32T & number, const uint32T pos, bool val = true);
+            static CUDA_DEVICE void resetBit(uint32T & number, const uint32T pos);
+            static CUDA_DEVICE void flipBit(uint32T & number, const uint32T pos);
 
-            static CUDA_DEVICE size_t firstZero(const size_t & number);
+            static CUDA_DEVICE uint32T firstZero(const uint32T & number);
         };
     }
 }

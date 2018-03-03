@@ -47,11 +47,11 @@ namespace cuda
                                                    size_t boardSize)
         {
             // Create array on host
-            h_boards = std::vector<cuda::Board>(solversCount * maxResultsPerThread,
+            h_boards = std::vector<cuda::Board>(solversCount * CUDA_MAX_RESULTS_PER_THREAD,
                                                 cuda::Board(boardSize));
 
             kernelOutputT d_retVal = nullptr;
-            cudaError_t err = cudaMalloc(&d_retVal, solversCount * maxResultsPerThread * sizeof(*d_retVal));
+            cudaError_t err = cudaMalloc(&d_retVal, solversCount * CUDA_MAX_RESULTS_PER_THREAD * sizeof(*d_retVal));
             if (err != cudaSuccess)
             {
                 CUDA_PRINT_ERROR("Failed allocation", err);
@@ -62,7 +62,7 @@ namespace cuda
                 // Zero out allocated memory
                 err = cudaMemcpy(d_retVal,
                                  h_boards.data(),
-                                 solversCount * maxResultsPerThread * sizeof(*d_retVal),
+                                 solversCount * CUDA_MAX_RESULTS_PER_THREAD * sizeof(*d_retVal),
                                  cudaMemcpyHostToDevice);
                 if (err != cudaSuccess)
                 {
@@ -98,7 +98,7 @@ namespace cuda
         CUDA_HOST kernelOutputT prepareHostResultArray(size_t solversCount)
         {
             kernelOutputT h_retVal = reinterpret_cast<kernelOutputT>(
-                calloc(solversCount * maxResultsPerThread, sizeof(*h_retVal)));
+                calloc(solversCount * CUDA_MAX_RESULTS_PER_THREAD, sizeof(*h_retVal)));
             if (h_retVal == nullptr)
             {
                 HOST_PRINT_ERROR("Failed calloc");
@@ -155,7 +155,7 @@ namespace cuda
         {
             cudaError_t err = cudaMemcpy(h_outputBoards,
                                          d_outputBoards,
-                                         solversCount * maxResultsPerThread * sizeof(*h_outputBoards),
+                                         solversCount * CUDA_MAX_RESULTS_PER_THREAD * sizeof(*h_outputBoards),
                                          cudaMemcpyDeviceToHost);
             if (err != cudaSuccess)
             {

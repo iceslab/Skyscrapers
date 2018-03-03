@@ -3,10 +3,12 @@
 
 #include "Solver.cuh"
 #include "BitManipulation.cuh"
+#include "Stack.cuh"
 
 #define CUDA_SIZE_T_MAX (size_t(~0))
-#define CUDA_LAST_CELL_PAIR (rowAndColumnPairT(CUDA_SIZE_T_MAX, CUDA_SIZE_T_MAX))
-
+#define CUDA_UINT32_T_MAX (cuda::uint32T(~0))
+#define CUDA_LAST_CELL_PAIR (rowAndColumnPairT(CUDA_UINT32_T_MAX, CUDA_UINT32_T_MAX))
+#define CUDA_MAX_RESULTS_PER_THREAD (cuda::uint32T(5))
 
 #define BT_WITH_STACK
 
@@ -14,9 +16,6 @@ namespace cuda
 {
     namespace solver
     {
-        constexpr const size_t maxResultsPerThread = 5;
-        constexpr const size_t maxStackEntrySize = 64;
-
         class SequentialSolver :
             public Solver
         {
@@ -24,20 +23,19 @@ namespace cuda
             SequentialSolver(const board::Board& board);
             ~SequentialSolver() = default;
 
-            CUDA_DEVICE size_t solve(cuda::Board* resultArray, size_t threadIdx);
+            CUDA_DEVICE uint32T solve(cuda::Board* resultArray, uint32T threadIdx);
 
             /// Backtracking
-#ifndef BT_WITH_STACK
-            void backTracking(std::vector<cuda::Board> & retVal, size_t level = 0, size_t row = 0, size_t column = 0);
-#else
-            CUDA_DEVICE size_t backTrackingWithStack(cuda::Board* resultArray, size_t threadIdx);
-#endif // !BT_WITH_STACK
-            CUDA_DEVICE void getNextFreeCell(size_t row,
-                                             size_t column,
-                                             size_t & rowOut,
-                                             size_t & columnOut) const;
+            CUDA_DEVICE uint32T backTrackingBase(cuda::Board* resultArray, uint32T threadIdx);
+            CUDA_DEVICE uint32T backTrackingAOSStack(cuda::Board* resultArray, uint32T threadIdx, stackAOST* stack);
+            CUDA_DEVICE uint32T backTrackingSOAStack(cuda::Board* resultArray, uint32T threadIdx, stackSOAT* stack);
 
-            static CUDA_DEVICE bool isCellValid(size_t row, size_t column);
+            CUDA_DEVICE void getNextFreeCell(uint32T row,
+                                             uint32T column,
+                                             uint32T & rowOut,
+                                             uint32T & columnOut) const;
+
+            static CUDA_DEVICE bool isCellValid(uint32T row, uint32T column);
 
             CUDA_DEVICE const cuda::Board & getBoard() const;
         };
