@@ -158,7 +158,10 @@ bool loadFromFile;
 const char* filePath;
 bool sequentialSolver;
 bool parallelCpuSolver;
-bool parallelGpuSolver;
+bool baseParallelGpuSolver;
+bool aosParallelGpuSolver;
+bool soaParallelGpuSolver;
+size_t gpuAlgorithmsToRun;
 size_t boardDimension = 1;
 size_t desiredBoards = 1;
 
@@ -229,7 +232,7 @@ bool ProcessCommandLine(int argc, TCHAR *argv[])
 {
     int c;
 
-    while ((c = getopt(argc, argv, _T("f:scgd:b:p:h"))) != EOF)
+    while ((c = getopt(argc, argv, _T("f:scg:d:b:p:h"))) != EOF)
     {
         switch (c)
         {
@@ -244,7 +247,7 @@ bool ProcessCommandLine(int argc, TCHAR *argv[])
             parallelCpuSolver = true;
             break;
         case _T('g'):
-            parallelGpuSolver = true;
+            parseGPUOptarg(optarg);
             break;
         case _T('d'):
             boardDimension = std::stoull(optarg);
@@ -284,18 +287,23 @@ void printUsage()
     printf("SkyscrappersCUDA usage:\n\n");
 
     printf("   -f path\n"
-           "      Loads file from given path\n");
+           "      Loads file from given path. Overrides -b option\n");
     printf("   -s\n"
            "      Program will run sequential algorithm\n");
     printf("   -c\n"
            "      Program will run parallel algorithm on CPU\n");
-    printf("   -g\n"
-           "      Program will run base parallel algorithm on GPU\n");
+    printf("   -g algorithm\n"
+           "      Program will run chosen algorithm(s) on GPU\n"
+           "      Valid options are: \"all\", \"basic\", \"aos\" and \"soa\"\n"
+           "      \"all\"   - run all available algorithms\n"
+           "      \"basic\" - run basic algorithm\n"
+           "      \"aos\"   - run Array of Structures stack algorithm\n"
+           "      \"soa\"   - run Structure of Arrays stack algorithm\n");
     printf("   -d dimension\n"
            "      Dimensions of generated square board\n");
     printf("   -b boards to generate\n"
            "      Number of boards wchich program will generate when running parallel algorithm.\n"
-           "      It determines number of launched threads.\n");
+           "      It determines number of launched threads. Option ignored when used with -f\n");
     printf("   -p FIFO size in bytes\n"
            "      Determines CUDA FIFO size in bytes. Useful when debugging\n"
            "      FIFO is used to store device's printf output during kernel execution.\n"
@@ -316,12 +324,53 @@ void printLaunchParameters()
     }
 
     printf("Number of threads in parallel algorithms: %zu\n", desiredBoards);
-    printf("Sequential algorithm:        %s\n", boolToEnabled(sequentialSolver));
-    printf("Parallel CPU algorithm:      %s\n", boolToEnabled(parallelCpuSolver));
-    printf("Base parallel GPU algorithm: %s\n", boolToEnabled(parallelGpuSolver));
+    printf("Sequential algorithm:             %s\n", boolToEnabled(sequentialSolver));
+    printf("Parallel CPU algorithm:           %s\n", boolToEnabled(parallelCpuSolver));
+    printf("Base parallel GPU algorithm:      %s\n", boolToEnabled(baseParallelGpuSolver));
+    printf("AoS stack parallel GPU algorithm: %s\n", boolToEnabled(aosParallelGpuSolver));
+    printf("SoA stack parallel GPU algorithm: %s\n", boolToEnabled(soaParallelGpuSolver));
 }
 
 const char * boolToEnabled(bool option)
 {
     return option ? "enabled" : "disabled";
+}
+
+void parseGPUOptarg(const std::string & optarg)
+{
+    std::vector<std::string> substrings = { "all", "basic", "aos", "soa" };
+
+    for (size_t i = 0; i < substrings.size(); i++)
+    {
+        const auto & el = substrings[i];
+        if (optarg.find(el) == std::string::npos)
+        {
+            continue;
+        }
+
+        switch (i)
+        {
+        case 0:
+            baseParallelGpuSolver = true;
+            aosParallelGpuSolver = true;
+            soaParallelGpuSolver = true;
+            gpuAlgorithmsToRun = 3;
+            return;
+        case 1:
+            baseParallelGpuSolver = true;
+            ++gpuAlgorithmsToRun;
+            break;
+        case 2:
+            aosParallelGpuSolver = true;
+            ++gpuAlgorithmsToRun;
+            break;
+        case 3:
+            soaParallelGpuSolver = true;
+            ++gpuAlgorithmsToRun;
+            break;
+        default:
+            printf("Error: Substring has no match!\n");
+            break;
+        }
+    }
 }

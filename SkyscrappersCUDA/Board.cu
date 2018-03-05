@@ -175,6 +175,11 @@ namespace cuda
         return SquareMatrix<boardFieldT>::getSize();
     }
 
+    CUDA_HOST_DEVICE size_t Board::getCellsCount() const
+    {
+        return getSize() * getSize();
+    }
+
     CUDA_DEVICE void Board::fill(const boardFieldT & value)
     {
         SquareMatrix<boardFieldT>::fill(value);

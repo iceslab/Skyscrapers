@@ -30,12 +30,12 @@ namespace cuda
             Stack() = delete;
             ~Stack() = delete;
 
-            stackAOST* allocateAOSStack(uint32T elements);
-            stackSOAT* allocateSOAStack(uint32T elements);
-            void deallocateAOSStack(stackAOST* & d_stack);
-            void deallocateSOAStack(stackSOAT* & d_stack);
+            static stackAOST* allocateAOSStack(uint32T elements);
+            static stackSOAT* allocateSOAStack(uint32T elements);
+            static void deallocateAOSStack(stackAOST* & d_stack);
+            static void deallocateSOAStack(stackSOAT* & d_stack);
         private:
-            void deallocateSOAStackHost(stackSOAT & h_stack);
+            static void deallocateSOAStackHost(stackSOAT & h_stack);
         };
     }
 }

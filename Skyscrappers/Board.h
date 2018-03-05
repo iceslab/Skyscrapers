@@ -95,6 +95,7 @@ namespace board
         boardFieldT getCell(size_t row, size_t column) const;
 
         size_t getSize() const;
+        size_t getCellsCount() const;
         void fill(const boardFieldT & value);
 
         matrix::SideE whichEdgeRow(size_t row) const;

@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <tchar.h>
 #include <string>
+#include <vector>
 
 extern int optind, opterr;
 extern TCHAR *optarg;
@@ -28,7 +29,10 @@ extern bool loadFromFile;
 extern const char* filePath;
 extern bool sequentialSolver;
 extern bool parallelCpuSolver;
-extern bool parallelGpuSolver;
+extern bool baseParallelGpuSolver;
+extern bool aosParallelGpuSolver;
+extern bool soaParallelGpuSolver;
+extern size_t gpuAlgorithmsToRun;
 extern size_t boardDimension;
 extern size_t desiredBoards;
 extern size_t desiredFifoSize;
@@ -40,5 +44,6 @@ bool ProcessCommandLine(int argc, TCHAR *argv[]);
 void printUsage();
 void printLaunchParameters();
 const char* boolToEnabled(bool option);
+void parseGPUOptarg(const std::string & optarg);
 
 #endif //XGETOPT_H

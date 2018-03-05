@@ -69,6 +69,7 @@ namespace cuda
         CUDA_DEVICE boardFieldT getCell(size_t row, size_t column) const;
 
         CUDA_HOST_DEVICE size_t getSize() const;
+        CUDA_HOST_DEVICE size_t getCellsCount() const;
         CUDA_DEVICE void fill(const boardFieldT & value);
         CUDA_HOST void clear();
 

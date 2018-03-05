@@ -23,7 +23,7 @@ namespace solver
         const auto theoreticalStopLevel = static_cast<size_t>(
             std::floor(std::log(desiredBoards) / std::log(board.size())));
 
-        printf("Theoretical stop level for %zu boards: %zu\n", desiredBoards, theoreticalStopLevel);
+        //printf("Theoretical stop level for %zu boards: %zu\n", desiredBoards, theoreticalStopLevel);
 
         auto currentStopLevel = theoreticalStopLevel;
         do
@@ -32,7 +32,7 @@ namespace solver
             generateBoards(currentStopLevel++, currentLevel);
         } while (currentLevel.size() <= desiredBoards && currentStopLevel <= boardCells);
 
-        printf("Final stop level with %zu boards: %zu\n", retVal.size(), currentStopLevel);
+        //printf("Final stop level with %zu boards: %zu\n", retVal.size(), currentStopLevel);
         
         return retVal;
     }

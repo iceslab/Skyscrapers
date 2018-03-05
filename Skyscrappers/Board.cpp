@@ -211,6 +211,11 @@ namespace board
         return SquareMatrix<boardFieldT>::getSize();
     }
 
+    size_t Board::getCellsCount() const
+    {
+        return getSize() * getSize();
+    }
+
     void Board::fill(const boardFieldT & value)
     {
         SquareMatrix<boardFieldT>::fill(value);
