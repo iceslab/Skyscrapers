@@ -113,7 +113,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <CudaCompile Include="StackEntry.cuh" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Skyscrappers.vcxproj">
+    <ProjectReference Include="..\Skyscrappers\Skyscrappers.vcxproj">
       <Project>{e8013aba-1727-467c-b222-e1083e130c3d}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Utilities\Utilities\Utilites.vcxproj">
@@ -130,6 +130,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <CudaCompile Include="Solver.cuh" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="KernelFunctions.inl" />
     <ClInclude Include="Stack.cuh" />
     <ClInclude Include="Statistics.h" />
     <ClInclude Include="XGetopt.h" />

@@ -155,7 +155,7 @@
     <ClInclude Include="StackEntry.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="Utilities\Utilities\Utilites.vcxproj">
+    <ProjectReference Include="..\Utilities\Utilities\Utilites.vcxproj">
       <Project>{aba715d0-6470-360f-9ca7-6b032ed7e3f0}</Project>
     </ProjectReference>
   </ItemGroup>

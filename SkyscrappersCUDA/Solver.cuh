@@ -1,6 +1,6 @@
 #ifndef __INCLUDED_SOLVER_CUH__
 #define __INCLUDED_SOLVER_CUH__
-#include "../Board.h"
+#include "../Skyscrappers/Board.h"
 #include "Board.cuh"
 
 namespace cuda

@@ -1,22 +1,12 @@
-#include "CUDAUtilities.cuh"
 #include "asserts.h"
 #include "Timer.h"
-#include "../SequentialSolver.h"
-#include "../ParallelCpuSolver.h"
-#include "ParallelSolver.cuh"
+#include "../Skyscrappers/SequentialSolver.h"
+#include "../Skyscrappers/ParallelCpuSolver.h"
 #include <stdio.h>
 #include "XGetopt.h"
 #include "Statistics.h"
 
-CUDA_GLOBAL void parallelBoardSolving(cuda::solver::kernelInputT d_solvers,
-                                      cuda::solver::kernelOutputT d_outputBoards,
-                                      cuda::solver::kernelOutputSizesT d_outputBoardsSizes)
-{
-    // It denotes thread index and array index
-    const auto idx = threadIdx.x;
-    d_outputBoardsSizes[idx] =
-        d_solvers[idx].solve(d_outputBoards + idx * CUDA_MAX_RESULTS_PER_THREAD, idx);
-}
+#include "KernelFunctions.inl"
 
 Statistics launchSequentialSolver(const board::Board & board);
 Statistics launchParallelCpuSolver(const board::Board & board);

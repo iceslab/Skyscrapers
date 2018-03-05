@@ -1,6 +1,6 @@
 #include <iostream>
-#include "asserts.h"
-#include "Timer.h"
+#include "../Utilities/asserts.h"
+#include "../Utilities/Timer.h"
 #include "Combinatorics.h"
 #include "Board.h"
 #include "EfficientIncidenceCube.h"

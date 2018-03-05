@@ -1,16 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2027
+VisualStudioVersion = 15.0.27130.2036
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Skyscrappers", "Skyscrappers.vcxproj", "{E8013ABA-1727-467C-B222-E1083E130C3D}"
-	ProjectSection(ProjectDependencies) = postProject
-		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0} = {ABA715D0-6470-360F-9CA7-6B032ED7E3F0}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Utilites", "Utilities\Utilities\Utilites.vcxproj", "{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SkyscrappersCUDA", "SkyscrappersCUDA\SkyscrappersCUDA.vcxproj", "{682B9801-1309-4C9E-97B1-BDE0C205FDF4}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Skyscrappers", "Skyscrappers\Skyscrappers.vcxproj", "{E8013ABA-1727-467C-B222-E1083E130C3D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,22 +21,6 @@ Global
 		RelWithDebInfo|x86 = RelWithDebInfo|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E8013ABA-1727-467C-B222-E1083E130C3D}.Debug|x64.ActiveCfg = Debug|x64
-		{E8013ABA-1727-467C-B222-E1083E130C3D}.Debug|x64.Build.0 = Debug|x64
-		{E8013ABA-1727-467C-B222-E1083E130C3D}.Debug|x86.ActiveCfg = Debug|Win32
-		{E8013ABA-1727-467C-B222-E1083E130C3D}.Debug|x86.Build.0 = Debug|Win32
-		{E8013ABA-1727-467C-B222-E1083E130C3D}.MinSizeRel|x64.ActiveCfg = Release|x64
-		{E8013ABA-1727-467C-B222-E1083E130C3D}.MinSizeRel|x64.Build.0 = Release|x64
-		{E8013ABA-1727-467C-B222-E1083E130C3D}.MinSizeRel|x86.ActiveCfg = Release|Win32
-		{E8013ABA-1727-467C-B222-E1083E130C3D}.MinSizeRel|x86.Build.0 = Release|Win32
-		{E8013ABA-1727-467C-B222-E1083E130C3D}.Release|x64.ActiveCfg = Release|x64
-		{E8013ABA-1727-467C-B222-E1083E130C3D}.Release|x64.Build.0 = Release|x64
-		{E8013ABA-1727-467C-B222-E1083E130C3D}.Release|x86.ActiveCfg = Release|Win32
-		{E8013ABA-1727-467C-B222-E1083E130C3D}.Release|x86.Build.0 = Release|Win32
-		{E8013ABA-1727-467C-B222-E1083E130C3D}.RelWithDebInfo|x64.ActiveCfg = Release|x64
-		{E8013ABA-1727-467C-B222-E1083E130C3D}.RelWithDebInfo|x64.Build.0 = Release|x64
-		{E8013ABA-1727-467C-B222-E1083E130C3D}.RelWithDebInfo|x86.ActiveCfg = Release|Win32
-		{E8013ABA-1727-467C-B222-E1083E130C3D}.RelWithDebInfo|x86.Build.0 = Release|Win32
 		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.Debug|x64.ActiveCfg = Debug|x64
 		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.Debug|x64.Build.0 = Debug|x64
 		{ABA715D0-6470-360F-9CA7-6B032ED7E3F0}.Debug|x86.ActiveCfg = Debug|x64
@@ -67,6 +48,22 @@ Global
 		{682B9801-1309-4C9E-97B1-BDE0C205FDF4}.RelWithDebInfo|x64.Build.0 = Release|x64
 		{682B9801-1309-4C9E-97B1-BDE0C205FDF4}.RelWithDebInfo|x86.ActiveCfg = Release|x64
 		{682B9801-1309-4C9E-97B1-BDE0C205FDF4}.RelWithDebInfo|x86.Build.0 = Release|x64
+		{E8013ABA-1727-467C-B222-E1083E130C3D}.Debug|x64.ActiveCfg = Debug|x64
+		{E8013ABA-1727-467C-B222-E1083E130C3D}.Debug|x64.Build.0 = Debug|x64
+		{E8013ABA-1727-467C-B222-E1083E130C3D}.Debug|x86.ActiveCfg = Debug|Win32
+		{E8013ABA-1727-467C-B222-E1083E130C3D}.Debug|x86.Build.0 = Debug|Win32
+		{E8013ABA-1727-467C-B222-E1083E130C3D}.MinSizeRel|x64.ActiveCfg = Release|x64
+		{E8013ABA-1727-467C-B222-E1083E130C3D}.MinSizeRel|x64.Build.0 = Release|x64
+		{E8013ABA-1727-467C-B222-E1083E130C3D}.MinSizeRel|x86.ActiveCfg = Release|Win32
+		{E8013ABA-1727-467C-B222-E1083E130C3D}.MinSizeRel|x86.Build.0 = Release|Win32
+		{E8013ABA-1727-467C-B222-E1083E130C3D}.Release|x64.ActiveCfg = Release|x64
+		{E8013ABA-1727-467C-B222-E1083E130C3D}.Release|x64.Build.0 = Release|x64
+		{E8013ABA-1727-467C-B222-E1083E130C3D}.Release|x86.ActiveCfg = Release|Win32
+		{E8013ABA-1727-467C-B222-E1083E130C3D}.Release|x86.Build.0 = Release|Win32
+		{E8013ABA-1727-467C-B222-E1083E130C3D}.RelWithDebInfo|x64.ActiveCfg = Release|x64
+		{E8013ABA-1727-467C-B222-E1083E130C3D}.RelWithDebInfo|x64.Build.0 = Release|x64
+		{E8013ABA-1727-467C-B222-E1083E130C3D}.RelWithDebInfo|x86.ActiveCfg = Release|Win32
+		{E8013ABA-1727-467C-B222-E1083E130C3D}.RelWithDebInfo|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

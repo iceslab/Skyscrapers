@@ -2,7 +2,7 @@
 #define __INCLUDED_PARALLEL_SOLVER_CUH__
 
 #include <vector>
-#include "../Board.h"
+#include "../Skyscrappers/Board.h"
 #include "SequentialSolver.cuh"
 
 namespace cuda
