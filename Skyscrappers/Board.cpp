@@ -93,20 +93,26 @@ namespace board
     {
         resize(boardSize);
 
-        // Generate uniformly distributed latin square
-        EfficientIncidenceCube eic(static_cast<int>(boardSize));
-        eic.shuffle();
-
-        // Copy contents
-        for (size_t x = 0; x < boardSize; x++)
+        if (boardSize > 1)
         {
-            for (size_t y = 0; y < boardSize; y++)
+            // Generate uniformly distributed latin square
+            EfficientIncidenceCube eic(static_cast<int>(boardSize));
+            eic.shuffle();
+
+            // Copy contents
+            for (size_t x = 0; x < boardSize; x++)
             {
-                // Latin square is indexed from 0 to boardSize, it is needed to add 1
-                (*this)[x][y] = static_cast<boardFieldT>(eic.plusOneZCoordOf(x, y) + 1);
+                for (size_t y = 0; y < boardSize; y++)
+                {
+                    // Latin square is indexed from 0 to boardSize, it is needed to add 1
+                    setCell(x, y, static_cast<boardFieldT>(eic.plusOneZCoordOf(x, y) + 1));
+                }
             }
         }
-
+        else
+        {
+            setCell(0, 0, 1);
+        }
         calculateHints();
     }
 

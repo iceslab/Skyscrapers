@@ -37,4 +37,8 @@ int getopt(int argc, TCHAR *argv[], TCHAR *optstring);
 
 bool ProcessCommandLine(int argc, TCHAR *argv[]);
 
+void printUsage();
+void printLaunchParameters();
+const char* boolToEnabled(bool option);
+
 #endif //XGETOPT_H

@@ -23,12 +23,16 @@ namespace cuda
             SequentialSolver(const board::Board& board);
             ~SequentialSolver() = default;
 
-            CUDA_DEVICE uint32T solve(cuda::Board* resultArray, uint32T threadIdx);
-
             /// Backtracking
             CUDA_DEVICE uint32T backTrackingBase(cuda::Board* resultArray, uint32T threadIdx);
-            CUDA_DEVICE uint32T backTrackingAOSStack(cuda::Board* resultArray, uint32T threadIdx, stackAOST* stack);
-            CUDA_DEVICE uint32T backTrackingSOAStack(cuda::Board* resultArray, uint32T threadIdx, stackSOAT* stack);
+            CUDA_DEVICE uint32T backTrackingAOSStack(cuda::Board * resultArray,
+                                                     stackAOST * stack,
+                                                     const uint32T threadIdx,
+                                                     const uint32T threadsCount);
+            CUDA_DEVICE uint32T backTrackingSOAStack(cuda::Board* resultArray,
+                                                     stackSOAT* stack,
+                                                     const uint32T threadIdx,
+                                                     const uint32T threadsCount);
 
             CUDA_DEVICE void getNextFreeCell(uint32T row,
                                              uint32T column,
@@ -38,6 +42,10 @@ namespace cuda
             static CUDA_DEVICE bool isCellValid(uint32T row, uint32T column);
 
             CUDA_DEVICE const cuda::Board & getBoard() const;
+            static CUDA_HOST_DEVICE uint32T getStackFrameNumber(uint32T stackSize,
+                                                                const uint32T threadId,
+                                                                const uint32T threadsCount);
+
         };
     }
 }

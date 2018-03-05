@@ -14,8 +14,14 @@ Statistics launchBaseParallelGpuSolver(const board::Board & board);
 
 int main(int argc, char** argv)
 {
-    ProcessCommandLine(argc, argv);
+    if (ProcessCommandLine(argc, argv) == FALSE)
+    {
+        // Exit when commandline processing fails
+        printUsage();
+        return -1;
+    }
 
+    printLaunchParameters();
     // Prepare data on host
     board::Board b(1);
     if (loadFromFile == true)
@@ -29,7 +35,8 @@ int main(int argc, char** argv)
     }
     b.saveToFile("lastRun.txt");
 
-    printf("Expected result\n");
+    printf("\nExpected result:\n");
+    printf("==========================\n");
     b.print();
     printf("==========================\n");
     fflush(stdout);
@@ -108,13 +115,9 @@ Statistics launchBaseParallelGpuSolver(const board::Board & board)
         initMilliseconds = time.stop(Resolution::MILLISECONDS);
 
         solver::ParallelSolver ps(board);
-        printf("Generating boards...\n");
-
         timeGeneration.start();
         const auto boards = ps.generateNBoards(desiredBoards);
         generationMilliseconds = timeGeneration.stop(Resolution::MILLISECONDS);
-
-        printf("Boards generated: %zu\n", boards.size());
         size_t generatedSolversCount = 0;
 
         timeAllocation.start();
@@ -126,17 +129,13 @@ Statistics launchBaseParallelGpuSolver(const board::Board & board)
         std::vector<cuda::Board> h_boards;
 
         // Allocating memory on device
-        //printf("Allocating memory on device...\n");
         auto d_solvers = cuda::solver::prepareSolvers(boards, h_solvers, generatedSolversCount);
         auto d_outputBoards = cuda::solver::prepareResultArray(h_boards, generatedSolversCount, boards.front().size());
         auto d_outputBoardsSizes = cuda::solver::prepareResultArraySizes(generatedSolversCount);
-        //printf("Memory allocated\n");
 
         // Allocating memory on host
-        //printf("Allocating memory on host...\n");
         auto h_outputBoards = cuda::solver::prepareHostResultArray(generatedSolversCount);
         auto h_outputBoardsSizes = cuda::solver::prepareHostResultArraySizes(generatedSolversCount);
-        //printf("Memory allocated\n");
         allocationMilliseconds = timeAllocation.stop(Resolution::MILLISECONDS);
 
 
@@ -145,7 +144,6 @@ Statistics launchBaseParallelGpuSolver(const board::Board & board)
         {
             dim3 numBlocks(1);
             dim3 threadsPerBlock(generatedSolversCount);
-            unsigned int sharedMemorySize = 8 * sizeof(unsigned int);
 
             printf("Launching kernel...\n");
             fflush(stdout);
@@ -153,7 +151,7 @@ Statistics launchBaseParallelGpuSolver(const board::Board & board)
 
             Timer kernelTimer;
             kernelTimer.start();
-            parallelBoardSolving << <numBlocks, threadsPerBlock, sharedMemorySize >> >
+            parallelSolvingBase << <numBlocks, threadsPerBlock >> >
                 (d_solvers,
                  d_outputBoards,
                  d_outputBoardsSizes);
@@ -164,7 +162,7 @@ Statistics launchBaseParallelGpuSolver(const board::Board & board)
             cudaError_t cudaStatus = cudaGetLastError();
             if (cudaStatus != cudaSuccess)
             {
-                printf("parallelBoardSolving launch failed: %s\n", cudaGetErrorString(cudaStatus));
+                printf("parallelSolvingBase launch failed: %s\n", cudaGetErrorString(cudaStatus));
             }
             else
             {

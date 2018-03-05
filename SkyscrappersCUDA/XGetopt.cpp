@@ -229,51 +229,99 @@ bool ProcessCommandLine(int argc, TCHAR *argv[])
 {
     int c;
 
-    while ((c = getopt(argc, argv, _T("f:scgd:b:p:"))) != EOF)
+    while ((c = getopt(argc, argv, _T("f:scgd:b:p:h"))) != EOF)
     {
         switch (c)
         {
         case _T('f'):
             loadFromFile = true;
             filePath = optarg;
-            printf("Loading board from: \"%s\"\n", filePath);
             break;
         case _T('s'):
             sequentialSolver = true;
-            printf("Sequential CPU solving is enabled\n");
             break;
         case _T('c'):
             parallelCpuSolver = true;
-            printf("Parallel CPU solving is enabled\n");
             break;
         case _T('g'):
             parallelGpuSolver = true;
-            printf("Parallel GPU solving is enabled\n");
             break;
         case _T('d'):
             boardDimension = std::stoull(optarg);
-            printf("Board dimensions set to: %zu\n", boardDimension);
+            boardDimension = boardDimension < 1 ? 1 : boardDimension;
             break;
         case _T('b'):
             desiredBoards = std::stoull(optarg);
-            printf("Desired boards set to: %zu\n", desiredBoards);
+            desiredBoards = desiredBoards < 1 ? 1 : desiredBoards;
             break;
         case _T('p'):
             desiredFifoSize = std::stoull(optarg);
-            printf("Desired FIFO size set to: %zu bytes\n", desiredFifoSize);
+            desiredFifoSize = desiredFifoSize < 1 ? 1 : desiredFifoSize;
+            break;
+        case _T('h'):
+            return FALSE;
             break;
         case _T('?'):
             printf("ERROR: illegal option %s\n", argv[optind - 1]);
             return FALSE;
             break;
         default:
+            printUsage();
             printf("WARNING: no handler for option %c\n", c);
             return FALSE;
             break;
         }
     }
+
     //
     // check for non-option args here
     //
     return TRUE;
+}
+
+void printUsage()
+{
+    printf("SkyscrappersCUDA usage:\n\n");
+
+    printf("   -f path\n"
+           "      Loads file from given path\n");
+    printf("   -s\n"
+           "      Program will run sequential algorithm\n");
+    printf("   -c\n"
+           "      Program will run parallel algorithm on CPU\n");
+    printf("   -g\n"
+           "      Program will run base parallel algorithm on GPU\n");
+    printf("   -d dimension\n"
+           "      Dimensions of generated square board\n");
+    printf("   -b boards to generate\n"
+           "      Number of boards wchich program will generate when running parallel algorithm.\n"
+           "      It determines number of launched threads.\n");
+    printf("   -p FIFO size in bytes\n"
+           "      Determines CUDA FIFO size in bytes. Useful when debugging\n"
+           "      FIFO is used to store device's printf output during kernel execution.\n"
+           "      Default value is 1MB (1 048 576 bytes)\n");
+    printf("   -h\n"
+           "      Prints this help text\n");
+}
+
+void printLaunchParameters()
+{
+    if (loadFromFile)
+    {
+        printf("Loading board from: \"%s\"\n", filePath);
+    }
+    else
+    {
+        printf("Generating %zux%zu board\n", boardDimension, boardDimension);
+    }
+
+    printf("Number of threads in parallel algorithms: %zu\n", desiredBoards);
+    printf("Sequential algorithm:        %s\n", boolToEnabled(sequentialSolver));
+    printf("Parallel CPU algorithm:      %s\n", boolToEnabled(parallelCpuSolver));
+    printf("Base parallel GPU algorithm: %s\n", boolToEnabled(parallelGpuSolver));
+}
+
+const char * boolToEnabled(bool option)
+{
+    return option ? "enabled" : "disabled";
 }
