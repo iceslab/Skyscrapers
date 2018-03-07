@@ -189,30 +189,30 @@ Statistics launchBaseParallelGpuSolver(const board::Board & board)
                            cudaStatus,
                            cudaGetErrorString(cudaStatus));
                 }
-                //else
-                //{
-                //    cuda::solver::copyResultsArray(h_outputBoards,
-                //                                   d_outputBoards,
-                //                                   generatedSolversCount);
-                //    cuda::solver::copyResultsArraySizes(h_outputBoardsSizes,
-                //                                        d_outputBoardsSizes,
-                //                                        generatedSolversCount);
+                else
+                {
+                    cuda::solver::copyResultsArray(h_outputBoards,
+                                                   d_outputBoards,
+                                                   generatedSolversCount);
+                    cuda::solver::copyResultsArraySizes(h_outputBoardsSizes,
+                                                        d_outputBoardsSizes,
+                                                        generatedSolversCount);
 
-                //    for (size_t i = 0; i < generatedSolversCount; i++)
-                //    {
-                //        const auto boardCount = h_outputBoardsSizes[i];
-                //        DEBUG_PRINTLN("Result boards in thread %zu: %zu - max: %zu",
-                //                      i,
-                //                      boardCount,
-                //                      cuda::solver::maxResultsPerThread);
-                //        for (size_t j = 0; j < boardCount && j < cuda::solver::maxResultsPerThread; j++)
-                //        {
-                //            board::Board b(h_outputBoards[i * cuda::solver::maxResultsPerThread + j].getHostVector());
-                //            b.calculateHints();
-                //            b.print();
-                //        }
-                //    }
-                //}
+                    for (size_t i = 0; i < generatedSolversCount; i++)
+                    {
+                        const auto boardCount = h_outputBoardsSizes[i];
+                        DEBUG_PRINTLN("Result boards in thread %zu: %zu - max: %zu",
+                                      i,
+                                      boardCount,
+                                      CUDA_MAX_RESULTS_PER_THREAD);
+                        for (size_t j = 0; j < boardCount && j < CUDA_MAX_RESULTS_PER_THREAD; j++)
+                        {
+                            board::Board b(h_outputBoards[i * CUDA_MAX_RESULTS_PER_THREAD + j].getHostVector());
+                            b.calculateHints();
+                            b.print();
+                        }
+                    }
+                }
             }
         }
 
@@ -343,30 +343,30 @@ Statistics launchAOSStackParallelGpuSolver(const board::Board & board)
                            cudaStatus,
                            cudaGetErrorString(cudaStatus));
                 }
-                //else
-                //{
-                //    cuda::solver::copyResultsArray(h_outputBoards,
-                //                                   d_outputBoards,
-                //                                   generatedSolversCount);
-                //    cuda::solver::copyResultsArraySizes(h_outputBoardsSizes,
-                //                                        d_outputBoardsSizes,
-                //                                        generatedSolversCount);
+                else
+                {
+                    cuda::solver::copyResultsArray(h_outputBoards,
+                                                   d_outputBoards,
+                                                   generatedSolversCount);
+                    cuda::solver::copyResultsArraySizes(h_outputBoardsSizes,
+                                                        d_outputBoardsSizes,
+                                                        generatedSolversCount);
 
-                //    for (size_t i = 0; i < generatedSolversCount; i++)
-                //    {
-                //        const auto boardCount = h_outputBoardsSizes[i];
-                //        DEBUG_PRINTLN("Result boards in thread %zu: %zu - max: %zu",
-                //                      i,
-                //                      boardCount,
-                //                      cuda::solver::maxResultsPerThread);
-                //        for (size_t j = 0; j < boardCount && j < cuda::solver::maxResultsPerThread; j++)
-                //        {
-                //            board::Board b(h_outputBoards[i * cuda::solver::maxResultsPerThread + j].getHostVector());
-                //            b.calculateHints();
-                //            b.print();
-                //        }
-                //    }
-                //}
+                    for (size_t i = 0; i < generatedSolversCount; i++)
+                    {
+                        const auto boardCount = h_outputBoardsSizes[i];
+                        DEBUG_PRINTLN("Result boards in thread %zu: %zu - max: %zu",
+                                      i,
+                                      boardCount,
+                                      CUDA_MAX_RESULTS_PER_THREAD);
+                        for (size_t j = 0; j < boardCount && j < CUDA_MAX_RESULTS_PER_THREAD; j++)
+                        {
+                            board::Board b(h_outputBoards[i * CUDA_MAX_RESULTS_PER_THREAD + j].getHostVector());
+                            b.calculateHints();
+                            b.print();
+                        }
+                    }
+                }
             }
         }
 
@@ -499,30 +499,30 @@ Statistics launchSOAStackParallelGpuSolver(const board::Board & board)
                            cudaStatus,
                            cudaGetErrorString(cudaStatus));
                 }
-                //else
-                //{
-                //    cuda::solver::copyResultsArray(h_outputBoards,
-                //                                   d_outputBoards,
-                //                                   generatedSolversCount);
-                //    cuda::solver::copyResultsArraySizes(h_outputBoardsSizes,
-                //                                        d_outputBoardsSizes,
-                //                                        generatedSolversCount);
+                else
+                {
+                    cuda::solver::copyResultsArray(h_outputBoards,
+                                                   d_outputBoards,
+                                                   generatedSolversCount);
+                    cuda::solver::copyResultsArraySizes(h_outputBoardsSizes,
+                                                        d_outputBoardsSizes,
+                                                        generatedSolversCount);
 
-                //    for (size_t i = 0; i < generatedSolversCount; i++)
-                //    {
-                //        const auto boardCount = h_outputBoardsSizes[i];
-                //        DEBUG_PRINTLN("Result boards in thread %zu: %zu - max: %zu",
-                //                      i,
-                //                      boardCount,
-                //                      cuda::solver::maxResultsPerThread);
-                //        for (size_t j = 0; j < boardCount && j < cuda::solver::maxResultsPerThread; j++)
-                //        {
-                //            board::Board b(h_outputBoards[i * cuda::solver::maxResultsPerThread + j].getHostVector());
-                //            b.calculateHints();
-                //            b.print();
-                //        }
-                //    }
-                //}
+                    for (size_t i = 0; i < generatedSolversCount; i++)
+                    {
+                        const auto boardCount = h_outputBoardsSizes[i];
+                        DEBUG_PRINTLN("Result boards in thread %zu: %zu - max: %zu",
+                                      i,
+                                      boardCount,
+                                      CUDA_MAX_RESULTS_PER_THREAD);
+                        for (size_t j = 0; j < boardCount && j < CUDA_MAX_RESULTS_PER_THREAD; j++)
+                        {
+                            board::Board b(h_outputBoards[i * CUDA_MAX_RESULTS_PER_THREAD + j].getHostVector());
+                            b.calculateHints();
+                            b.print();
+                        }
+                    }
+                }
             }
         }
 
