@@ -33,8 +33,8 @@ namespace board
         static constexpr size_t hintSize = 4;
         std::array<hintT, hintSize> hints;
 
-        Board(const Board & board) = default;
-        Board(Board && board) = default;
+        Board(const Board & board);
+        Board(Board && board);
 
         Board(const std::vector<boardFieldT> & fieldVector);
 
@@ -96,6 +96,8 @@ namespace board
 
         size_t getSize() const;
         size_t getCellsCount() const;
+        const memoizedSetValuesT & getSetRows() const;
+        const memoizedSetValuesT & getSetColumns() const;
         void fill(const boardFieldT & value);
 
         matrix::SideE whichEdgeRow(size_t row) const;
@@ -103,6 +105,7 @@ namespace board
 
         /// Output
         void print() const;
+        void printToFile() const;
     private:
         static const std::array<matrix::SideE, 4> validSides;
         // Contains which values are set in each row and column
@@ -110,6 +113,9 @@ namespace board
         memoizedSetValuesT setColumns;
 
         void resize(const size_t boardSize);
+
+        static size_t allInstances;
+        size_t instanceIndex;
     };
 
     // Counts visible buildings from "first" side

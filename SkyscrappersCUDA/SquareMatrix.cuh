@@ -52,6 +52,8 @@ namespace cuda
         CUDA_DEVICE void fill(const T & value);
         CUDA_HOST void clear();
 
+        //CUDA_HOST void deduceSetValues();
+
     protected:
         T * d_data;
         size_t size;

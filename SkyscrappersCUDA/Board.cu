@@ -10,7 +10,7 @@ namespace cuda
         {
             // Alloc and memset setRows
             cudaError_t err = cudaMalloc(reinterpret_cast<void**>(&setRows),
-                                         boardSize * sizeof(boardFieldT));
+                                         boardSize * boardSize * sizeof(memoizedSetValuesT));
             if (err != cudaSuccess)
             {
                 CUDA_PRINT_ERROR("Failed allocation setRows", err);
@@ -20,7 +20,7 @@ namespace cuda
             {
                 err = cudaMemset(reinterpret_cast<void*>(setRows),
                                  0,
-                                 boardSize * sizeof(boardFieldT));
+                                 boardSize * boardSize * sizeof(memoizedSetValuesT));
                 if (err != cudaSuccess)
                 {
                     CUDA_PRINT_ERROR("Failed memset setRows", err);
@@ -29,7 +29,7 @@ namespace cuda
 
             // Alloc and memset setColumns
             err = cudaMalloc(reinterpret_cast<void**>(&setColumns),
-                             boardSize * sizeof(boardFieldT));
+                             boardSize * boardSize * sizeof(memoizedSetValuesT));
             if (err != cudaSuccess)
             {
                 CUDA_PRINT_ERROR("Failed allocation setColumns", err);
@@ -39,7 +39,7 @@ namespace cuda
             {
                 err = cudaMemset(reinterpret_cast<void*>(setColumns),
                                  0,
-                                 boardSize * sizeof(boardFieldT));
+                                 boardSize * boardSize * sizeof(memoizedSetValuesT));
                 if (err != cudaSuccess)
                 {
                     CUDA_PRINT_ERROR("Failed memset setColumns", err);
@@ -99,13 +99,14 @@ namespace cuda
     Board::Board(const board::Board & board) : Board(board.size())
     {
         const auto boardSize = board.size();
+        cudaError_t err = cudaSuccess;
         for (size_t row = 0; row < boardSize; row++)
         {
             const auto h_data = board.getRow(row).data();
-            cudaError_t err = cudaMemcpy(d_data + row * boardSize,
-                                         h_data,
-                                         sizeof(*d_data) * boardSize,
-                                         cudaMemcpyHostToDevice);
+            err = cudaMemcpy(d_data + row * boardSize,
+                             h_data,
+                             sizeof(*d_data) * boardSize,
+                             cudaMemcpyHostToDevice);
             if (err != cudaSuccess)
             {
                 CUDA_PRINT_ERROR("Failed memcpy row", err);
@@ -115,15 +116,55 @@ namespace cuda
         // Copy hints
         for (size_t side = 0; side < hintsSize; side++)
         {
-            cudaError_t err = cudaMemcpy(hints[side],
-                                         board.hints[side].data(),
-                                         boardSize * sizeof(boardFieldT),
-                                         cudaMemcpyHostToDevice);
+            err = cudaMemcpy(hints[side],
+                             board.hints[side].data(),
+                             boardSize * sizeof(boardFieldT),
+                             cudaMemcpyHostToDevice);
             if (err != cudaSuccess)
             {
                 CUDA_PRINT_ERROR("Failed memcpy hints[side]", err);
                 hints[side] = nullptr;
             }
+        }
+
+        // Set rows and columns copy
+        auto setRowsCopy = reinterpret_cast<memoizedSetValuesT>(
+            std::malloc(boardSize * boardSize * sizeof(memoizedSetValuesT)));
+        auto setColumnsCopy = reinterpret_cast<memoizedSetValuesT>(
+            std::malloc(boardSize * boardSize * sizeof(memoizedSetValuesT)));
+        const auto & boardSetRows = board.getSetRows();
+        const auto & boardSetColumns = board.getSetColumns();
+
+        for (size_t i = 0; i < boardSize; i++)
+        {
+            for (size_t buildingIdx = 0; buildingIdx < boardSize; buildingIdx++)
+            {
+                auto & copyRowElement = setRowsCopy[i * boardSize + buildingIdx];
+                auto & copyColumnElement = setColumnsCopy[i * boardSize + buildingIdx];
+                const auto & boardRowElement = boardSetRows[i][buildingIdx];
+                const auto & boardColumnElement = boardSetColumns[i][buildingIdx];
+
+                copyRowElement = boardRowElement;
+                copyColumnElement = boardColumnElement;
+            }
+        }
+
+        err = cudaMemcpy(setRows,
+                         setRowsCopy,
+                         boardSize * boardSize * sizeof(memoizedSetValuesT),
+                         cudaMemcpyHostToDevice);
+        if (err != cudaSuccess)
+        {
+            CUDA_PRINT_ERROR("Failed memcpy setRows", err);
+        }
+
+        err = cudaMemcpy(setColumns,
+                         setColumnsCopy,
+                         boardSize * boardSize * sizeof(memoizedSetValuesT),
+                         cudaMemcpyHostToDevice);
+        if (err != cudaSuccess)
+        {
+            CUDA_PRINT_ERROR("Failed memcpy setColumns", err);
         }
     }
 

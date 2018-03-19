@@ -349,6 +349,7 @@ std::vector<board::Board> solver::SequentialSolver::backTrackingWithStack()
 
     do
     {
+        //board.printToFile();
         auto & entry = stack.back().first;
         auto & stackCell = stack.back().second;
 

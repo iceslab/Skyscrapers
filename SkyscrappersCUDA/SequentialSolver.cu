@@ -486,10 +486,12 @@ namespace cuda
         {
             return row != CUDA_UINT32_T_MAX && column != CUDA_UINT32_T_MAX;
         }
+
         CUDA_DEVICE const cuda::Board & SequentialSolver::getBoard() const
         {
             return board;
         }
+
         CUDA_HOST_DEVICE uint32T SequentialSolver::getStackFrameNumber(uint32T stackSize,
                                                                        const uint32T threadId,
                                                                        const uint32T threadsCount)

@@ -10,8 +10,28 @@ namespace board
         matrix::LEFT
     };
 
+    size_t Board::allInstances = 0;
+
+    Board::Board(const Board & board) : matrix::SquareMatrix<boardFieldT>(board)
+    {
+        instanceIndex = allInstances++;
+        hints = board.hints;
+        setRows = board.setRows;
+        setColumns = board.setColumns;
+    }
+
+    Board::Board(Board && board) : matrix::SquareMatrix<boardFieldT>(std::move(board))
+    {
+        instanceIndex = allInstances++;
+        hints = std::move(board.hints);
+        setRows = std::move(board.setRows);
+        setColumns = std::move(board.setColumns);
+    }
+
     Board::Board(const std::vector<boardFieldT>& fieldVector)
     {
+        instanceIndex = allInstances++;
+
         const double root = std::sqrt(static_cast<double>(fieldVector.size()));
         const double rootFloor = std::floor(root);
 
@@ -33,6 +53,7 @@ namespace board
         setRows(boardSize, std::vector<bool>(boardSize, false)),
         setColumns(boardSize, std::vector<bool>(boardSize, false))
     {
+        instanceIndex = allInstances++;
         // Resize hints
         for (auto& h : hints)
         {
@@ -42,11 +63,13 @@ namespace board
 
     Board::Board(const std::string & path)
     {
+        instanceIndex = allInstances++;
         readFromFile(path);
     }
 
     Board::Board(std::ifstream & stream)
     {
+        instanceIndex = allInstances++;
         readFromFile(stream);
     }
 
@@ -216,6 +239,16 @@ namespace board
         return getSize() * getSize();
     }
 
+    const memoizedSetValuesT & Board::getSetRows() const
+    {
+        return setRows;
+    }
+
+    const memoizedSetValuesT & Board::getSetColumns() const
+    {
+        return setColumns;
+    }
+
     void Board::fill(const boardFieldT & value)
     {
         SquareMatrix<boardFieldT>::fill(value);
@@ -261,6 +294,43 @@ namespace board
         // Bottom hints
         std::copy(hints[matrix::BOTTOM].begin(), hints[matrix::BOTTOM].end(), field_it);
         std::cout << std::endl;
+    }
+
+    void Board::printToFile() const
+    {
+        std::ofstream outFile("board_print_" + std::to_string(instanceIndex) + ".txt",
+                              std::ios_base::app);
+        //std::cout << "Saving step to file: board_print_" << std::to_string(instanceIndex) << ".txt\n";
+        std::ostream_iterator<boardFieldT> field_it(outFile, " ");
+        std::string space = " ";
+
+        // Free field to align columns
+        outFile << "  ";
+        // Top hints
+        std::copy(hints[matrix::TOP].begin(), hints[matrix::TOP].end(), field_it);
+        outFile << "\n";
+
+        // Whole board
+        for (size_t rowIdx = 0; rowIdx < getSize(); rowIdx++)
+        {
+            // Left hint field
+            std::copy(hints[matrix::LEFT].begin() + rowIdx, hints[matrix::LEFT].begin() + rowIdx + 1, field_it);
+
+            // Board fields
+            std::copy((*this)[rowIdx].begin(), (*this)[rowIdx].end(), field_it);
+
+            // Right hint field
+            std::copy(hints[matrix::RIGHT].begin() + rowIdx, hints[matrix::RIGHT].begin() + rowIdx + 1, field_it);
+            outFile << "\n";
+        }
+
+        // Free field to align columns
+        outFile << "  ";
+        // Bottom hints
+        std::copy(hints[matrix::BOTTOM].begin(), hints[matrix::BOTTOM].end(), field_it);
+        outFile << "\n";
+        outFile.flush();
+        outFile.close();
     }
 
     void Board::resize(const size_t boardSize)

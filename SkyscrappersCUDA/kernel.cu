@@ -16,6 +16,9 @@ Statistics launchSOAStackParallelGpuSolver(const board::Board & board);
 
 int main(int argc, char** argv)
 {
+    TCHAR pwd[MAX_PATH];
+    GetCurrentDirectory(MAX_PATH, pwd);
+    std::cout << "Current directory: \"" << pwd << "\"" << std::endl;
     if (ProcessCommandLine(argc, argv) == FALSE)
     {
         // Exit when commandline processing fails

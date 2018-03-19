@@ -14,6 +14,7 @@
 #define CUDA_HOST_DEVICE __host__ __device__
 #define CUDA_GLOBAL __global__
 #define CUDA_SHARED __shared__
+#define CUDA_CONSTANT __constant__
 
 #define CUDA_DEFAULT_FIFO_SIZE (1 << 20) // default FIFO size in bytes
 

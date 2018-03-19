@@ -95,6 +95,43 @@ namespace cuda
             return d_retVal;
         }
 
+        CUDA_HOST threadLocalsT * prepareThreadLocals(size_t solversCount)
+        {
+            threadLocalsT* d_retVal = nullptr;
+            cudaError_t err = cudaMalloc(&d_retVal, solversCount * sizeof(*d_retVal));
+            if (err != cudaSuccess)
+            {
+                CUDA_PRINT_ERROR("Failed allocation", err);
+                d_retVal = nullptr;
+            }
+            else
+            {
+                // Copy host array to device
+                err = cudaMemset(d_retVal, 0, solversCount * sizeof(*d_retVal));
+                if (err != cudaSuccess)
+                {
+                    CUDA_PRINT_ERROR("Failed memset", err);
+                    cudaFree(d_retVal);
+                    d_retVal = nullptr;
+                }
+            }
+
+            return d_retVal;
+        }
+
+        CUDA_HOST uint32T * prepareScatterArray(size_t solversCount)
+        {
+            uint32T* d_retVal = nullptr;
+            cudaError_t err = cudaMalloc(&d_retVal, solversCount * sizeof(*d_retVal));
+            if (err != cudaSuccess)
+            {
+                CUDA_PRINT_ERROR("Failed allocation", err);
+                d_retVal = nullptr;
+            }
+
+            return d_retVal;
+        }
+
         CUDA_HOST kernelOutputT prepareHostResultArray(size_t solversCount)
         {
             kernelOutputT h_retVal = reinterpret_cast<kernelOutputT>(
@@ -135,6 +172,18 @@ namespace cuda
         {
             cudaFree(d_outputBoardsSizes);
             d_outputBoardsSizes = nullptr;
+        }
+
+        CUDA_HOST void freeThreadLocals(threadLocalsT *& d_threadLocals)
+        {
+            cudaFree(d_threadLocals);
+            d_threadLocals = nullptr;
+        }
+
+        CUDA_HOST void freeScatterArray(uint32T *& d_scatterArray)
+        {
+            cudaFree(d_scatterArray);
+            d_scatterArray = nullptr;
         }
 
         CUDA_HOST void freeHostResultArray(kernelOutputT & h_outputBoards)
