@@ -43,10 +43,10 @@ namespace solver
                                         size_t row,
                                         size_t column)
     {
-        ASSERT(stopLevel <= board.size());
+        ASSERT(stopLevel <= board.getCellsCount());
         //DEBUG_CALL(std::cout << "level: " << level << " row: " << row << " column: " << column << "\n";);
         //DEBUG_CALL(board.print());
-        const auto treeRowSize = board.size();
+        const auto treeRowSize = board.getSize();
 
         // Check if it is last cell
         const auto cellPair = getNextFreeCell(row, column);

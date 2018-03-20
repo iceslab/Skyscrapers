@@ -212,7 +212,7 @@ Statistics launchBaseParallelGpuSolver(const board::Board & board)
                         {
                             board::Board b(h_outputBoards[i * CUDA_MAX_RESULTS_PER_THREAD + j].getHostVector());
                             b.calculateHints();
-                            b.print();
+                            //b.print();
                         }
                     }
                 }
@@ -366,7 +366,7 @@ Statistics launchAOSStackParallelGpuSolver(const board::Board & board)
                         {
                             board::Board b(h_outputBoards[i * CUDA_MAX_RESULTS_PER_THREAD + j].getHostVector());
                             b.calculateHints();
-                            b.print();
+                            //b.print();
                         }
                     }
                 }
@@ -522,7 +522,7 @@ Statistics launchSOAStackParallelGpuSolver(const board::Board & board)
                         {
                             board::Board b(h_outputBoards[i * CUDA_MAX_RESULTS_PER_THREAD + j].getHostVector());
                             b.calculateHints();
-                            b.print();
+                            //b.print();
                         }
                     }
                 }

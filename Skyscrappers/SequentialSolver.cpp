@@ -9,7 +9,13 @@ SequentialSolver::SequentialSolver(const board::Board & board) :
     continueBackTracking(nullptr),
     constraints(board.size())
 {
-    this->board.fill(board::boardFieldT());
+    for (size_t row = 0; row < this->board.getSize(); row++)
+    {
+        for (size_t column = 0; column< this->board.getSize(); column++)
+        {
+            this->board.clearCell(row, column);
+        }
+    }
 }
 
 solver::SequentialSolver::SequentialSolver(board::Board && board) :
@@ -336,7 +342,7 @@ std::vector<board::Board> solver::SequentialSolver::backTrackingWithStack()
 {
     std::vector<board::Board> retVal;
     stackT stack;
-    stack.reserve(board.size());
+    stack.reserve(board.getCellsCount());
 
     auto initialCellPair = rowAndColumnPairT(0, 0);
     if (board.getCell(0, 0) != 0)
