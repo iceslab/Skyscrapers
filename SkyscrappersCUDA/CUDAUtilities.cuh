@@ -24,6 +24,34 @@ namespace cuda
     typedef unsigned int uint32T;
     typedef signed long long int int64T;
     typedef unsigned long long int uint64T;
+
+    typedef struct cudaEventsDevice
+    {
+        int64T initBegin;
+        int64T initEnd;
+        int64T loopBegin;
+        int64T loopEnd;
+
+        int64T firstZeroDiff;
+        int64T goodIndexDiff;
+        int64T badIndexDiff;
+        int64T placeableDiff;
+        int64T placeableFnDiff;
+        int64T boardValidDiff;
+        int64T boardInvalidDiff;
+        int64T boardValidFnDiff;
+        int64T lastCellDiff;
+        int64T notLastCellDiff;
+        int64T copyResultDiff;
+    } cudaEventsDeviceT;
+
+    enum Resolution
+    {
+        SECONDS = 1,
+        MILLISECONDS = SECONDS * 1000,
+        MICROSECONDS = MILLISECONDS * 1000,
+        NANOSECONDS = MICROSECONDS * 1000
+    };
 }
 
 //#else
@@ -76,6 +104,8 @@ namespace cuda
     cudaError_t deinitDevice();
 
     std::pair<double, std::string> bytesToHumanReadable(double bytes);
+    double getTime(int64T start, int64T end, Resolution resolution = SECONDS);
+    double getTime(int64T diff, Resolution resolution = SECONDS);
 }
 
 #endif // !__INCLUDED_CUDA_UTILITIES_CUH__

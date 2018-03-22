@@ -24,7 +24,12 @@ namespace cuda
             ~SequentialSolver() = default;
 
             /// Backtracking
-            CUDA_DEVICE uint32T backTrackingBase(cuda::Board* resultArray, uint32T threadIdx);
+            CUDA_DEVICE uint32T backTrackingBase(cuda::Board* resultArray,
+                                                 uint32T threadIdx,
+                                                 cuda::cudaEventsDeviceT & timers);
+            CUDA_DEVICE uint32T backTrackingIncrementalStack(cuda::Board* resultArray,
+                                                           uint32T threadIdx,
+                                                           cuda::cudaEventsDeviceT & timers);
             CUDA_DEVICE uint32T backTrackingAOSStack(cuda::Board * resultArray,
                                                      stackAOST * stack,
                                                      const uint32T threadIdx,

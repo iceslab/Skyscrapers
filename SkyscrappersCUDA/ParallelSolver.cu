@@ -132,6 +132,19 @@ namespace cuda
             return d_retVal;
         }
 
+        CUDA_HOST cudaEventsDeviceT * prepareCudaEventDevice(const std::vector<cudaEventsDeviceT>& h_timers)
+        {
+            cudaEventsDeviceT* d_retVal = nullptr;
+            cudaError_t err = cudaMalloc(&d_retVal, h_timers.size() * sizeof(*d_retVal));
+            if (err != cudaSuccess)
+            {
+                CUDA_PRINT_ERROR("Failed allocation", err);
+                d_retVal = nullptr;
+            }
+
+            return d_retVal;
+        }
+
         CUDA_HOST kernelOutputT prepareHostResultArray(size_t solversCount)
         {
             kernelOutputT h_retVal = reinterpret_cast<kernelOutputT>(
@@ -186,6 +199,12 @@ namespace cuda
             d_scatterArray = nullptr;
         }
 
+        CUDA_HOST void freeCudaEventDevice(cudaEventsDeviceT *& d_timers)
+        {
+            cudaFree(d_timers);
+            d_timers = nullptr;
+        }
+
         CUDA_HOST void freeHostResultArray(kernelOutputT & h_outputBoards)
         {
             free(h_outputBoards);
@@ -219,6 +238,18 @@ namespace cuda
             cudaError_t err = cudaMemcpy(h_outputBoardsSizes,
                                          d_outputBoardsSizes,
                                          solversCount * sizeof(*h_outputBoardsSizes),
+                                         cudaMemcpyDeviceToHost);
+            if (err != cudaSuccess)
+            {
+                CUDA_PRINT_ERROR("Failed memcpy", err);
+            }
+        }
+
+        CUDA_HOST void copyCudaEventDevice(std::vector<cudaEventsDeviceT>& h_timers, cudaEventsDeviceT *& d_timers)
+        {
+            cudaError_t err = cudaMemcpy(h_timers.data(),
+                                         d_timers,
+                                         h_timers.size() * sizeof(*d_timers),
                                          cudaMemcpyDeviceToHost);
             if (err != cudaSuccess)
             {

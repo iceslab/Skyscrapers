@@ -25,13 +25,22 @@
 extern int optind, opterr;
 extern TCHAR *optarg;
 
+enum SolversEnableE
+{
+    SEQUENTIAL = 0,
+    PARALLEL_CPU,
+    PARALLEL_GPU_BEGIN,
+    PARALLEL_GPU_BASE = PARALLEL_GPU_BEGIN,
+    PARALLEL_GPU_INCREMENTAL,
+    PARALLEL_GPU_AOS,
+    PARALLEL_GPU_SOA,
+    PARALLEL_GPU_END,
+    SOLVERS_SIZE = PARALLEL_GPU_END
+};
+
 extern bool loadFromFile;
 extern const char* filePath;
-extern bool sequentialSolver;
-extern bool parallelCpuSolver;
-extern bool baseParallelGpuSolver;
-extern bool aosParallelGpuSolver;
-extern bool soaParallelGpuSolver;
+extern std::vector<bool> solversEnabled;
 extern size_t gpuAlgorithmsToRun;
 extern size_t boardDimension;
 extern size_t desiredBoards;

@@ -8,13 +8,28 @@
 
 CUDA_GLOBAL void parallelSolvingBase(cuda::solver::kernelInputT d_solvers,
                                      cuda::solver::kernelOutputT d_outputBoards,
-                                     cuda::solver::kernelOutputSizesT d_outputBoardsSizes)
+                                     cuda::solver::kernelOutputSizesT d_outputBoardsSizes,
+                                     cuda::cudaEventsDeviceT* d_timers)
 {
     // It denotes thread index and array index
     const auto idx = threadIdx.x;
     d_outputBoardsSizes[idx] =
         d_solvers[idx].backTrackingBase(d_outputBoards + idx * CUDA_MAX_RESULTS_PER_THREAD,
-                                        idx);
+                                        idx,
+                                        d_timers[idx]);
+}
+
+CUDA_GLOBAL void parallelSolvingIncrementalStack(cuda::solver::kernelInputT d_solvers,
+                                                 cuda::solver::kernelOutputT d_outputBoards,
+                                                 cuda::solver::kernelOutputSizesT d_outputBoardsSizes,
+                                                 cuda::cudaEventsDeviceT* d_timers)
+{
+    // It denotes thread index and array index
+    const auto idx = threadIdx.x;
+    d_outputBoardsSizes[idx] =
+        d_solvers[idx].backTrackingIncrementalStack(d_outputBoards + idx * CUDA_MAX_RESULTS_PER_THREAD,
+                                                    idx,
+                                                    d_timers[idx]);
 }
 
 CUDA_GLOBAL void parallelSolvingAOSStack(cuda::solver::kernelInputT d_solvers,

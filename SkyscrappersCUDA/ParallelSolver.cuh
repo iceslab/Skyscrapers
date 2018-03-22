@@ -45,6 +45,7 @@ namespace cuda
         CUDA_HOST kernelOutputSizesT prepareResultArraySizes(size_t solversCount);
         CUDA_HOST threadLocalsT* prepareThreadLocals(size_t solversCount);
         CUDA_HOST uint32T* prepareScatterArray(size_t solversCount);
+        CUDA_HOST cudaEventsDeviceT* prepareCudaEventDevice(const std::vector<cudaEventsDeviceT> & h_events);
 
         CUDA_HOST kernelOutputT prepareHostResultArray(size_t solversCount);
         CUDA_HOST kernelOutputSizesT prepareHostResultArraySizes(size_t solversCount);
@@ -59,6 +60,8 @@ namespace cuda
         CUDA_HOST void freeThreadLocals(threadLocalsT* & d_threadLocals);
         // Complementary function to free scatter array
         CUDA_HOST void freeScatterArray(uint32T* & d_scatterArray);
+        // Complementary function to free cudaEventDevice array
+        CUDA_HOST void freeCudaEventDevice(cudaEventsDeviceT* & d_timers);
 
         // Complementary function to free results array
         CUDA_HOST void freeHostResultArray(kernelOutputT & h_outputBoards);
@@ -71,6 +74,8 @@ namespace cuda
         CUDA_HOST void copyResultsArraySizes(kernelOutputSizesT h_outputBoardsSizes,
                                              kernelOutputSizesT d_outputBoardsSizes,
                                              size_t solversCount);
+        CUDA_HOST void copyCudaEventDevice(std::vector<cudaEventsDeviceT> & h_timers,
+                                           cudaEventsDeviceT* & d_timers);
 
         CUDA_HOST bool verifyAllocation(kernelInputT & d_solvers,
                                         kernelOutputT & d_outputBoards,

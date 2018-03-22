@@ -156,11 +156,7 @@ int		optind = 0; 	// global argv index
 
 bool loadFromFile;
 const char* filePath;
-bool sequentialSolver;
-bool parallelCpuSolver;
-bool baseParallelGpuSolver;
-bool aosParallelGpuSolver;
-bool soaParallelGpuSolver;
+std::vector<bool> solversEnabled(SOLVERS_SIZE, false);
 size_t gpuAlgorithmsToRun;
 size_t boardDimension = 1;
 size_t desiredBoards = 1;
@@ -241,10 +237,10 @@ bool ProcessCommandLine(int argc, TCHAR *argv[])
             filePath = optarg;
             break;
         case _T('s'):
-            sequentialSolver = true;
+            solversEnabled[SEQUENTIAL] = true;
             break;
         case _T('c'):
-            parallelCpuSolver = true;
+            solversEnabled[PARALLEL_CPU] = true;
             break;
         case _T('g'):
             parseGPUOptarg(optarg);
@@ -294,9 +290,10 @@ void printUsage()
            "      Program will run parallel algorithm on CPU\n");
     printf("   -g algorithm\n"
            "      Program will run chosen algorithm(s) on GPU\n"
-           "      Valid options are: \"all\", \"basic\", \"aos\" and \"soa\"\n"
+           "      Valid options are: \"all\", \"basic\", \"inc\", \"aos\" and \"soa\"\n"
            "      \"all\"   - run all available algorithms\n"
            "      \"basic\" - run basic algorithm\n"
+           "      \"inc\"   - run incremental stack algorithm\n"
            "      \"aos\"   - run Array of Structures stack algorithm\n"
            "      \"soa\"   - run Structure of Arrays stack algorithm\n");
     printf("   -d dimension\n"
@@ -324,11 +321,12 @@ void printLaunchParameters()
     }
 
     printf("Number of threads in parallel algorithms: %zu\n", desiredBoards);
-    printf("Sequential algorithm:             %s\n", boolToEnabled(sequentialSolver));
-    printf("Parallel CPU algorithm:           %s\n", boolToEnabled(parallelCpuSolver));
-    printf("Base parallel GPU algorithm:      %s\n", boolToEnabled(baseParallelGpuSolver));
-    printf("AoS stack parallel GPU algorithm: %s\n", boolToEnabled(aosParallelGpuSolver));
-    printf("SoA stack parallel GPU algorithm: %s\n", boolToEnabled(soaParallelGpuSolver));
+    printf("Sequential algorithm:                     %s\n", boolToEnabled(solversEnabled[SEQUENTIAL]));
+    printf("Parallel CPU algorithm:                   %s\n", boolToEnabled(solversEnabled[PARALLEL_CPU]));
+    printf("Base parallel GPU algorithm:              %s\n", boolToEnabled(solversEnabled[PARALLEL_GPU_BASE]));
+    printf("Incremental stack parallel GPU algorithm: %s\n", boolToEnabled(solversEnabled[PARALLEL_GPU_INCREMENTAL]));
+    printf("AoS stack parallel GPU algorithm:         %s\n", boolToEnabled(solversEnabled[PARALLEL_GPU_AOS]));
+    printf("SoA stack parallel GPU algorithm:         %s\n", boolToEnabled(solversEnabled[PARALLEL_GPU_SOA]));
 }
 
 const char * boolToEnabled(bool option)
@@ -338,7 +336,7 @@ const char * boolToEnabled(bool option)
 
 void parseGPUOptarg(const std::string & optarg)
 {
-    std::vector<std::string> substrings = { "all", "basic", "aos", "soa" };
+    std::vector<std::string> substrings = { "all", "basic", "inc", "aos", "soa" };
 
     for (size_t i = 0; i < substrings.size(); i++)
     {
@@ -351,26 +349,28 @@ void parseGPUOptarg(const std::string & optarg)
         switch (i)
         {
         case 0:
-            baseParallelGpuSolver = true;
-            aosParallelGpuSolver = true;
-            soaParallelGpuSolver = true;
-            gpuAlgorithmsToRun = 3;
+            for (size_t i = PARALLEL_GPU_BEGIN; i < PARALLEL_GPU_END; i++)
+            {
+                solversEnabled[i] = true;
+            }
             return;
         case 1:
-            baseParallelGpuSolver = true;
-            ++gpuAlgorithmsToRun;
+            solversEnabled[PARALLEL_GPU_BASE] = true;
             break;
         case 2:
-            aosParallelGpuSolver = true;
-            ++gpuAlgorithmsToRun;
+            solversEnabled[PARALLEL_GPU_INCREMENTAL] = true;
             break;
         case 3:
-            soaParallelGpuSolver = true;
-            ++gpuAlgorithmsToRun;
+            solversEnabled[PARALLEL_GPU_AOS] = true;
+            break;
+        case 4:
+            solversEnabled[PARALLEL_GPU_SOA] = true;
             break;
         default:
             printf("Error: Substring has no match!\n");
             break;
         }
     }
+
+    gpuAlgorithmsToRun = std::count(solversEnabled.begin(), solversEnabled.end(), true);
 }

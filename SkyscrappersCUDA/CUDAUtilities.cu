@@ -15,7 +15,7 @@ namespace cuda
             cudaStatus = cudaSetDevice(0);
             if (cudaStatus != cudaSuccess)
             {
-                fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
+                fprintf(stderr, "cudaSetDevice failed! Do you have a CUDA-capable GPU installed?\n");
             }
 
             if (fifoSize != CUDA_DEFAULT_FIFO_SIZE)
@@ -57,7 +57,7 @@ namespace cuda
 
     std::pair<double, std::string> bytesToHumanReadable(double bytes)
     {
-        const std::vector<std::string> postfixes = {"B", "KB", "MB", "GB", "TB", "PB", "EB"};
+        const std::vector<std::string> postfixes = { "B", "KB", "MB", "GB", "TB", "PB", "EB" };
         const double factor = 1024.0;
 
         size_t i = 0;
@@ -73,4 +73,44 @@ namespace cuda
         return std::make_pair(bytes, postfixes[i]);
     }
 
+    double getTime(int64T start, int64T end, Resolution resolution)
+    {
+        return getTime(end - start, resolution);
+    }
+
+    double getTime(int64T diff, Resolution resolution)
+    {
+        static int hzClockRate = 0;
+        double retVal = std::numeric_limits<double>::quiet_NaN();
+        if (hzClockRate == 0)
+        {
+            int device = 0;
+            cudaError_t err = cudaGetDevice(&device);
+            if (err != cudaSuccess)
+            {
+                fprintf(stderr, "cudaGetDevice failed! Do you have a CUDA-capable GPU installed?\n");
+            }
+            else
+            {
+                cudaDeviceProp properties;
+                err = cudaGetDeviceProperties(&properties, device);
+                if (err != cudaSuccess)
+                {
+                    fprintf(stderr, "cudaGetDeviceProperties failed! Cannot get device #%d properties\n", device);
+                }
+                else
+                {
+                    // Clock rate returned in kHz
+                    hzClockRate = properties.clockRate * 1000;
+                }
+            }
+        }
+        else
+        {
+            retVal = static_cast<double>(diff) * static_cast<double>(resolution) /
+                static_cast<double>(hzClockRate);
+        }
+
+        return retVal;
+    }
 }

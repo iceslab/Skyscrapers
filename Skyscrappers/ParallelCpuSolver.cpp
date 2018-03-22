@@ -7,27 +7,43 @@ namespace solver
         // Nothing to do
     }
 
-    std::vector<board::Board> ParallelCpuSolver::solve(const size_t stopLevel)
+    std::vector<board::Board> ParallelCpuSolver::solve(const size_t stopLevel,
+                                                       double & initMilliseconds,
+                                                       double & generationMilliseconds,
+                                                       double & threadsLaunchMilliseconds,
+                                                       double & threadsSyncMilliseconds)
     {
+        Timer time;
+        Timer timeInit;
+        Timer timeGeneration;
+
+        timeInit.start();
         std::vector<board::Board> retVal;
         continueBoolT continueBT = true;
         UNREFERENCED_PARAMETER(continueBT);
+        timeGeneration.start();
         auto solvers = prepareSolvers(stopLevel);
+        generationMilliseconds = timeGeneration.stop(Resolution::MILLISECONDS);
         retVal.reserve(solvers.size());
         std::vector<std::future<std::vector<board::Board>>> results;
         results.reserve(solvers.size());
+        initMilliseconds = timeInit.stop(Resolution::MILLISECONDS);
 
+        time.start();
         for (auto& solver : solvers)
         {
             //solver.setContinueBackTrackingPointer(&continueBT);
             results.emplace_back(std::async(std::launch::async, &SequentialSolver::solve, solver));
         }
+        threadsLaunchMilliseconds = time.stop(Resolution::MILLISECONDS);
 
+        time.start();
         for (auto& result : results)
         {
             const auto resultVector = result.get();
             retVal.insert(retVal.end(), resultVector.begin(), resultVector.end());
         }
+        threadsSyncMilliseconds = time.stop(Resolution::MILLISECONDS);
 
         return retVal;
     }
