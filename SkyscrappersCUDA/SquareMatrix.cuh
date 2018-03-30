@@ -23,14 +23,10 @@ namespace cuda
         typedef T * columnT;
         typedef T * setIntersectionT;
 
-        //SquareMatrix(const SquareMatrix & matrix);
-        //SquareMatrix(SquareMatrix && matrix);
-
-        SquareMatrix & operator=(const SquareMatrix & matrix);
-        SquareMatrix & operator=(SquareMatrix && matrix);
-
-        SquareMatrix(const size_t size);
-        ~SquareMatrix();
+        CUDA_HOST SquareMatrix(const size_t size);
+        CUDA_DEVICE SquareMatrix(const size_t size,
+                                 void* sharedMemoryPtr);
+        CUDA_HOST_DEVICE ~SquareMatrix();
 
         /// Accessors
 
@@ -43,6 +39,11 @@ namespace cuda
         CUDA_DEVICE void setCell(size_t row, size_t column, T value);
 
         CUDA_HOST_DEVICE size_t getSize() const;
+
+        CUDA_HOST_DEVICE size_t getCellsCount() const;
+
+        CUDA_HOST_DEVICE size_t getMatrixMemoryUsage() const;
+        static CUDA_HOST_DEVICE size_t getMatrixMemoryUsage(const size_t cellsCount);
 
         /// Helper methods
 
@@ -57,13 +58,15 @@ namespace cuda
     protected:
         T * d_data;
         size_t size;
+        bool usesSharedMemory;
     };
 
     template<class T>
-    inline SquareMatrix<T>::SquareMatrix(const size_t size)
+    inline CUDA_HOST SquareMatrix<T>::SquareMatrix(const size_t size) :
+        usesSharedMemory(false)
     {
         this->size = size;
-        if(size > 0)
+        if (size > 0)
         {
             const cudaError_t err = cudaMalloc(&d_data, size * size * sizeof(T));
             if (err != cudaSuccess)
@@ -80,9 +83,24 @@ namespace cuda
     }
 
     template<class T>
-    inline SquareMatrix<T>::~SquareMatrix()
+    inline CUDA_DEVICE SquareMatrix<T>::SquareMatrix(const size_t size,
+                                                     void* sharedMemoryPtr) :
+        usesSharedMemory(true)
     {
-        cudaFree(d_data);
+        this->size = size;
+        if (size > 0)
+        {
+            d_data = reinterpret_cast<T*>(sharedMemoryPtr);
+        }
+    }
+
+    template<class T>
+    inline CUDA_HOST_DEVICE SquareMatrix<T>::~SquareMatrix()
+    {
+        if (usesSharedMemory == false)
+        {
+            cudaFree(d_data);
+        }
         d_data = nullptr;
         size = 0;
     }
@@ -135,6 +153,24 @@ namespace cuda
     inline CUDA_HOST_DEVICE size_t SquareMatrix<T>::getSize() const
     {
         return size;
+    }
+
+    template<class T>
+    inline CUDA_HOST_DEVICE size_t SquareMatrix<T>::getCellsCount() const
+    {
+        return getSize() * getSize();
+    }
+
+    template<class T>
+    inline CUDA_HOST_DEVICE size_t SquareMatrix<T>::getMatrixMemoryUsage() const
+    {
+        return getMatrixMemoryUsage(getCellsCount());
+    }
+
+    template<class T>
+    CUDA_HOST_DEVICE size_t SquareMatrix<T>::getMatrixMemoryUsage(const size_t cellsCount)
+    {
+        return cellsCount * sizeof(T);
     }
 
     template<class T>

@@ -12,9 +12,11 @@ namespace cuda
         public:
             Solver(const board::Board& board);
             Solver(board::Board&& board);
-            Solver(const cuda::Board& board);
-            ~Solver() = default;
-        protected:
+            CUDA_HOST_DEVICE Solver(const cuda::Board& board,
+                                    void * constantMemoryPtr = nullptr,
+                                    void * sharedMemoryPtr = nullptr);
+            CUDA_HOST_DEVICE ~Solver();
+
             cuda::Board board;
         };
     }

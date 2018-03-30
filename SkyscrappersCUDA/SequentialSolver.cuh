@@ -8,7 +8,8 @@
 #define CUDA_SIZE_T_MAX (size_t(~0))
 #define CUDA_UINT32_T_MAX (cuda::uint32T(~0))
 #define CUDA_LAST_CELL_PAIR (rowAndColumnPairT(CUDA_UINT32_T_MAX, CUDA_UINT32_T_MAX))
-#define CUDA_MAX_RESULTS_PER_THREAD (cuda::uint32T(5))
+//#define CUDA_MAX_RESULTS_PER_THREAD (cuda::uint32T(7))
+#define CUDA_MAX_RESULTS (cuda::uint32T(20))
 
 #define BT_WITH_STACK
 
@@ -21,23 +22,32 @@ namespace cuda
         {
         public:
             SequentialSolver(const board::Board& board);
-            ~SequentialSolver() = default;
+            CUDA_HOST_DEVICE SequentialSolver(const cuda::Board& board,
+                                              void * constantMemoryPtr = nullptr,
+                                              void * sharedMemoryPtr = nullptr);
+            CUDA_HOST_DEVICE ~SequentialSolver();
 
             /// Backtracking
-            CUDA_DEVICE uint32T backTrackingBase(cuda::Board* resultArray,
-                                                 uint32T threadIdx,
-                                                 cuda::cudaEventsDeviceT & timers);
-            CUDA_DEVICE uint32T backTrackingIncrementalStack(cuda::Board* resultArray,
-                                                           uint32T threadIdx,
-                                                           cuda::cudaEventsDeviceT & timers);
-            CUDA_DEVICE uint32T backTrackingAOSStack(cuda::Board * resultArray,
-                                                     stackAOST * stack,
-                                                     const uint32T threadIdx,
-                                                     const uint32T threadsCount);
-            CUDA_DEVICE uint32T backTrackingSOAStack(cuda::Board* resultArray,
-                                                     stackSOAT* stack,
-                                                     const uint32T threadIdx,
-                                                     const uint32T threadsCount);
+            CUDA_DEVICE void backTrackingBase(cuda::Board* resultArray,
+                                              uint32T* allResultsCount,
+                                              uint32T threadIdx,
+                                              cuda::cudaEventsDeviceT & timers);
+            CUDA_DEVICE void backTrackingIncrementalStack(cuda::Board* resultArray,
+                                                          uint32T* allResultsCount,
+                                                          uint32T threadIdx,
+                                                          cuda::cudaEventsDeviceT & timers);
+            CUDA_DEVICE void backTrackingAOSStack(cuda::Board * resultArray,
+                                                  uint32T* allResultsCount,
+                                                  stackAOST * stack,
+                                                  const uint32T threadIdx,
+                                                  const uint32T threadsCount,
+                                                  cuda::cudaEventsDeviceT & timers);
+            CUDA_DEVICE void backTrackingSOAStack(cuda::Board* resultArray,
+                                                  uint32T* allResultsCount,
+                                                  stackSOAT* stack,
+                                                  const uint32T threadIdx,
+                                                  const uint32T threadsCount,
+                                                  cuda::cudaEventsDeviceT & timers);
 
             CUDA_DEVICE void getNextFreeCell(uint32T row,
                                              uint32T column,

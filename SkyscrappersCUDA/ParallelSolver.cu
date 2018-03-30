@@ -47,11 +47,11 @@ namespace cuda
                                                    size_t boardSize)
         {
             // Create array on host
-            h_boards = std::vector<cuda::Board>(solversCount * CUDA_MAX_RESULTS_PER_THREAD,
+            h_boards = std::vector<cuda::Board>(CUDA_MAX_RESULTS,
                                                 cuda::Board(boardSize));
 
             kernelOutputT d_retVal = nullptr;
-            cudaError_t err = cudaMalloc(&d_retVal, solversCount * CUDA_MAX_RESULTS_PER_THREAD * sizeof(*d_retVal));
+            cudaError_t err = cudaMalloc(&d_retVal, CUDA_MAX_RESULTS * sizeof(*d_retVal));
             if (err != cudaSuccess)
             {
                 CUDA_PRINT_ERROR("Failed allocation", err);
@@ -62,7 +62,7 @@ namespace cuda
                 // Zero out allocated memory
                 err = cudaMemcpy(d_retVal,
                                  h_boards.data(),
-                                 solversCount * CUDA_MAX_RESULTS_PER_THREAD * sizeof(*d_retVal),
+                                 CUDA_MAX_RESULTS * sizeof(*d_retVal),
                                  cudaMemcpyHostToDevice);
                 if (err != cudaSuccess)
                 {
@@ -73,10 +73,10 @@ namespace cuda
             return d_retVal;
         }
 
-        CUDA_HOST kernelOutputSizesT prepareResultArraySizes(size_t solversCount)
+        CUDA_HOST uint32T * prepareResultArraySize()
         {
-            kernelOutputSizesT d_retVal = nullptr;
-            cudaError_t err = cudaMalloc(&d_retVal, solversCount * sizeof(*d_retVal));
+            uint32T* d_retVal = nullptr;
+            cudaError_t err = cudaMalloc(&d_retVal, sizeof(*d_retVal));
             if (err != cudaSuccess)
             {
                 CUDA_PRINT_ERROR("Failed allocation", err);
@@ -84,14 +84,16 @@ namespace cuda
             }
             else
             {
-                // Zero out allocated memory
-                err = cudaMemset(d_retVal, 0, solversCount * sizeof(*d_retVal));
+                uint32T h_valueToSet = 1;
+                // Copy host variable to device
+                err = cudaMemcpy(d_retVal, &h_valueToSet, sizeof(*d_retVal), cudaMemcpyHostToDevice);
                 if (err != cudaSuccess)
                 {
-                    CUDA_PRINT_ERROR("Failed memset", err);
+                    CUDA_PRINT_ERROR("Failed memcpy", err);
+                    cudaFree(d_retVal);
+                    d_retVal = nullptr;
                 }
             }
-
             return d_retVal;
         }
 
@@ -145,22 +147,10 @@ namespace cuda
             return d_retVal;
         }
 
-        CUDA_HOST kernelOutputT prepareHostResultArray(size_t solversCount)
+        CUDA_HOST kernelOutputT prepareHostResultArray()
         {
             kernelOutputT h_retVal = reinterpret_cast<kernelOutputT>(
-                calloc(solversCount * CUDA_MAX_RESULTS_PER_THREAD, sizeof(*h_retVal)));
-            if (h_retVal == nullptr)
-            {
-                HOST_PRINT_ERROR("Failed calloc");
-            }
-
-            return h_retVal;
-        }
-
-        CUDA_HOST kernelOutputSizesT prepareHostResultArraySizes(size_t solversCount)
-        {
-            kernelOutputSizesT h_retVal = reinterpret_cast<kernelOutputSizesT>(
-                calloc(solversCount, sizeof(*h_retVal)));
+                calloc(CUDA_MAX_RESULTS, sizeof(*h_retVal)));
             if (h_retVal == nullptr)
             {
                 HOST_PRINT_ERROR("Failed calloc");
@@ -181,10 +171,10 @@ namespace cuda
             d_outputBoards = nullptr;
         }
 
-        CUDA_HOST void freeResultArraySizes(kernelOutputSizesT & d_outputBoardsSizes)
+        CUDA_HOST void freeResultArraySize(uint32T* & d_outputBoardsSize)
         {
-            cudaFree(d_outputBoardsSizes);
-            d_outputBoardsSizes = nullptr;
+            cudaFree(d_outputBoardsSize);
+            d_outputBoardsSize = nullptr;
         }
 
         CUDA_HOST void freeThreadLocals(threadLocalsT *& d_threadLocals)
@@ -211,19 +201,13 @@ namespace cuda
             h_outputBoards = nullptr;
         }
 
-        CUDA_HOST void freeHostResultArraySizes(kernelOutputSizesT & h_outputBoardsSizes)
-        {
-            free(h_outputBoardsSizes);
-            h_outputBoardsSizes = nullptr;
-        }
-
         CUDA_HOST void copyResultsArray(kernelOutputT h_outputBoards,
                                         kernelOutputT d_outputBoards,
                                         size_t solversCount)
         {
             cudaError_t err = cudaMemcpy(h_outputBoards,
                                          d_outputBoards,
-                                         solversCount * CUDA_MAX_RESULTS_PER_THREAD * sizeof(*h_outputBoards),
+                                         CUDA_MAX_RESULTS * sizeof(*h_outputBoards),
                                          cudaMemcpyDeviceToHost);
             if (err != cudaSuccess)
             {
@@ -231,13 +215,12 @@ namespace cuda
             }
         }
 
-        CUDA_HOST void copyResultsArraySizes(kernelOutputSizesT h_outputBoardsSizes,
-                                             kernelOutputSizesT d_outputBoardsSizes,
-                                             size_t solversCount)
+        CUDA_HOST void copyResultsArraySize(uint32T * h_outputBoardsSize,
+                                            uint32T * d_outputBoardsSize)
         {
-            cudaError_t err = cudaMemcpy(h_outputBoardsSizes,
-                                         d_outputBoardsSizes,
-                                         solversCount * sizeof(*h_outputBoardsSizes),
+            cudaError_t err = cudaMemcpy(h_outputBoardsSize,
+                                         d_outputBoardsSize,
+                                         sizeof(uint32T),
                                          cudaMemcpyDeviceToHost);
             if (err != cudaSuccess)
             {
@@ -259,11 +242,11 @@ namespace cuda
 
         CUDA_HOST bool verifyAllocation(kernelInputT & d_solvers,
                                         kernelOutputT & d_outputBoards,
-                                        kernelOutputSizesT & d_outputBoardsSizes)
+                                        uint32T* & d_outputBoardsSize)
         {
             return d_solvers != nullptr &&
                 d_outputBoards != nullptr &&
-                d_outputBoardsSizes != nullptr;
+                d_outputBoardsSize != nullptr;
         }
 
         //CUDA_GLOBAL void parallelBoardSolving(kernelInputT d_solvers,

@@ -12,6 +12,7 @@ Statistics launchSequentialSolver(const board::Board & board);
 Statistics launchParallelCpuSolver(const board::Board & board);
 Statistics launchBaseParallelGpuSolver(const board::Board & board);
 Statistics launchIncrementalStackParallelGpuSolver(const board::Board & board);
+Statistics launchSharedMemoryParallelGpuSolver(const board::Board & board);
 Statistics launchAOSStackParallelGpuSolver(const board::Board & board);
 Statistics launchSOAStackParallelGpuSolver(const board::Board & board);
 
@@ -57,6 +58,7 @@ int main(int argc, char** argv)
     const auto pcStats = launchParallelCpuSolver(b);
     const auto bpgStats = launchBaseParallelGpuSolver(b);
     const auto isgStats = launchIncrementalStackParallelGpuSolver(b);
+    const auto shmgStats = launchSharedMemoryParallelGpuSolver(b);
     const auto aosgStats = launchAOSStackParallelGpuSolver(b);
     const auto soagStats = launchSOAStackParallelGpuSolver(b);
 
@@ -64,6 +66,7 @@ int main(int argc, char** argv)
     pcStats.print();
     bpgStats.print();
     isgStats.print();
+    shmgStats.print();
     aosgStats.print();
     soagStats.print();
 
@@ -82,6 +85,7 @@ Statistics launchSequentialSolver(const board::Board & board)
         time.start();
         const auto cResult = c.solve();
         cMilliseconds = time.stop(Resolution::MILLISECONDS);
+        std::cout << "SequentialSolver result size: " << cResult.size() << std::endl;
     }
     retVal.emplace_back("SequentialSolver solving time: ", cMilliseconds);
     return retVal;
@@ -106,6 +110,7 @@ Statistics launchParallelCpuSolver(const board::Board & board)
                                        threadsLaunchMilliseconds,
                                        threadsSyncMilliseconds);
         pcMilliseconds = time.stop(Resolution::MILLISECONDS);
+        std::cout << "ParallelCpuSolver result size: " << pcResult.size() << std::endl;
     }
     retVal.emplace_back("ParallelCpuSolver solving time: ", pcMilliseconds);
     retVal.emplace_back("\nDevice initialize time: ", initMilliseconds);
@@ -145,7 +150,7 @@ Statistics launchBaseParallelGpuSolver(const board::Board & board)
 
         solver::ParallelSolver ps(board);
         timeGeneration.start();
-        const auto boards = ps.generateNBoards(desiredBoards);
+        const auto boards = ps.generateBoards(desiredBoards);
         generationMilliseconds = timeGeneration.stop(Resolution::MILLISECONDS);
         size_t generatedSolversCount = 0;
 
@@ -160,19 +165,19 @@ Statistics launchBaseParallelGpuSolver(const board::Board & board)
         // Allocating memory on device
         auto d_solvers = cuda::solver::prepareSolvers(boards, h_solvers, generatedSolversCount);
         auto d_outputBoards = cuda::solver::prepareResultArray(h_boards, generatedSolversCount, boards.front().size());
-        auto d_outputBoardsSizes = cuda::solver::prepareResultArraySizes(generatedSolversCount);
+        auto d_outputBoardsSize = cuda::solver::prepareResultArraySize();
 
         std::vector<cuda::cudaEventsDeviceT> h_timers(generatedSolversCount);
         auto d_timers = cuda::solver::prepareCudaEventDevice(h_timers);
 
         // Allocating memory on host
-        auto h_outputBoards = cuda::solver::prepareHostResultArray(generatedSolversCount);
-        auto h_outputBoardsSizes = cuda::solver::prepareHostResultArraySizes(generatedSolversCount);
+        auto h_outputBoards = cuda::solver::prepareHostResultArray();
+        cuda::uint32T h_outputBoardsSize = 0;
         allocationMilliseconds = timeAllocation.stop(Resolution::MILLISECONDS);
 
 
         // If allocation was successfull launch kernel
-        if (cuda::solver::verifyAllocation(d_solvers, d_outputBoards, d_outputBoardsSizes))
+        if (cuda::solver::verifyAllocation(d_solvers, d_outputBoards, d_outputBoardsSize))
         {
             dim3 numBlocks(1);
             dim3 threadsPerBlock(generatedSolversCount);
@@ -186,7 +191,7 @@ Statistics launchBaseParallelGpuSolver(const board::Board & board)
             parallelSolvingBase << <numBlocks, threadsPerBlock >> >
                 (d_solvers,
                  d_outputBoards,
-                 d_outputBoardsSizes,
+                 d_outputBoardsSize,
                  d_timers);
 
             kernelLaunchMilliseconds = kernelTimer.stop(Resolution::MILLISECONDS);
@@ -233,13 +238,13 @@ Statistics launchBaseParallelGpuSolver(const board::Board & board)
                         double placeableDiff = cuda::getTime(el.placeableDiff,
                                                              cuda::Resolution::MILLISECONDS);
                         double placeableFnDiff = cuda::getTime(el.placeableFnDiff,
-                                                             cuda::Resolution::MILLISECONDS);
+                                                               cuda::Resolution::MILLISECONDS);
                         double boardValidDiff = cuda::getTime(el.boardValidDiff,
                                                               cuda::Resolution::MILLISECONDS);
                         double boardInvalidDiff = cuda::getTime(el.boardInvalidDiff,
                                                                 cuda::Resolution::MILLISECONDS);
                         double boardValidFnDiff = cuda::getTime(el.boardValidFnDiff,
-                                                              cuda::Resolution::MILLISECONDS);
+                                                                cuda::Resolution::MILLISECONDS);
                         double lastCellDiff = cuda::getTime(el.lastCellDiff,
                                                             cuda::Resolution::MILLISECONDS);
                         double notLastCellDiff = cuda::getTime(el.notLastCellDiff,
@@ -248,55 +253,45 @@ Statistics launchBaseParallelGpuSolver(const board::Board & board)
                                                               cuda::Resolution::MILLISECONDS);
 
 
-                        retVal.emplace_back("\nThread #" + std::to_string(i) + " init time: ", initTime);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " loop time: ", loopTime);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " first zero time: ", firstZeroDiff);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " good index time: ", goodIndexDiff);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " bad index time: ", badIndexDiff);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " is placeable time: ", placeableDiff);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " is placeable function time: ", placeableFnDiff);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " board valid time: ", boardValidDiff);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " board invalid time: ", boardInvalidDiff);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " board valid function time: ", boardValidFnDiff);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " last cell time: ", lastCellDiff);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " not last cell time: ", notLastCellDiff);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " copy result time: ", copyResultDiff);
+                        //retVal.emplace_back("\nThread #" + std::to_string(i) + " init time: ", initTime);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " loop time: ", loopTime);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " first zero time: ", firstZeroDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " good index time: ", goodIndexDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " bad index time: ", badIndexDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " is placeable time: ", placeableDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " is placeable function time: ", placeableFnDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " board valid time: ", boardValidDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " board invalid time: ", boardInvalidDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " board valid function time: ", boardValidFnDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " last cell time: ", lastCellDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " not last cell time: ", notLastCellDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " copy result time: ", copyResultDiff);
                     }
 
                     cuda::solver::copyResultsArray(h_outputBoards,
                                                    d_outputBoards,
                                                    generatedSolversCount);
-                    cuda::solver::copyResultsArraySizes(h_outputBoardsSizes,
-                                                        d_outputBoardsSizes,
-                                                        generatedSolversCount);
-
-                    for (size_t i = 0; i < generatedSolversCount; i++)
+                    cuda::solver::copyResultsArraySize(&h_outputBoardsSize, d_outputBoardsSize);
+                    h_outputBoardsSize = h_outputBoardsSize == 0 ? CUDA_MAX_RESULTS : h_outputBoardsSize - 1;
+                    for (size_t i = 0; i < h_outputBoardsSize && i < CUDA_MAX_RESULTS; i++)
                     {
-                        const auto boardCount = h_outputBoardsSizes[i];
-                        DEBUG_PRINTLN("Result boards in thread %zu: %zu - max: %zu",
-                                      i,
-                                      boardCount,
-                                      CUDA_MAX_RESULTS_PER_THREAD);
-                        for (size_t j = 0; j < boardCount && j < CUDA_MAX_RESULTS_PER_THREAD; j++)
-                        {
-                            board::Board b(h_outputBoards[i * CUDA_MAX_RESULTS_PER_THREAD + j].getHostVector());
-                            b.calculateHints();
-                            //b.print();
-                        }
+                        board::Board b(h_outputBoards[i].getHostVector());
+                        b.calculateHints();
+                        //b.print();
                     }
+
+                    std::cout << "Base ParallelGpuSolver result size: " << h_outputBoardsSize << std::endl;
                 }
             }
         }
 
-
         timeAllocation.start();
         // Dellocating host memory (in reverse order)
-        cuda::solver::freeHostResultArraySizes(h_outputBoardsSizes);
         cuda::solver::freeHostResultArray(h_outputBoards);
 
         // Dellocating device memory (in reverse order)
         cuda::solver::freeCudaEventDevice(d_timers);
-        cuda::solver::freeResultArraySizes(d_outputBoardsSizes);
+        cuda::solver::freeResultArraySize(d_outputBoardsSize);
         cuda::solver::freeResultArray(d_outputBoards);
         cuda::solver::freeSolvers(d_solvers);
         deallocationMilliseconds = timeAllocation.stop(Resolution::MILLISECONDS);
@@ -351,7 +346,7 @@ Statistics launchIncrementalStackParallelGpuSolver(const board::Board & board)
 
         solver::ParallelSolver ps(board);
         timeGeneration.start();
-        const auto boards = ps.generateNBoards(desiredBoards);
+        const auto boards = ps.generateBoards(desiredBoards);
         generationMilliseconds = timeGeneration.stop(Resolution::MILLISECONDS);
         size_t generatedSolversCount = 0;
 
@@ -366,19 +361,19 @@ Statistics launchIncrementalStackParallelGpuSolver(const board::Board & board)
         // Allocating memory on device
         auto d_solvers = cuda::solver::prepareSolvers(boards, h_solvers, generatedSolversCount);
         auto d_outputBoards = cuda::solver::prepareResultArray(h_boards, generatedSolversCount, boards.front().size());
-        auto d_outputBoardsSizes = cuda::solver::prepareResultArraySizes(generatedSolversCount);
+        auto d_outputBoardsSize = cuda::solver::prepareResultArraySize();
 
         std::vector<cuda::cudaEventsDeviceT> h_timers(generatedSolversCount);
         auto d_timers = cuda::solver::prepareCudaEventDevice(h_timers);
 
         // Allocating memory on host
-        auto h_outputBoards = cuda::solver::prepareHostResultArray(generatedSolversCount);
-        auto h_outputBoardsSizes = cuda::solver::prepareHostResultArraySizes(generatedSolversCount);
+        auto h_outputBoards = cuda::solver::prepareHostResultArray();
+        cuda::uint32T h_outputBoardsSize = 0;
         allocationMilliseconds = timeAllocation.stop(Resolution::MILLISECONDS);
 
 
         // If allocation was successfull launch kernel
-        if (cuda::solver::verifyAllocation(d_solvers, d_outputBoards, d_outputBoardsSizes))
+        if (cuda::solver::verifyAllocation(d_solvers, d_outputBoards, d_outputBoardsSize))
         {
             dim3 numBlocks(1);
             dim3 threadsPerBlock(generatedSolversCount);
@@ -392,7 +387,7 @@ Statistics launchIncrementalStackParallelGpuSolver(const board::Board & board)
             parallelSolvingIncrementalStack << <numBlocks, threadsPerBlock >> >
                 (d_solvers,
                  d_outputBoards,
-                 d_outputBoardsSizes,
+                 d_outputBoardsSize,
                  d_timers);
 
             kernelLaunchMilliseconds = kernelTimer.stop(Resolution::MILLISECONDS);
@@ -454,42 +449,34 @@ Statistics launchIncrementalStackParallelGpuSolver(const board::Board & board)
                                                               cuda::Resolution::MILLISECONDS);
 
 
-                        retVal.emplace_back("\nThread #" + std::to_string(i) + " init time: ", initTime);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " loop time: ", loopTime);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " first zero time: ", firstZeroDiff);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " good index time: ", goodIndexDiff);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " bad index time: ", badIndexDiff);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " is placeable time: ", placeableDiff);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " is placeable function time: ", placeableFnDiff);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " board valid time: ", boardValidDiff);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " board invalid time: ", boardInvalidDiff);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " board valid function time: ", boardValidFnDiff);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " last cell time: ", lastCellDiff);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " not last cell time: ", notLastCellDiff);
-                        retVal.emplace_back("Thread #" + std::to_string(i) + " copy result time: ", copyResultDiff);
+                        //retVal.emplace_back("\nThread #" + std::to_string(i) + " init time: ", initTime);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " loop time: ", loopTime);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " first zero time: ", firstZeroDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " good index time: ", goodIndexDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " bad index time: ", badIndexDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " is placeable time: ", placeableDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " is placeable function time: ", placeableFnDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " board valid time: ", boardValidDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " board invalid time: ", boardInvalidDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " board valid function time: ", boardValidFnDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " last cell time: ", lastCellDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " not last cell time: ", notLastCellDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " copy result time: ", copyResultDiff);
                     }
 
                     cuda::solver::copyResultsArray(h_outputBoards,
                                                    d_outputBoards,
                                                    generatedSolversCount);
-                    cuda::solver::copyResultsArraySizes(h_outputBoardsSizes,
-                                                        d_outputBoardsSizes,
-                                                        generatedSolversCount);
-
-                    for (size_t i = 0; i < generatedSolversCount; i++)
+                    cuda::solver::copyResultsArraySize(&h_outputBoardsSize, d_outputBoardsSize);
+                    h_outputBoardsSize = h_outputBoardsSize == 0 ? CUDA_MAX_RESULTS : h_outputBoardsSize - 1;
+                    for (size_t i = 0; i < h_outputBoardsSize && i < CUDA_MAX_RESULTS; i++)
                     {
-                        const auto boardCount = h_outputBoardsSizes[i];
-                        DEBUG_PRINTLN("Result boards in thread %zu: %zu - max: %zu",
-                                      i,
-                                      boardCount,
-                                      CUDA_MAX_RESULTS_PER_THREAD);
-                        for (size_t j = 0; j < boardCount && j < CUDA_MAX_RESULTS_PER_THREAD; j++)
-                        {
-                            board::Board b(h_outputBoards[i * CUDA_MAX_RESULTS_PER_THREAD + j].getHostVector());
-                            b.calculateHints();
-                            //b.print();
-                        }
+                        board::Board b(h_outputBoards[i].getHostVector());
+                        b.calculateHints();
+                        //b.print();
                     }
+
+                    std::cout << "Incremental ParallelGpuSolver result size: " << h_outputBoardsSize << std::endl;
                 }
             }
         }
@@ -497,12 +484,11 @@ Statistics launchIncrementalStackParallelGpuSolver(const board::Board & board)
 
         timeAllocation.start();
         // Dellocating host memory (in reverse order)
-        cuda::solver::freeHostResultArraySizes(h_outputBoardsSizes);
         cuda::solver::freeHostResultArray(h_outputBoards);
 
         // Dellocating device memory (in reverse order)
         cuda::solver::freeCudaEventDevice(d_timers);
-        cuda::solver::freeResultArraySizes(d_outputBoardsSizes);
+        cuda::solver::freeResultArraySize(d_outputBoardsSize);
         cuda::solver::freeResultArray(d_outputBoards);
         cuda::solver::freeSolvers(d_solvers);
         deallocationMilliseconds = timeAllocation.stop(Resolution::MILLISECONDS);
@@ -514,7 +500,7 @@ Statistics launchIncrementalStackParallelGpuSolver(const board::Board & board)
         pgMilliseconds = time.stop(Resolution::MILLISECONDS);
     }
 
-    retVal.emplace_back("Base ParallelGpuSolver solving time: ", pgMilliseconds);
+    retVal.emplace_back("Incremental ParallelGpuSolver solving time: ", pgMilliseconds);
     retVal.emplace_back("\nDevice initialize time: ", initMilliseconds);
     retVal.emplace_back("Device deinitialize time: ", deinitMilliseconds);
     retVal.emplace_back("\nBoard generation time: ", generationMilliseconds);
@@ -528,6 +514,220 @@ Statistics launchIncrementalStackParallelGpuSolver(const board::Board & board)
     return retVal;
 }
 
+Statistics launchSharedMemoryParallelGpuSolver(const board::Board & board)
+{
+    Statistics retVal(solversEnabled[PARALLEL_GPU_SHM]);
+    auto pgMilliseconds = std::numeric_limits<double>::quiet_NaN();
+
+    auto initMilliseconds = std::numeric_limits<double>::quiet_NaN();
+    auto deinitMilliseconds = std::numeric_limits<double>::quiet_NaN();
+
+    auto generationMilliseconds = std::numeric_limits<double>::quiet_NaN();
+
+    auto allocationMilliseconds = std::numeric_limits<double>::quiet_NaN();
+    auto deallocationMilliseconds = std::numeric_limits<double>::quiet_NaN();
+
+    auto kernelLaunchMilliseconds = std::numeric_limits<double>::quiet_NaN();
+    auto kernelSyncMilliseconds = std::numeric_limits<double>::quiet_NaN();
+
+    if (solversEnabled[PARALLEL_GPU_SHM] == true)
+    {
+        Timer time;
+        Timer timeInit;
+        Timer timeGeneration;
+        Timer timeAllocation;
+        time.start();
+        // Initialize device
+        cuda::initDevice();
+        initMilliseconds = time.stop(Resolution::MILLISECONDS);
+
+        solver::ParallelSolver ps(board);
+        timeGeneration.start();
+        const auto boards = ps.generateBoards(desiredBoards);
+        generationMilliseconds = timeGeneration.stop(Resolution::MILLISECONDS);
+        size_t generatedSolversCount = 0;
+
+        timeAllocation.start();
+        // Host vector for solvers - needed to properly execute destructors
+        // It's lifetime ensures that pointers on device are valid during kernel execution
+        std::vector<cuda::solver::SequentialSolver> h_solvers;
+        // Host vector for boards - needed to properly execute destructors
+        // It's lifetime ensures that pointers on device are valid during kernel execution
+        std::vector<cuda::Board> h_boards;
+
+        std::vector<cuda::boardFieldT> h_hints(4 * board.size());
+        for (size_t i = 0; i < 4; i++)
+        {
+            memcpy(h_hints.data() + i * board.size(),
+                   board.hints[i].data(),
+                   board.size() * sizeof(cuda::boardFieldT));
+        }
+
+        cudaError_t err = cudaMemcpyToSymbol(constantMemoryPtr,
+                                             h_hints.data(),
+                                             4 * board.size() * sizeof(cuda::boardFieldT));
+
+        if (err != cudaSuccess)
+        {
+            printf("cudaMemcpyToSymbol failed: %s\n", cudaGetErrorString(err));
+        }
+
+        // Allocating memory on device
+        auto d_solvers = cuda::solver::prepareSolvers(boards, h_solvers, generatedSolversCount);
+        auto d_outputBoards = cuda::solver::prepareResultArray(h_boards, generatedSolversCount, boards.front().size());
+        auto d_outputBoardsSize = cuda::solver::prepareResultArraySize();
+
+        std::vector<cuda::cudaEventsDeviceT> h_timers(generatedSolversCount);
+        auto d_timers = cuda::solver::prepareCudaEventDevice(h_timers);
+
+        // Allocating memory on host
+        auto h_outputBoards = cuda::solver::prepareHostResultArray();
+        cuda::uint32T h_outputBoardsSize = 0;
+        allocationMilliseconds = timeAllocation.stop(Resolution::MILLISECONDS);
+
+
+        // If allocation was successfull launch kernel
+        if (cuda::solver::verifyAllocation(d_solvers, d_outputBoards, d_outputBoardsSize))
+        {
+            dim3 numBlocks(1);
+            dim3 threadsPerBlock(generatedSolversCount);
+            int sharedMemorySize = 32 << 10; // 32 kB
+
+            printf("Launching kernel...\n");
+            fflush(stdout);
+            fflush(stderr);
+
+            Timer kernelTimer;
+            kernelTimer.start();
+            parallelSolvingSharedMemory << <numBlocks, threadsPerBlock, sharedMemorySize >> >
+                (d_solvers,
+                 d_outputBoards,
+                 d_outputBoardsSize,
+                 d_timers);
+
+            kernelLaunchMilliseconds = kernelTimer.stop(Resolution::MILLISECONDS);
+
+            // Check for any errors launching the kernel
+            cudaError_t cudaStatus = cudaGetLastError();
+            if (cudaStatus != cudaSuccess)
+            {
+                printf("parallelSolvingSharedMemory launch failed: %s\n", cudaGetErrorString(cudaStatus));
+            }
+            else
+            {
+                // cudaDeviceSynchronize waits for the kernel to finish, and returns
+                // any errors encountered during the launch.
+                cudaStatus = cudaDeviceSynchronize();
+                kernelSyncMilliseconds = kernelTimer.stop(Resolution::MILLISECONDS);
+                printf("Kernel finished\n");
+                fflush(stdout);
+                fflush(stderr);
+                if (cudaStatus != cudaSuccess)
+                {
+                    printf("cudaDeviceSynchronize returned %d \"%s\"\n",
+                           cudaStatus,
+                           cudaGetErrorString(cudaStatus));
+                }
+                else
+                {
+                    cuda::solver::copyCudaEventDevice(h_timers, d_timers);
+                    for (size_t i = 0; i < h_timers.size(); i++)
+                    {
+                        const auto & el = h_timers[i];
+                        double initTime = cuda::getTime(el.initBegin,
+                                                        el.initEnd,
+                                                        cuda::Resolution::MILLISECONDS);
+                        double loopTime = cuda::getTime(el.loopBegin,
+                                                        el.loopEnd,
+                                                        cuda::Resolution::MILLISECONDS);
+                        double firstZeroDiff = cuda::getTime(el.firstZeroDiff,
+                                                             cuda::Resolution::MILLISECONDS);
+                        double goodIndexDiff = cuda::getTime(el.goodIndexDiff,
+                                                             cuda::Resolution::MILLISECONDS);
+                        double badIndexDiff = cuda::getTime(el.badIndexDiff,
+                                                            cuda::Resolution::MILLISECONDS);
+                        double placeableDiff = cuda::getTime(el.placeableDiff,
+                                                             cuda::Resolution::MILLISECONDS);
+                        double placeableFnDiff = cuda::getTime(el.placeableFnDiff,
+                                                               cuda::Resolution::MILLISECONDS);
+                        double boardValidDiff = cuda::getTime(el.boardValidDiff,
+                                                              cuda::Resolution::MILLISECONDS);
+                        double boardInvalidDiff = cuda::getTime(el.boardInvalidDiff,
+                                                                cuda::Resolution::MILLISECONDS);
+                        double boardValidFnDiff = cuda::getTime(el.boardValidFnDiff,
+                                                                cuda::Resolution::MILLISECONDS);
+                        double lastCellDiff = cuda::getTime(el.lastCellDiff,
+                                                            cuda::Resolution::MILLISECONDS);
+                        double notLastCellDiff = cuda::getTime(el.notLastCellDiff,
+                                                               cuda::Resolution::MILLISECONDS);
+                        double copyResultDiff = cuda::getTime(el.copyResultDiff,
+                                                              cuda::Resolution::MILLISECONDS);
+
+
+                        //retVal.emplace_back("\nThread #" + std::to_string(i) + " init time: ", initTime);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " loop time: ", loopTime);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " first zero time: ", firstZeroDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " good index time: ", goodIndexDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " bad index time: ", badIndexDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " is placeable time: ", placeableDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " is placeable function time: ", placeableFnDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " board valid time: ", boardValidDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " board invalid time: ", boardInvalidDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " board valid function time: ", boardValidFnDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " last cell time: ", lastCellDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " not last cell time: ", notLastCellDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " copy result time: ", copyResultDiff);
+                    }
+
+                    cuda::solver::copyResultsArray(h_outputBoards,
+                                                   d_outputBoards,
+                                                   generatedSolversCount);
+                    cuda::solver::copyResultsArraySize(&h_outputBoardsSize, d_outputBoardsSize);
+                    h_outputBoardsSize = h_outputBoardsSize == 0 ? CUDA_MAX_RESULTS : h_outputBoardsSize - 1;
+                    for (size_t i = 0; i < h_outputBoardsSize && i < CUDA_MAX_RESULTS; i++)
+                    {
+                        board::Board b(h_outputBoards[i].getHostVector());
+                        b.calculateHints();
+                        //b.print();
+                    }
+
+                    std::cout << "Shared memory ParallelGpuSolver result size: " << h_outputBoardsSize << std::endl;
+                }
+            }
+        }
+
+
+        timeAllocation.start();
+        // Dellocating host memory (in reverse order)
+        cuda::solver::freeHostResultArray(h_outputBoards);
+
+        // Dellocating device memory (in reverse order)
+        cuda::solver::freeCudaEventDevice(d_timers);
+        cuda::solver::freeResultArraySize(d_outputBoardsSize);
+        cuda::solver::freeResultArray(d_outputBoards);
+        cuda::solver::freeSolvers(d_solvers);
+        deallocationMilliseconds = timeAllocation.stop(Resolution::MILLISECONDS);
+
+        timeInit.start();
+        // Deinitialize device
+        cuda::deinitDevice();
+        deinitMilliseconds = timeInit.stop(Resolution::MILLISECONDS);
+        pgMilliseconds = time.stop(Resolution::MILLISECONDS);
+    }
+
+    retVal.emplace_back("Shared memory ParallelGpuSolver solving time: ", pgMilliseconds);
+    retVal.emplace_back("\nDevice initialize time: ", initMilliseconds);
+    retVal.emplace_back("Device deinitialize time: ", deinitMilliseconds);
+    retVal.emplace_back("\nBoard generation time: ", generationMilliseconds);
+    retVal.emplace_back("\nMemory allocation time: ", allocationMilliseconds);
+    retVal.emplace_back("Memory deallocation time: ", deallocationMilliseconds);
+    retVal.emplace_back("\nKernel launch time: ", kernelLaunchMilliseconds);
+    retVal.emplace_back("Kernel synchronize time: ", kernelSyncMilliseconds);
+    retVal.emplace_back("Allocation + synchronize + deallocation time: ",
+                        allocationMilliseconds + kernelSyncMilliseconds + deallocationMilliseconds);
+
+    return retVal;
+}
 
 Statistics launchAOSStackParallelGpuSolver(const board::Board & board)
 {
@@ -558,7 +758,7 @@ Statistics launchAOSStackParallelGpuSolver(const board::Board & board)
 
         solver::ParallelSolver ps(board);
         timeGeneration.start();
-        const auto boards = ps.generateNBoards(desiredBoards);
+        const auto boards = ps.generateBoards(desiredBoards);
         generationMilliseconds = timeGeneration.stop(Resolution::MILLISECONDS);
         size_t generatedSolversCount = 0;
 
@@ -573,18 +773,21 @@ Statistics launchAOSStackParallelGpuSolver(const board::Board & board)
         // Allocating memory on device
         auto d_solvers = cuda::solver::prepareSolvers(boards, h_solvers, generatedSolversCount);
         auto d_outputBoards = cuda::solver::prepareResultArray(h_boards, generatedSolversCount, boards.front().size());
-        auto d_outputBoardsSizes = cuda::solver::prepareResultArraySizes(generatedSolversCount);
+        auto d_outputBoardsSize = cuda::solver::prepareResultArraySize();
+
+        std::vector<cuda::cudaEventsDeviceT> h_timers(generatedSolversCount);
+        auto d_timers = cuda::solver::prepareCudaEventDevice(h_timers);
 
         // Allocating memory on host
-        auto h_outputBoards = cuda::solver::prepareHostResultArray(generatedSolversCount);
-        auto h_outputBoardsSizes = cuda::solver::prepareHostResultArraySizes(generatedSolversCount);
+        auto h_outputBoards = cuda::solver::prepareHostResultArray();
+        cuda::uint32T h_outputBoardsSize = 0;
 
         const auto stackElements = generatedSolversCount * boards.front().getCellsCount();
         auto d_stack = cuda::solver::Stack::allocateAOSStack(stackElements);
         allocationMilliseconds = timeAllocation.stop(Resolution::MILLISECONDS);
 
         // If allocation was successfull launch kernel
-        if (cuda::solver::verifyAllocation(d_solvers, d_outputBoards, d_outputBoardsSizes))
+        if (cuda::solver::verifyAllocation(d_solvers, d_outputBoards, d_outputBoardsSize))
         {
             dim3 numBlocks(1);
             dim3 threadsPerBlock(generatedSolversCount);
@@ -598,8 +801,9 @@ Statistics launchAOSStackParallelGpuSolver(const board::Board & board)
             parallelSolvingAOSStack << <numBlocks, threadsPerBlock >> >
                 (d_solvers,
                  d_outputBoards,
-                 d_outputBoardsSizes,
-                 d_stack);
+                 d_outputBoardsSize,
+                 d_stack,
+                 d_timers);
 
             kernelLaunchMilliseconds = kernelTimer.stop(Resolution::MILLISECONDS);
 
@@ -626,27 +830,68 @@ Statistics launchAOSStackParallelGpuSolver(const board::Board & board)
                 }
                 else
                 {
+                    cuda::solver::copyCudaEventDevice(h_timers, d_timers);
+                    for (size_t i = 0; i < h_timers.size(); i++)
+                    {
+                        const auto & el = h_timers[i];
+                        double initTime = cuda::getTime(el.initBegin,
+                                                        el.initEnd,
+                                                        cuda::Resolution::MILLISECONDS);
+                        double loopTime = cuda::getTime(el.loopBegin,
+                                                        el.loopEnd,
+                                                        cuda::Resolution::MILLISECONDS);
+                        double firstZeroDiff = cuda::getTime(el.firstZeroDiff,
+                                                             cuda::Resolution::MILLISECONDS);
+                        double goodIndexDiff = cuda::getTime(el.goodIndexDiff,
+                                                             cuda::Resolution::MILLISECONDS);
+                        double badIndexDiff = cuda::getTime(el.badIndexDiff,
+                                                            cuda::Resolution::MILLISECONDS);
+                        double placeableDiff = cuda::getTime(el.placeableDiff,
+                                                             cuda::Resolution::MILLISECONDS);
+                        double placeableFnDiff = cuda::getTime(el.placeableFnDiff,
+                                                               cuda::Resolution::MILLISECONDS);
+                        double boardValidDiff = cuda::getTime(el.boardValidDiff,
+                                                              cuda::Resolution::MILLISECONDS);
+                        double boardInvalidDiff = cuda::getTime(el.boardInvalidDiff,
+                                                                cuda::Resolution::MILLISECONDS);
+                        double boardValidFnDiff = cuda::getTime(el.boardValidFnDiff,
+                                                                cuda::Resolution::MILLISECONDS);
+                        double lastCellDiff = cuda::getTime(el.lastCellDiff,
+                                                            cuda::Resolution::MILLISECONDS);
+                        double notLastCellDiff = cuda::getTime(el.notLastCellDiff,
+                                                               cuda::Resolution::MILLISECONDS);
+                        double copyResultDiff = cuda::getTime(el.copyResultDiff,
+                                                              cuda::Resolution::MILLISECONDS);
+
+
+                        //retVal.emplace_back("\nThread #" + std::to_string(i) + " init time: ", initTime);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " loop time: ", loopTime);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " first zero time: ", firstZeroDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " good index time: ", goodIndexDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " bad index time: ", badIndexDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " is placeable time: ", placeableDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " is placeable function time: ", placeableFnDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " board valid time: ", boardValidDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " board invalid time: ", boardInvalidDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " board valid function time: ", boardValidFnDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " last cell time: ", lastCellDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " not last cell time: ", notLastCellDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " copy result time: ", copyResultDiff);
+                    }
+
                     cuda::solver::copyResultsArray(h_outputBoards,
                                                    d_outputBoards,
                                                    generatedSolversCount);
-                    cuda::solver::copyResultsArraySizes(h_outputBoardsSizes,
-                                                        d_outputBoardsSizes,
-                                                        generatedSolversCount);
-
-                    for (size_t i = 0; i < generatedSolversCount; i++)
+                    cuda::solver::copyResultsArraySize(&h_outputBoardsSize, d_outputBoardsSize);
+                    h_outputBoardsSize = h_outputBoardsSize == 0 ? CUDA_MAX_RESULTS : h_outputBoardsSize - 1;
+                    for (size_t i = 0; i < h_outputBoardsSize && i < CUDA_MAX_RESULTS; i++)
                     {
-                        const auto boardCount = h_outputBoardsSizes[i];
-                        DEBUG_PRINTLN("Result boards in thread %zu: %zu - max: %zu",
-                                      i,
-                                      boardCount,
-                                      CUDA_MAX_RESULTS_PER_THREAD);
-                        for (size_t j = 0; j < boardCount && j < CUDA_MAX_RESULTS_PER_THREAD; j++)
-                        {
-                            board::Board b(h_outputBoards[i * CUDA_MAX_RESULTS_PER_THREAD + j].getHostVector());
-                            b.calculateHints();
-                            //b.print();
-                        }
+                        board::Board b(h_outputBoards[i].getHostVector());
+                        b.calculateHints();
+                        //b.print();
                     }
+
+                    std::cout << "AOS ParallelGpuSolver result size: " << h_outputBoardsSize << std::endl;
                 }
             }
         }
@@ -656,11 +901,10 @@ Statistics launchAOSStackParallelGpuSolver(const board::Board & board)
         cuda::solver::Stack::deallocateAOSStack(d_stack);
 
         // Dellocating host memory (in reverse order)
-        cuda::solver::freeHostResultArraySizes(h_outputBoardsSizes);
         cuda::solver::freeHostResultArray(h_outputBoards);
 
         // Dellocating device memory (in reverse order)
-        cuda::solver::freeResultArraySizes(d_outputBoardsSizes);
+        cuda::solver::freeResultArraySize(d_outputBoardsSize);
         cuda::solver::freeResultArray(d_outputBoards);
         cuda::solver::freeSolvers(d_solvers);
         deallocationMilliseconds = timeAllocation.stop(Resolution::MILLISECONDS);
@@ -714,7 +958,7 @@ Statistics launchSOAStackParallelGpuSolver(const board::Board & board)
 
         solver::ParallelSolver ps(board);
         timeGeneration.start();
-        const auto boards = ps.generateNBoards(desiredBoards);
+        const auto boards = ps.generateBoards(desiredBoards);
         generationMilliseconds = timeGeneration.stop(Resolution::MILLISECONDS);
         size_t generatedSolversCount = 0;
 
@@ -729,18 +973,21 @@ Statistics launchSOAStackParallelGpuSolver(const board::Board & board)
         // Allocating memory on device
         auto d_solvers = cuda::solver::prepareSolvers(boards, h_solvers, generatedSolversCount);
         auto d_outputBoards = cuda::solver::prepareResultArray(h_boards, generatedSolversCount, boards.front().size());
-        auto d_outputBoardsSizes = cuda::solver::prepareResultArraySizes(generatedSolversCount);
+        auto d_outputBoardsSize = cuda::solver::prepareResultArraySize();
+
+        std::vector<cuda::cudaEventsDeviceT> h_timers(generatedSolversCount);
+        auto d_timers = cuda::solver::prepareCudaEventDevice(h_timers);
 
         // Allocating memory on host
-        auto h_outputBoards = cuda::solver::prepareHostResultArray(generatedSolversCount);
-        auto h_outputBoardsSizes = cuda::solver::prepareHostResultArraySizes(generatedSolversCount);
+        auto h_outputBoards = cuda::solver::prepareHostResultArray();
+        cuda::uint32T h_outputBoardsSize = 0;
 
         const auto stackElements = generatedSolversCount * boards.front().getCellsCount();
         auto d_stack = cuda::solver::Stack::allocateSOAStack(stackElements);
         allocationMilliseconds = timeAllocation.stop(Resolution::MILLISECONDS);
 
         // If allocation was successfull launch kernel
-        if (cuda::solver::verifyAllocation(d_solvers, d_outputBoards, d_outputBoardsSizes))
+        if (cuda::solver::verifyAllocation(d_solvers, d_outputBoards, d_outputBoardsSize))
         {
             dim3 numBlocks(1);
             dim3 threadsPerBlock(generatedSolversCount);
@@ -754,8 +1001,9 @@ Statistics launchSOAStackParallelGpuSolver(const board::Board & board)
             parallelSolvingSOAStack << <numBlocks, threadsPerBlock >> >
                 (d_solvers,
                  d_outputBoards,
-                 d_outputBoardsSizes,
-                 d_stack);
+                 d_outputBoardsSize,
+                 d_stack,
+                 d_timers);
 
             kernelLaunchMilliseconds = kernelTimer.stop(Resolution::MILLISECONDS);
 
@@ -782,27 +1030,67 @@ Statistics launchSOAStackParallelGpuSolver(const board::Board & board)
                 }
                 else
                 {
+                    cuda::solver::copyCudaEventDevice(h_timers, d_timers);
+                    for (size_t i = 0; i < h_timers.size(); i++)
+                    {
+                        const auto & el = h_timers[i];
+                        double initTime = cuda::getTime(el.initBegin,
+                                                        el.initEnd,
+                                                        cuda::Resolution::MILLISECONDS);
+                        double loopTime = cuda::getTime(el.loopBegin,
+                                                        el.loopEnd,
+                                                        cuda::Resolution::MILLISECONDS);
+                        double firstZeroDiff = cuda::getTime(el.firstZeroDiff,
+                                                             cuda::Resolution::MILLISECONDS);
+                        double goodIndexDiff = cuda::getTime(el.goodIndexDiff,
+                                                             cuda::Resolution::MILLISECONDS);
+                        double badIndexDiff = cuda::getTime(el.badIndexDiff,
+                                                            cuda::Resolution::MILLISECONDS);
+                        double placeableDiff = cuda::getTime(el.placeableDiff,
+                                                             cuda::Resolution::MILLISECONDS);
+                        double placeableFnDiff = cuda::getTime(el.placeableFnDiff,
+                                                               cuda::Resolution::MILLISECONDS);
+                        double boardValidDiff = cuda::getTime(el.boardValidDiff,
+                                                              cuda::Resolution::MILLISECONDS);
+                        double boardInvalidDiff = cuda::getTime(el.boardInvalidDiff,
+                                                                cuda::Resolution::MILLISECONDS);
+                        double boardValidFnDiff = cuda::getTime(el.boardValidFnDiff,
+                                                                cuda::Resolution::MILLISECONDS);
+                        double lastCellDiff = cuda::getTime(el.lastCellDiff,
+                                                            cuda::Resolution::MILLISECONDS);
+                        double notLastCellDiff = cuda::getTime(el.notLastCellDiff,
+                                                               cuda::Resolution::MILLISECONDS);
+                        double copyResultDiff = cuda::getTime(el.copyResultDiff,
+                                                              cuda::Resolution::MILLISECONDS);
+
+                        //retVal.emplace_back("\nThread #" + std::to_string(i) + " init time: ", initTime);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " loop time: ", loopTime);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " first zero time: ", firstZeroDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " good index time: ", goodIndexDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " bad index time: ", badIndexDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " is placeable time: ", placeableDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " is placeable function time: ", placeableFnDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " board valid time: ", boardValidDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " board invalid time: ", boardInvalidDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " board valid function time: ", boardValidFnDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " last cell time: ", lastCellDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " not last cell time: ", notLastCellDiff);
+                        //retVal.emplace_back("Thread #" + std::to_string(i) + " copy result time: ", copyResultDiff);
+                    }
+
                     cuda::solver::copyResultsArray(h_outputBoards,
                                                    d_outputBoards,
                                                    generatedSolversCount);
-                    cuda::solver::copyResultsArraySizes(h_outputBoardsSizes,
-                                                        d_outputBoardsSizes,
-                                                        generatedSolversCount);
-
-                    for (size_t i = 0; i < generatedSolversCount; i++)
+                    cuda::solver::copyResultsArraySize(&h_outputBoardsSize, d_outputBoardsSize);
+                    h_outputBoardsSize = h_outputBoardsSize == 0 ? CUDA_MAX_RESULTS : h_outputBoardsSize - 1;
+                    for (size_t i = 0; i < h_outputBoardsSize && i < CUDA_MAX_RESULTS; i++)
                     {
-                        const auto boardCount = h_outputBoardsSizes[i];
-                        DEBUG_PRINTLN("Result boards in thread %zu: %zu - max: %zu",
-                                      i,
-                                      boardCount,
-                                      CUDA_MAX_RESULTS_PER_THREAD);
-                        for (size_t j = 0; j < boardCount && j < CUDA_MAX_RESULTS_PER_THREAD; j++)
-                        {
-                            board::Board b(h_outputBoards[i * CUDA_MAX_RESULTS_PER_THREAD + j].getHostVector());
-                            b.calculateHints();
-                            //b.print();
-                        }
+                        board::Board b(h_outputBoards[i].getHostVector());
+                        b.calculateHints();
+                        //b.print();
                     }
+
+                    std::cout << "SOA ParallelGpuSolver result size: " << h_outputBoardsSize << std::endl;
                 }
             }
         }
@@ -811,11 +1099,10 @@ Statistics launchSOAStackParallelGpuSolver(const board::Board & board)
         cuda::solver::Stack::deallocateSOAStack(d_stack);
 
         // Dellocating host memory (in reverse order)
-        cuda::solver::freeHostResultArraySizes(h_outputBoardsSizes);
         cuda::solver::freeHostResultArray(h_outputBoards);
 
         // Dellocating device memory (in reverse order)
-        cuda::solver::freeResultArraySizes(d_outputBoardsSizes);
+        cuda::solver::freeResultArraySize(d_outputBoardsSize);
         cuda::solver::freeResultArray(d_outputBoards);
         cuda::solver::freeSolvers(d_solvers);
         deallocationMilliseconds = timeAllocation.stop(Resolution::MILLISECONDS);

@@ -26,7 +26,8 @@ namespace cuda
     typedef const boardFieldT* columnConstT;
     typedef boardFieldT* columnT;
     typedef boardFieldT* setIntersectionT;
-    typedef bool* memoizedSetValuesT; // Originally double pointer
+    typedef bool memoizedSetValuesTypeT;
+    typedef memoizedSetValuesTypeT* memoizedSetValuesT; // Originally double pointer
 
 
     class Board : public SquareMatrix<boardFieldT>
@@ -35,10 +36,16 @@ namespace cuda
         static constexpr size_t hintsSize = 4;
         hintT hints[hintsSize];
 
-        Board(const size_t boardSize);
-        Board(const Board & board);
-        Board(const board::Board & board);
-        ~Board();
+        CUDA_HOST Board(const size_t boardSize);
+        CUDA_DEVICE Board(const size_t boardSize,
+                          void* constantMemoryPtr,
+                          void* sharedMemoryPtr);
+        CUDA_HOST Board(const Board & board);
+        CUDA_DEVICE Board(const Board & board,
+                          void* constantMemoryPtr,
+                          void* sharedMemoryPtr);
+        CUDA_HOST Board(const board::Board & board);
+        CUDA_HOST_DEVICE ~Board();
 
         /// Generators
 
@@ -70,6 +77,9 @@ namespace cuda
 
         CUDA_HOST_DEVICE size_t getSize() const;
         CUDA_HOST_DEVICE size_t getCellsCount() const;
+        CUDA_HOST_DEVICE size_t getBoardMemoryUsage() const;
+        static CUDA_HOST_DEVICE size_t getBoardMemoryUsage(const size_t boardSize);
+
         CUDA_DEVICE void fill(const boardFieldT & value);
         CUDA_HOST void clear();
 
@@ -88,7 +98,6 @@ namespace cuda
         // Contains which values are set in each row and column
         memoizedSetValuesT setRows;
         memoizedSetValuesT setColumns;
-
 
         // Counts visible buildings in specified row
         CUDA_DEVICE size_t countRowVisibility(size_t row) const;

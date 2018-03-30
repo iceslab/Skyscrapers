@@ -3,9 +3,10 @@
 
 namespace cuda
 {
-    Board::Board(const size_t boardSize) :
+    CUDA_HOST Board::Board(const size_t boardSize) :
         SquareMatrix<boardFieldT>(boardSize)
     {
+        //printf("cuda::Board host size constructor...\n");
         if (boardSize > 0)
         {
             // Alloc and memset setRows
@@ -68,35 +69,120 @@ namespace cuda
                 }
             }
         }
+        //printf("cuda::Board size constructor\n");
     }
 
-    Board::Board(const Board & board) : Board(board.getSize())
+    CUDA_HOST Board::Board(const size_t boardSize,
+                           void* constantMemoryPtr,
+                           void* sharedMemoryPtr) :
+        SquareMatrix<boardFieldT>(boardSize, sharedMemoryPtr)
     {
+        //printf("cuda::Board device size constructor...\n");
+        if (boardSize > 0)
+        {
+            auto boardCells = getCellsCount();
+            auto remainingMemoryPtr = reinterpret_cast<memoizedSetValuesT>(d_data + boardCells);
+
+            // Setting proper pointers
+            setRows = remainingMemoryPtr;
+            setColumns = remainingMemoryPtr + boardCells;
+
+            // Prepare hints (assuming that constant memory is already initialized)
+            hintT shmemHintsPtr = reinterpret_cast<hintT>(constantMemoryPtr);
+            for (size_t side = 0; side < hintsSize; side++)
+            {
+                hints[side] = shmemHintsPtr;
+                shmemHintsPtr += boardSize;
+            }
+        }
+        //printf("cuda::Board device size constructor\n");
+    }
+
+    CUDA_HOST Board::Board(const Board & board) :
+        Board(board.getSize())
+    {
+        //printf("cuda::Board host copy constructor...\n");
         const auto boardSize = board.getSize();
+        const auto boardCells = board.getCellsCount();
+
         cudaError_t err = cudaMemcpy(d_data,
                                      board.d_data,
-                                     sizeof(*d_data) * boardSize * boardSize,
+                                     sizeof(*d_data) * boardCells,
                                      cudaMemcpyDeviceToDevice);
         if (err != cudaSuccess)
         {
             CUDA_PRINT_ERROR("Failed memcpy board", err);
         }
-
-        // Copy hints
-        for (size_t side = 0; side < hintsSize; side++)
+        else
         {
-            err = cudaMemcpy(hints[side],
-                             board.hints[side],
-                             boardSize * sizeof(boardFieldT),
+            // Copy setRows
+            err = cudaMemcpy(setRows,
+                             board.setRows,
+                             sizeof(*setRows) * boardCells,
                              cudaMemcpyDeviceToDevice);
+
             if (err != cudaSuccess)
             {
-                CUDA_PRINT_ERROR("Failed memcpy hints[side]", err);
+                CUDA_PRINT_ERROR("Failed memcpy setRows", err);
+            }
+            else
+            {
+                // Copy setColumns
+                err = cudaMemcpy(setColumns,
+                                 board.setColumns,
+                                 sizeof(*setColumns) * boardCells,
+                                 cudaMemcpyDeviceToDevice);
+                if (err != cudaSuccess)
+                {
+                    CUDA_PRINT_ERROR("Failed memcpy setColumns", err);
+                }
+                else
+                {
+                    // Copy hints
+                    for (size_t side = 0; side < hintsSize; side++)
+                    {
+                        err = cudaMemcpy(hints[side],
+                                         board.hints[side],
+                                         boardSize * sizeof(boardFieldT),
+                                         cudaMemcpyDeviceToDevice);
+                        if (err != cudaSuccess)
+                        {
+                            CUDA_PRINT_ERROR("Failed memcpy hints[side]", err);
+                        }
+                    }
+                }
             }
         }
+        //printf("cuda::Board host copy constructor\n");
     }
 
-    Board::Board(const board::Board & board) : Board(board.size())
+    CUDA_DEVICE Board::Board(const Board & board,
+                             void * constantMemoryPtr,
+                             void * sharedMemoryPtr) :
+        Board(board.getSize(), constantMemoryPtr, sharedMemoryPtr)
+    {
+        //printf("cuda::Board device copy constructor...\n");
+        const auto boardSize = board.getSize();
+        const auto boardCells = board.getCellsCount();
+
+        // Copy data
+        memcpy(d_data,
+               board.d_data,
+               getMatrixMemoryUsage());
+
+        // Copy set rows
+        memcpy(setRows,
+               board.setRows,
+               boardCells * sizeof(*setRows));
+
+        // Copy set columns
+        memcpy(setColumns,
+               board.setColumns,
+               boardCells * sizeof(*setColumns));
+        //printf("cuda::Board device copy constructor\n");
+    }
+
+    CUDA_HOST Board::Board(const board::Board & board) : Board(board.size())
     {
         const auto boardSize = board.size();
         cudaError_t err = cudaSuccess;
@@ -168,18 +254,29 @@ namespace cuda
         }
     }
 
-    Board::~Board()
+    CUDA_HOST_DEVICE Board::~Board()
     {
-        cudaFree(setRows);
-        setRows = nullptr;
-        cudaFree(setColumns);
-        setColumns = nullptr;
-
-        for (size_t side = 0; side < hintsSize; side++)
+        if (usesSharedMemory == false)
         {
-            cudaFree(hints[side]);
-            hints[side] = nullptr;
+            cudaFree(setRows);
+            cudaFree(setColumns);
+            for (size_t side = 0; side < hintsSize; side++)
+            {
+                cudaFree(hints[side]);
+                hints[side] = nullptr;
+            }
         }
+        else
+        {
+            // Only nullify  pointers
+            for (size_t side = 0; side < hintsSize; side++)
+            {
+                hints[side] = nullptr;
+            }
+        }
+
+        setRows = nullptr;
+        setColumns = nullptr;
     }
 
     CUDA_DEVICE bool Board::operator==(const Board & other) const
@@ -218,7 +315,20 @@ namespace cuda
 
     CUDA_HOST_DEVICE size_t Board::getCellsCount() const
     {
-        return getSize() * getSize();
+        return SquareMatrix<boardFieldT>::getCellsCount();
+    }
+
+    CUDA_HOST_DEVICE size_t Board::getBoardMemoryUsage() const
+    {
+        return getBoardMemoryUsage(getSize());
+    }
+
+    CUDA_HOST_DEVICE size_t Board::getBoardMemoryUsage(const size_t boardSize)
+    {
+        const auto boardCells = boardSize * boardSize;
+        // Underlying matrix + fields for set rows and columns
+        return SquareMatrix<boardFieldT>::getMatrixMemoryUsage(boardCells) +
+            2 * boardCells * sizeof(memoizedSetValuesTypeT);
     }
 
     CUDA_DEVICE void Board::fill(const boardFieldT & value)

@@ -63,7 +63,7 @@ namespace cuda
 
 #define CUDA_PRINT_ERROR(description, errorCode) \
 do{ \
-    fprintf(stderr, "%s %s: %s\n", __FUNCSIG__, description, cudaGetErrorString(errorCode)); \
+    printf("%s %s: %s\n", __FUNCSIG__, description, cudaGetErrorString(errorCode)); \
 } while (false);
 
 #define CUDA_PRINT(...) \
@@ -73,14 +73,14 @@ do{ \
 
 #define HOST_PRINT_ERROR(description) \
 do{ \
-    fprintf(stderr, "%s %s\n", __FUNCSIG__, description); \
+    printf("%s %s\n", __FUNCSIG__, description); \
 } while (false);
 
 #define CUDA_SOFT_ASSERT(expr) \
 do{ \
     if(!(expr)) \
     { \
-        fprintf(stderr, "Assertion failed: " QUOTE(expr) ", file %s, line %d\n", __FILE__, __LINE__); \
+        printf("Assertion failed: " QUOTE(expr) ", file %s, line %d\n", __FILE__, __LINE__); \
     } \
 } while (false);
 
@@ -88,9 +88,9 @@ do{ \
 do{ \
     if(!(expr)) \
     { \
-        fprintf(stderr, "Assertion failed: " QUOTE(expr) ", "); \
-        fprintf(stderr, format, __VA_ARGS__); \
-        fprintf(stderr, ", file %s, line %d\n", __FILE__, __LINE__); \
+        printf("Assertion failed: " QUOTE(expr) ", "); \
+        printf(format, __VA_ARGS__); \
+        printf(", file %s, line %d\n", __FILE__, __LINE__); \
     } \
 } while (false);
 

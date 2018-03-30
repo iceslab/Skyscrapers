@@ -294,6 +294,7 @@ void printUsage()
            "      \"all\"   - run all available algorithms\n"
            "      \"basic\" - run basic algorithm\n"
            "      \"inc\"   - run incremental stack algorithm\n"
+           "      \"shm\"   - run shared memory algorithm\n"
            "      \"aos\"   - run Array of Structures stack algorithm\n"
            "      \"soa\"   - run Structure of Arrays stack algorithm\n");
     printf("   -d dimension\n"
@@ -325,6 +326,7 @@ void printLaunchParameters()
     printf("Parallel CPU algorithm:                   %s\n", boolToEnabled(solversEnabled[PARALLEL_CPU]));
     printf("Base parallel GPU algorithm:              %s\n", boolToEnabled(solversEnabled[PARALLEL_GPU_BASE]));
     printf("Incremental stack parallel GPU algorithm: %s\n", boolToEnabled(solversEnabled[PARALLEL_GPU_INCREMENTAL]));
+    printf("Shared memory parallel GPU algorithm:     %s\n", boolToEnabled(solversEnabled[PARALLEL_GPU_SHM]));
     printf("AoS stack parallel GPU algorithm:         %s\n", boolToEnabled(solversEnabled[PARALLEL_GPU_AOS]));
     printf("SoA stack parallel GPU algorithm:         %s\n", boolToEnabled(solversEnabled[PARALLEL_GPU_SOA]));
 }
@@ -336,7 +338,7 @@ const char * boolToEnabled(bool option)
 
 void parseGPUOptarg(const std::string & optarg)
 {
-    std::vector<std::string> substrings = { "all", "basic", "inc", "aos", "soa" };
+    std::vector<std::string> substrings = { "all", "basic", "inc", "shm", "aos", "soa" };
 
     for (size_t i = 0; i < substrings.size(); i++)
     {
@@ -361,9 +363,12 @@ void parseGPUOptarg(const std::string & optarg)
             solversEnabled[PARALLEL_GPU_INCREMENTAL] = true;
             break;
         case 3:
-            solversEnabled[PARALLEL_GPU_AOS] = true;
+            solversEnabled[PARALLEL_GPU_SHM] = true;
             break;
         case 4:
+            solversEnabled[PARALLEL_GPU_AOS] = true;
+            break;
+        case 5:
             solversEnabled[PARALLEL_GPU_SOA] = true;
             break;
         default:

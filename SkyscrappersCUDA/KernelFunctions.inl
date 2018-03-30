@@ -6,60 +6,88 @@
 #include "Stack.cuh"
 #include "BitManipulation.cuh"
 
+CUDA_CONSTANT cuda::boardFieldT constantMemoryPtr[(16 << 10) >> 2]; // 16 kB
+
 CUDA_GLOBAL void parallelSolvingBase(cuda::solver::kernelInputT d_solvers,
                                      cuda::solver::kernelOutputT d_outputBoards,
-                                     cuda::solver::kernelOutputSizesT d_outputBoardsSizes,
+                                     cuda::uint32T* d_outputBoardsSize,
                                      cuda::cudaEventsDeviceT* d_timers)
 {
     // It denotes thread index and array index
     const auto idx = threadIdx.x;
-    d_outputBoardsSizes[idx] =
-        d_solvers[idx].backTrackingBase(d_outputBoards + idx * CUDA_MAX_RESULTS_PER_THREAD,
-                                        idx,
-                                        d_timers[idx]);
+    d_solvers[idx].backTrackingBase(d_outputBoards,
+                                    d_outputBoardsSize,
+                                    idx,
+                                    d_timers[idx]);
 }
 
 CUDA_GLOBAL void parallelSolvingIncrementalStack(cuda::solver::kernelInputT d_solvers,
                                                  cuda::solver::kernelOutputT d_outputBoards,
-                                                 cuda::solver::kernelOutputSizesT d_outputBoardsSizes,
+                                                 cuda::uint32T* d_outputBoardsSize,
                                                  cuda::cudaEventsDeviceT* d_timers)
 {
     // It denotes thread index and array index
     const auto idx = threadIdx.x;
-    d_outputBoardsSizes[idx] =
-        d_solvers[idx].backTrackingIncrementalStack(d_outputBoards + idx * CUDA_MAX_RESULTS_PER_THREAD,
-                                                    idx,
-                                                    d_timers[idx]);
+    d_solvers[idx].backTrackingIncrementalStack(d_outputBoards,
+                                                d_outputBoardsSize,
+                                                idx,
+                                                d_timers[idx]);
+}
+
+CUDA_GLOBAL void parallelSolvingSharedMemory(cuda::solver::kernelInputT d_solvers,
+                                             cuda::solver::kernelOutputT d_outputBoards,
+                                             cuda::uint32T* d_outputBoardsSize,
+                                             cuda::cudaEventsDeviceT* d_timers)
+{
+    // Shared memory placeholder
+    extern CUDA_SHARED char sharedMemoryDecl[];
+    char* sharedMemoryPtr = sharedMemoryDecl;
+
+    // It denotes thread index and array index
+    const auto idx = threadIdx.x;
+    const auto bytesPerBoard = d_solvers[idx].board.getBoardMemoryUsage();
+    // Local solver to copy contents to shared memory
+    cuda::solver::SequentialSolver d_localSolver(d_solvers[idx].board,
+                                                 constantMemoryPtr,
+                                                 sharedMemoryPtr + idx * bytesPerBoard);
+    d_localSolver.backTrackingBase(d_outputBoards,
+                                   d_outputBoardsSize,
+                                   idx,
+                                   d_timers[idx]);
 }
 
 CUDA_GLOBAL void parallelSolvingAOSStack(cuda::solver::kernelInputT d_solvers,
                                          cuda::solver::kernelOutputT d_outputBoards,
-                                         cuda::solver::kernelOutputSizesT d_outputBoardsSizes,
-                                         cuda::solver::stackAOST* stack)
+                                         cuda::uint32T* d_outputBoardsSize,
+                                         cuda::solver::stackAOST* stack,
+                                         cuda::cudaEventsDeviceT* d_timers)
 {
     // It denotes thread index and array index
     const auto idx = threadIdx.x;
     const auto threads = blockDim.x;
-    d_outputBoardsSizes[idx] =
-        d_solvers[idx].backTrackingAOSStack(d_outputBoards + idx * CUDA_MAX_RESULTS_PER_THREAD,
-                                            stack,
-                                            idx,
-                                            threads);
+    d_solvers[idx].backTrackingAOSStack(d_outputBoards,
+                                        d_outputBoardsSize,
+                                        stack,
+                                        idx,
+                                        threads,
+                                        d_timers[idx]);
 }
 
 CUDA_GLOBAL void parallelSolvingSOAStack(cuda::solver::kernelInputT d_solvers,
                                          cuda::solver::kernelOutputT d_outputBoards,
-                                         cuda::solver::kernelOutputSizesT d_outputBoardsSizes,
-                                         cuda::solver::stackSOAT* stack)
+                                         cuda::uint32T* d_outputBoardsSize,
+                                         cuda::solver::stackSOAT* stack,
+                                         cuda::cudaEventsDeviceT* d_timers)
 {
     // It denotes thread index and array index
     const auto idx = threadIdx.x;
     const auto threads = blockDim.x;
-    d_outputBoardsSizes[idx] =
-        d_solvers[idx].backTrackingSOAStack(d_outputBoards + idx * CUDA_MAX_RESULTS_PER_THREAD,
-                                            stack,
-                                            idx,
-                                            threads);
+    d_solvers[idx].backTrackingSOAStack(d_outputBoards,
+                                        d_outputBoardsSize,
+                                        stack,
+                                        idx,
+                                        threads,
+                                        d_timers[idx]);
 }
 
 // Microkernels

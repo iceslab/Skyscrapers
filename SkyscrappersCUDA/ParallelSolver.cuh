@@ -12,6 +12,7 @@ namespace cuda
         typedef solver::SequentialSolver* kernelInputT;
         typedef cuda::Board* kernelOutputT;
         typedef size_t* kernelOutputSizesT;
+        typedef uint32T kernelOutputSizeT;
         typedef struct
         {
             // Result boards count
@@ -42,20 +43,19 @@ namespace cuda
         CUDA_HOST kernelOutputT prepareResultArray(std::vector<cuda::Board> & h_boards,
                                                    size_t solversCount,
                                                    size_t boardSize);
-        CUDA_HOST kernelOutputSizesT prepareResultArraySizes(size_t solversCount);
+        CUDA_HOST uint32T* prepareResultArraySize();
         CUDA_HOST threadLocalsT* prepareThreadLocals(size_t solversCount);
         CUDA_HOST uint32T* prepareScatterArray(size_t solversCount);
         CUDA_HOST cudaEventsDeviceT* prepareCudaEventDevice(const std::vector<cudaEventsDeviceT> & h_events);
 
-        CUDA_HOST kernelOutputT prepareHostResultArray(size_t solversCount);
-        CUDA_HOST kernelOutputSizesT prepareHostResultArraySizes(size_t solversCount);
+        CUDA_HOST kernelOutputT prepareHostResultArray();
 
         // Complementary function to free solver array
         CUDA_HOST void freeSolvers(kernelInputT & d_solvers);
         // Complementary function to free results array
         CUDA_HOST void freeResultArray(kernelOutputT & d_outputBoards);
         // Complementary function to free results array sizes
-        CUDA_HOST void freeResultArraySizes(kernelOutputSizesT & d_outputBoardsSizes);
+        CUDA_HOST void freeResultArraySize(uint32T* & d_outputBoardsSize);
         // Complementary function to free thread locals structures
         CUDA_HOST void freeThreadLocals(threadLocalsT* & d_threadLocals);
         // Complementary function to free scatter array
@@ -65,21 +65,18 @@ namespace cuda
 
         // Complementary function to free results array
         CUDA_HOST void freeHostResultArray(kernelOutputT & h_outputBoards);
-        // Complementary function to free results array sizes
-        CUDA_HOST void freeHostResultArraySizes(kernelOutputSizesT & h_outputBoardsSizes);
 
         CUDA_HOST void copyResultsArray(kernelOutputT h_outputBoards,
                                         kernelOutputT d_outputBoards,
                                         size_t solversCount);
-        CUDA_HOST void copyResultsArraySizes(kernelOutputSizesT h_outputBoardsSizes,
-                                             kernelOutputSizesT d_outputBoardsSizes,
-                                             size_t solversCount);
+        CUDA_HOST void copyResultsArraySize(uint32T* h_outputBoardsSize,
+                                            uint32T* d_outputBoardsSize);
         CUDA_HOST void copyCudaEventDevice(std::vector<cudaEventsDeviceT> & h_timers,
                                            cudaEventsDeviceT* & d_timers);
 
         CUDA_HOST bool verifyAllocation(kernelInputT & d_solvers,
                                         kernelOutputT & d_outputBoards,
-                                        kernelOutputSizesT & d_outputBoardsSizes);
+                                        uint32T* & d_outputBoardsSizes);
     }
 }
 
