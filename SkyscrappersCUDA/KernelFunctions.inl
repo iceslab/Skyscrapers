@@ -29,20 +29,25 @@ CUDA_GLOBAL void parallelSolvingBase(cuda::solver::kernelInputT d_solvers,
 
 CUDA_GLOBAL void parallelSolvingIncrementalStack(cuda::solver::kernelInputT d_solvers,
                                                  cuda::uint32T* d_solversTaken,
+                                                 cuda::uint32T* d_generatedSolversCount,
                                                  cuda::solver::kernelOutputT d_outputBoards,
                                                  cuda::uint32T* d_outputBoardsSize,
                                                  cuda::cudaEventsDeviceT* d_timers)
 {
-    // It denotes thread index and array index
-    const auto idx = threadIdx.x;
-    d_solvers[idx].backTrackingIncrementalStack(d_outputBoards,
-                                                d_outputBoardsSize,
-                                                idx,
-                                                d_timers[idx]);
+    for (cuda::uint32T idx = atomicInc(d_solversTaken, CUDA_UINT32T_MAX);
+         idx < *d_generatedSolversCount;
+         idx = atomicInc(d_solversTaken, CUDA_UINT32T_MAX))
+    {
+        d_solvers[idx].backTrackingIncrementalStack(d_outputBoards,
+                                                    d_outputBoardsSize,
+                                                    idx,
+                                                    d_timers[idx]);
+    }
 }
 
 CUDA_GLOBAL void parallelSolvingSharedMemory(cuda::solver::kernelInputT d_solvers,
                                              cuda::uint32T* d_solversTaken,
+                                             cuda::uint32T* d_generatedSolversCount,
                                              cuda::solver::kernelOutputT d_outputBoards,
                                              cuda::uint32T* d_outputBoardsSize,
                                              cuda::cudaEventsDeviceT* d_timers)
@@ -66,38 +71,44 @@ CUDA_GLOBAL void parallelSolvingSharedMemory(cuda::solver::kernelInputT d_solver
 
 CUDA_GLOBAL void parallelSolvingAOSStack(cuda::solver::kernelInputT d_solvers,
                                          cuda::uint32T* d_solversTaken,
+                                         cuda::uint32T* d_generatedSolversCount,
                                          cuda::solver::kernelOutputT d_outputBoards,
                                          cuda::uint32T* d_outputBoardsSize,
                                          cuda::solver::stackAOST* stack,
                                          cuda::cudaEventsDeviceT* d_timers)
 {
-    // It denotes thread index and array index
-    const auto idx = threadIdx.x;
-    const auto threads = blockDim.x;
-    d_solvers[idx].backTrackingAOSStack(d_outputBoards,
-                                        d_outputBoardsSize,
-                                        stack,
-                                        idx,
-                                        threads,
-                                        d_timers[idx]);
+    for (cuda::uint32T idx = atomicInc(d_solversTaken, CUDA_UINT32T_MAX);
+         idx < *d_generatedSolversCount;
+         idx = atomicInc(d_solversTaken, CUDA_UINT32T_MAX))
+    {
+        d_solvers[idx].backTrackingAOSStack(d_outputBoards,
+                                            d_outputBoardsSize,
+                                            stack,
+                                            idx,
+                                            *d_generatedSolversCount,
+                                            d_timers[idx]);
+    }
 }
 
 CUDA_GLOBAL void parallelSolvingSOAStack(cuda::solver::kernelInputT d_solvers,
                                          cuda::uint32T* d_solversTaken,
+                                         cuda::uint32T* d_generatedSolversCount,
                                          cuda::solver::kernelOutputT d_outputBoards,
                                          cuda::uint32T* d_outputBoardsSize,
                                          cuda::solver::stackSOAT* stack,
                                          cuda::cudaEventsDeviceT* d_timers)
 {
-    // It denotes thread index and array index
-    const auto idx = threadIdx.x;
-    const auto threads = blockDim.x;
-    d_solvers[idx].backTrackingSOAStack(d_outputBoards,
-                                        d_outputBoardsSize,
-                                        stack,
-                                        idx,
-                                        threads,
-                                        d_timers[idx]);
+    for (cuda::uint32T idx = atomicInc(d_solversTaken, CUDA_UINT32T_MAX);
+         idx < *d_generatedSolversCount;
+         idx = atomicInc(d_solversTaken, CUDA_UINT32T_MAX))
+    {
+        d_solvers[idx].backTrackingSOAStack(d_outputBoards,
+                                            d_outputBoardsSize,
+                                            stack,
+                                            idx,
+                                            *d_generatedSolversCount,
+                                            d_timers[idx]);
+    }
 }
 
 // Microkernels
@@ -401,6 +412,7 @@ void launchGenericGpuKernel(SolversEnableE solverType,
         parallelSolvingIncrementalStack << <numBlocks, threadsPerBlock, sharedMemory >> >
             (d_solvers,
              d_solversTaken,
+             d_generatedSolversCount,
              d_outputBoards,
              d_outputBoardsSize,
              d_timers);
@@ -409,6 +421,7 @@ void launchGenericGpuKernel(SolversEnableE solverType,
         parallelSolvingSharedMemory << <numBlocks, threadsPerBlock, sharedMemory >> >
             (d_solvers,
              d_solversTaken,
+             d_generatedSolversCount,
              d_outputBoards,
              d_outputBoardsSize,
              d_timers);
@@ -417,6 +430,7 @@ void launchGenericGpuKernel(SolversEnableE solverType,
         parallelSolvingAOSStack << <numBlocks, threadsPerBlock, sharedMemory >> >
             (d_solvers,
              d_solversTaken,
+             d_generatedSolversCount,
              d_outputBoards,
              d_outputBoardsSize,
              reinterpret_cast<cuda::solver::stackAOST*>(d_stack),
@@ -426,6 +440,7 @@ void launchGenericGpuKernel(SolversEnableE solverType,
         parallelSolvingSOAStack << <numBlocks, threadsPerBlock, sharedMemory >> >
             (d_solvers,
              d_solversTaken,
+             d_generatedSolversCount,
              d_outputBoards,
              d_outputBoardsSize,
              reinterpret_cast<cuda::solver::stackSOAT*>(d_stack),

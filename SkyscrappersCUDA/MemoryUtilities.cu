@@ -351,13 +351,22 @@ namespace cuda
                 d_outputBoardsSize != nullptr;
         }
 
-        CUDA_HOST int getSharedMemorySize(SolversEnableE solverType)
+        CUDA_HOST int getSharedMemorySize(SolversEnableE solverType,
+                                          size_t generatedSolversCount,
+                                          size_t cellsCount)
         {
             int retVal = 0;
             switch (solverType)
             {
             case PARALLEL_GPU_SHM:
-                retVal = 32 << 10; // 32 kB;
+                if (cellsCount > 0)
+                {
+                    retVal = cuda::Board::getBoardMemoryUsage(cellsCount) * generatedSolversCount;
+                }
+                else
+                {
+                    retVal = CUDA_MAX_SHARED_MEMORY;
+                }
                 break;
             }
             return retVal;

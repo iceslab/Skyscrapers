@@ -92,7 +92,9 @@ namespace cuda
         CUDA_HOST bool verifyAllocation(kernelInputT & d_solvers,
                                         kernelOutputT & d_outputBoards,
                                         uint32T* & d_outputBoardsSizes);
-        CUDA_HOST int getSharedMemorySize(SolversEnableE solverType);
+        CUDA_HOST int getSharedMemorySize(SolversEnableE solverType,
+                                          size_t generatedSolversCount,
+                                          size_t cellsCount);
     }
 }
 

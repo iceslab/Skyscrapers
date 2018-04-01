@@ -55,6 +55,7 @@ namespace cuda
 }
 
 #define CUDA_UINT32T_MAX (cuda::uint32T(~0))
+#define CUDA_MAX_SHARED_MEMORY (32 << 10) // 32 kB
 
 //#else
 //#define CUDA_HOST

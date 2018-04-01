@@ -12,7 +12,7 @@ Statistics launchSequentialSolver(const board::Board & board);
 Statistics launchParallelCpuSolver(const board::Board & board);
 
 // TODO: Make generic GPU launch function
-Statistics launchGenericGpuSolver(const board::Board & board, SolversEnableE solverType);
+Statistics launchGenericGpuSolver(const board::Board board, SolversEnableE solverType);
 
 int main(int argc, char** argv)
 {
@@ -85,7 +85,7 @@ Statistics launchSequentialSolver(const board::Board & board)
         cMilliseconds = time.stop(Resolution::MILLISECONDS);
         std::cout << "SequentialSolver result size: " << cResult.size() << std::endl;
     }
-    retVal.emplace_back("SequentialSolver solving time: ", cMilliseconds);
+    retVal.emplace_back("+ SequentialSolver solving time: ", cMilliseconds);
     return retVal;
 }
 
@@ -110,7 +110,7 @@ Statistics launchParallelCpuSolver(const board::Board & board)
         pcMilliseconds = time.stop(Resolution::MILLISECONDS);
         std::cout << "ParallelCpuSolver result size: " << pcResult.size() << std::endl;
     }
-    retVal.emplace_back("ParallelCpuSolver solving time: ", pcMilliseconds);
+    retVal.emplace_back("+ ParallelCpuSolver solving time: ", pcMilliseconds);
     retVal.emplace_back("\nDevice initialize time: ", initMilliseconds);
     retVal.emplace_back("Board generation time: ", generationMilliseconds);
     retVal.emplace_back("Threads launch time: ", threadsLaunchMilliseconds);
@@ -119,7 +119,7 @@ Statistics launchParallelCpuSolver(const board::Board & board)
     return retVal;
 }
 
-Statistics launchGenericGpuSolver(const board::Board & board, SolversEnableE solverType)
+Statistics launchGenericGpuSolver(const board::Board board, SolversEnableE solverType)
 {
     Statistics retVal(false);
     if (solverType < PARALLEL_GPU_BEGIN || solverType > PARALLEL_GPU_END)
@@ -190,26 +190,41 @@ Statistics launchGenericGpuSolver(const board::Board & board, SolversEnableE sol
         {
             dim3 numBlocks(blocksOfThreads);
             dim3 threadsPerBlock(threadsInBlock);
-            int sharedMemorySize = cuda::solver::getSharedMemorySize(solverType);
-
-            printf("Launching kernel...\n");
-            fflush(stdout);
-            fflush(stderr);
-
+            int sharedMemorySize = cuda::solver::getSharedMemorySize(solverType,
+                                                                     generatedSolversCount,
+                                                                     board.getCellsCount());
             Timer kernelTimer;
-            kernelTimer.start();
-            launchGenericGpuKernel(solverType,
-                                   numBlocks,
-                                   threadsPerBlock,
-                                   sharedMemorySize,
-                                   d_solvers,
-                                   d_solversTaken,
-                                   d_generatedSolversCount,
-                                   d_outputBoards,
-                                   d_outputBoardsSize,
-                                   d_stack,
-                                   d_timers);
-            kernelLaunchMilliseconds = kernelTimer.stop(Resolution::MILLISECONDS);
+            if (sharedMemorySize <= CUDA_MAX_SHARED_MEMORY)
+            {
+                printf("Launching kernel...\n");
+                fflush(stdout);
+                fflush(stderr);
+
+                kernelTimer.start();
+                launchGenericGpuKernel(solverType,
+                                       numBlocks,
+                                       threadsPerBlock,
+                                       sharedMemorySize,
+                                       d_solvers,
+                                       d_solversTaken,
+                                       d_generatedSolversCount,
+                                       d_outputBoards,
+                                       d_outputBoardsSize,
+                                       d_stack,
+                                       d_timers);
+                kernelLaunchMilliseconds = kernelTimer.stop(Resolution::MILLISECONDS);
+            }
+            else
+            {
+                auto shmConverted = cuda::bytesToHumanReadable(sharedMemorySize);
+                auto limitConverted = cuda::bytesToHumanReadable(CUDA_MAX_SHARED_MEMORY);
+                printf("Exceeded shared memory size limit (%5.1f %s/%5.1f %s)."
+                       "Kernel launch aborted\n",
+                       shmConverted.first,
+                       shmConverted.second,
+                       limitConverted.first,
+                       limitConverted.second);
+            }
 
             // Check for any errors launching the kernel
             cudaError_t cudaStatus = cudaGetLastError();
