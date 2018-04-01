@@ -1,4 +1,4 @@
-#include "ParallelSolver.cuh"
+#include "MemoryUtilities.cuh"
 
 namespace cuda
 {

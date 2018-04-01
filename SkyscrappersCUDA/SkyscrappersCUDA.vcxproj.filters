@@ -4,7 +4,6 @@
     <CudaCompile Include="CUDAUtilities.cu" />
     <CudaCompile Include="kernel.cu" />
     <CudaCompile Include="Board.cu" />
-    <CudaCompile Include="ParallelSolver.cu" />
     <CudaCompile Include="SequentialSolver.cu" />
     <CudaCompile Include="Solver.cu" />
     <CudaCompile Include="SquareMatrix.cu" />
@@ -18,6 +17,7 @@
     <CudaCompile Include="Solver.cuh" />
     <CudaCompile Include="BitManipulation.cuh" />
     <CudaCompile Include="BitManipulation.cu" />
+    <CudaCompile Include="MemoryUtilities.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Statistics.cpp" />
@@ -27,7 +27,7 @@
     <ClInclude Include="Stack.cuh" />
     <ClInclude Include="Statistics.h" />
     <ClInclude Include="XGetopt.h" />
-    <ClInclude Include="ParallelSolver.cuh" />
     <ClInclude Include="KernelFunctions.inl" />
+    <ClInclude Include="MemoryUtilities.cuh" />
   </ItemGroup>
 </Project>

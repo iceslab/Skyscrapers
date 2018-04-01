@@ -2,7 +2,7 @@
 #define __INCLUDED_KERNEL_FUNCTIONS_INL__
 
 #include "CUDAUtilities.cuh"
-#include "ParallelSolver.cuh"
+#include "MemoryUtilities.cuh"
 #include "Stack.cuh"
 #include "BitManipulation.cuh"
 
