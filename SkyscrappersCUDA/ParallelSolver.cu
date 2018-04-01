@@ -4,6 +4,28 @@ namespace cuda
 {
     namespace solver
     {
+        CUDA_HOST cuda::uint32T * prepareGeneratedSolversCount(cuda::uint32T generatedSolversCount)
+        {
+            uint32T* d_retVal = nullptr;
+            cudaError_t err = cudaMalloc(&d_retVal, sizeof(*d_retVal));
+            if (err != cudaSuccess)
+            {
+                CUDA_PRINT_ERROR("Failed allocation", err);
+                d_retVal = nullptr;
+            }
+            else
+            {
+                // Copy host variable to device
+                err = cudaMemcpy(d_retVal, &generatedSolversCount, sizeof(*d_retVal), cudaMemcpyHostToDevice);
+                if (err != cudaSuccess)
+                {
+                    CUDA_PRINT_ERROR("Failed memcpy", err);
+                    cudaFree(d_retVal);
+                    d_retVal = nullptr;
+                }
+            }
+            return d_retVal;
+        }
         CUDA_HOST kernelInputT prepareSolvers(const std::vector<board::Board> & boards,
                                               std::vector<SequentialSolver> & h_solvers,
                                               size_t & count)
@@ -39,6 +61,30 @@ namespace cuda
                 }
             }
 
+            return d_retVal;
+        }
+
+        CUDA_HOST cuda::uint32T * prepareSolversTaken()
+        {
+            uint32T* d_retVal = nullptr;
+            cudaError_t err = cudaMalloc(&d_retVal, sizeof(*d_retVal));
+            if (err != cudaSuccess)
+            {
+                CUDA_PRINT_ERROR("Failed allocation", err);
+                d_retVal = nullptr;
+            }
+            else
+            {
+                uint32T h_valueToSet = 0;
+                // Copy host variable to device
+                err = cudaMemcpy(d_retVal, &h_valueToSet, sizeof(*d_retVal), cudaMemcpyHostToDevice);
+                if (err != cudaSuccess)
+                {
+                    CUDA_PRINT_ERROR("Failed memcpy", err);
+                    cudaFree(d_retVal);
+                    d_retVal = nullptr;
+                }
+            }
             return d_retVal;
         }
 
@@ -84,7 +130,7 @@ namespace cuda
             }
             else
             {
-                uint32T h_valueToSet = 1;
+                uint32T h_valueToSet = 0;
                 // Copy host variable to device
                 err = cudaMemcpy(d_retVal, &h_valueToSet, sizeof(*d_retVal), cudaMemcpyHostToDevice);
                 if (err != cudaSuccess)
@@ -147,6 +193,44 @@ namespace cuda
             return d_retVal;
         }
 
+        CUDA_HOST void * prepareStack(SolversEnableE solverType,
+                                      size_t generatedSolversCount,
+                                      size_t cellsCount)
+        {
+            void* retVal = nullptr;
+            const auto stackElements = generatedSolversCount * cellsCount;
+            switch (solverType)
+            {
+            case PARALLEL_GPU_AOS:
+                retVal = cuda::solver::Stack::allocateAOSStack(stackElements);
+                break;
+            case PARALLEL_GPU_SOA:
+                retVal = cuda::solver::Stack::allocateSOAStack(stackElements);
+                break;
+            }
+            return retVal;
+        }
+
+        CUDA_HOST void prepareConstantMemory(const board::Board & board)
+        {
+            // Make continuous memory from vector
+            std::vector<cuda::boardFieldT> h_hints(4 * board.size());
+            for (size_t i = 0; i < 4; i++)
+            {
+                memcpy(h_hints.data() + i * board.size(),
+                       board.hints[i].data(),
+                       board.size() * sizeof(cuda::boardFieldT));
+            }
+
+            cudaError_t err = cudaMemcpyToSymbol(constantMemoryPtr,
+                                                 h_hints.data(),
+                                                 4 * board.size() * sizeof(cuda::boardFieldT));
+            if (err != cudaSuccess)
+            {
+                CUDA_PRINT_ERROR("Failed copying to symbol", err);
+            }
+        }
+
         CUDA_HOST kernelOutputT prepareHostResultArray()
         {
             kernelOutputT h_retVal = reinterpret_cast<kernelOutputT>(
@@ -159,10 +243,22 @@ namespace cuda
             return h_retVal;
         }
 
+        CUDA_HOST void freeGeneratedSolversCount(cuda::uint32T * d_generatedSolversCount)
+        {
+            cudaFree(d_generatedSolversCount);
+            d_generatedSolversCount = nullptr;
+        }
+
         CUDA_HOST void freeSolvers(kernelInputT & d_solvers)
         {
             cudaFree(d_solvers);
             d_solvers = nullptr;
+        }
+
+        CUDA_HOST void freeSolversTaken(cuda::uint32T *& d_solversTaken)
+        {
+            cudaFree(d_solversTaken);
+            d_solversTaken = nullptr;
         }
 
         CUDA_HOST void freeResultArray(kernelOutputT & d_outputBoards)
@@ -193,6 +289,12 @@ namespace cuda
         {
             cudaFree(d_timers);
             d_timers = nullptr;
+        }
+
+        CUDA_HOST void freeStack(void *& d_stack)
+        {
+            cudaFree(d_stack);
+            d_stack = nullptr;
         }
 
         CUDA_HOST void freeHostResultArray(kernelOutputT & h_outputBoards)
@@ -247,6 +349,18 @@ namespace cuda
             return d_solvers != nullptr &&
                 d_outputBoards != nullptr &&
                 d_outputBoardsSize != nullptr;
+        }
+
+        CUDA_HOST int getSharedMemorySize(SolversEnableE solverType)
+        {
+            int retVal = 0;
+            switch (solverType)
+            {
+            case PARALLEL_GPU_SHM:
+                retVal = 32 << 10; // 32 kB;
+                break;
+            }
+            return retVal;
         }
 
         //CUDA_GLOBAL void parallelBoardSolving(kernelInputT d_solvers,

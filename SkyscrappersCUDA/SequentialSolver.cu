@@ -106,16 +106,18 @@ namespace cuda
                                 int64T lastCellBegin = clock64();
 
                                 // Returns 0 when value is equal or above limit
-                                uint32T resultIndex = atomicInc(allResultsCount, CUDA_MAX_RESULTS + 1);
-                                if (resultIndex > 0)
+                                uint32T resultIndex = atomicInc(allResultsCount, CUDA_UINT32T_MAX);
+                                //CUDA_PRINT("resultIndex: %u\n", resultIndex);
+                                if (resultIndex < CUDA_MAX_RESULTS)
                                 {
                                     int64T copyResultBegin = clock64();
-                                    board.copyInto(resultArray[resultIndex - 1]);
+                                    board.copyInto(resultArray[resultIndex]);
                                     localTimers.copyResultDiff += clock64() - copyResultBegin;
                                 }
                                 else
                                 {
-                                    // Nothing to do
+                                    // Ensures addition with saturation
+                                    atomicExch(allResultsCount, CUDA_MAX_RESULTS);
                                 }
                                 board.clearCell(row, column);
                                 localTimers.lastCellDiff += clock64() - lastCellBegin;
@@ -246,11 +248,11 @@ namespace cuda
                             {
                                 int64T lastCellBegin = clock64();
                                 // Returns 0 when value is equal or above limit
-                                uint32T resultIndex = atomicInc(allResultsCount, CUDA_MAX_RESULTS + 1);
-                                if (resultIndex > 0)
+                                uint32T resultIndex = atomicInc(allResultsCount, CUDA_UINT32T_MAX);
+                                if (resultIndex < CUDA_MAX_RESULTS)
                                 {
                                     int64T copyResultBegin = clock64();
-                                    board.copyInto(resultArray[resultIndex - 1]);
+                                    board.copyInto(resultArray[resultIndex]);
                                     localTimers.copyResultDiff += clock64() - copyResultBegin;
                                 }
                                 else
@@ -371,11 +373,11 @@ namespace cuda
                             {
                                 int64T lastCellBegin = clock64();
                                 // Returns 0 when value is equal or above limit
-                                uint32T resultIndex = atomicInc(allResultsCount, CUDA_MAX_RESULTS + 1);
-                                if (resultIndex > 0)
+                                uint32T resultIndex = atomicInc(allResultsCount, CUDA_UINT32T_MAX);
+                                if (resultIndex < CUDA_MAX_RESULTS)
                                 {
                                     int64T copyResultBegin = clock64();
-                                    board.copyInto(resultArray[resultIndex - 1]);
+                                    board.copyInto(resultArray[resultIndex]);
                                     localTimers.copyResultDiff += clock64() - copyResultBegin;
                                 }
                                 else
@@ -486,11 +488,11 @@ namespace cuda
                             {
                                 int64T lastCellBegin = clock64();
                                 // Returns 0 when value is equal or above limit
-                                uint32T resultIndex = atomicInc(allResultsCount, CUDA_MAX_RESULTS + 1);
-                                if (resultIndex > 0)
+                                uint32T resultIndex = atomicInc(allResultsCount, CUDA_UINT32T_MAX);
+                                if (resultIndex < CUDA_MAX_RESULTS)
                                 {
                                     int64T copyResultBegin = clock64();
-                                    board.copyInto(resultArray[resultIndex - 1]);
+                                    board.copyInto(resultArray[resultIndex]);
                                     localTimers.copyResultDiff += clock64() - copyResultBegin;
                                 }
                                 else
@@ -562,8 +564,8 @@ namespace cuda
             // If row is too big return max values
             if (row >= maxSize)
             {
-                row = CUDA_UINT32_T_MAX;
-                column = CUDA_UINT32_T_MAX;
+                row = CUDA_UINT32T_MAX;
+                column = CUDA_UINT32T_MAX;
             }
 
             rowOut = row;
@@ -572,7 +574,7 @@ namespace cuda
 
         CUDA_DEVICE bool SequentialSolver::isCellValid(uint32T row, uint32T column)
         {
-            return row != CUDA_UINT32_T_MAX && column != CUDA_UINT32_T_MAX;
+            return row != CUDA_UINT32T_MAX && column != CUDA_UINT32T_MAX;
         }
 
         CUDA_DEVICE const cuda::Board & SequentialSolver::getBoard() const

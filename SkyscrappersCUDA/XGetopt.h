@@ -22,6 +22,9 @@
 #include <string>
 #include <vector>
 
+#define CUDA_MAX_THREADS_IN_BLOCK (1024)
+#define CUDA_MAX_BLOCKS_OF_THREADS (1024)
+
 extern int optind, opterr;
 extern TCHAR *optarg;
 
@@ -44,6 +47,8 @@ extern const char* filePath;
 extern std::vector<bool> solversEnabled;
 extern size_t gpuAlgorithmsToRun;
 extern size_t boardDimension;
+extern size_t threadsInBlock;
+extern size_t blocksOfThreads;
 extern size_t desiredBoards;
 extern size_t desiredFifoSize;
 
@@ -55,5 +60,7 @@ void printUsage();
 void printLaunchParameters();
 const char* boolToEnabled(bool option);
 void parseGPUOptarg(const std::string & optarg);
+const char* enumToKernelName(SolversEnableE solverType);
+const char* enumToSolverName(SolversEnableE solverType);
 
 #endif //XGETOPT_H

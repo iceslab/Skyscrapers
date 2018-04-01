@@ -24,6 +24,9 @@ namespace solver
         timeGeneration.start();
         auto solvers = prepareSolvers(stopLevel);
         generationMilliseconds = timeGeneration.stop(Resolution::MILLISECONDS);
+        printf("Generated %zu solvers\n", solvers.size());
+        fflush(stdout);
+        fflush(stderr);
         retVal.reserve(solvers.size());
         std::vector<std::future<std::vector<board::Board>>> results;
         results.reserve(solvers.size());
@@ -50,7 +53,7 @@ namespace solver
 
     std::vector<SequentialSolver> ParallelCpuSolver::prepareSolvers(const size_t count)
     {
-        auto boards = generateNBoards(count);
+        auto boards = generateBoards(count);
         std::vector<SequentialSolver> retVal;
         retVal.reserve(boards.size());
 

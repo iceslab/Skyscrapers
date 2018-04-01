@@ -4,6 +4,9 @@
 #include <vector>
 #include "../Skyscrappers/Board.h"
 #include "SequentialSolver.cuh"
+#include "XGetopt.h"
+
+extern CUDA_CONSTANT cuda::boardFieldT constantMemoryPtr[];
 
 namespace cuda
 {
@@ -37,9 +40,11 @@ namespace cuda
 
         // Generates solvers for boards till given tree level (count)
         // Solvers count is then placed in count variable
+        CUDA_HOST cuda::uint32T* prepareGeneratedSolversCount(cuda::uint32T generatedSolversCount);
         CUDA_HOST kernelInputT prepareSolvers(const std::vector<board::Board> & boards,
                                               std::vector<SequentialSolver> & h_solvers,
                                               size_t & count);
+        CUDA_HOST cuda::uint32T* prepareSolversTaken();
         CUDA_HOST kernelOutputT prepareResultArray(std::vector<cuda::Board> & h_boards,
                                                    size_t solversCount,
                                                    size_t boardSize);
@@ -47,11 +52,19 @@ namespace cuda
         CUDA_HOST threadLocalsT* prepareThreadLocals(size_t solversCount);
         CUDA_HOST uint32T* prepareScatterArray(size_t solversCount);
         CUDA_HOST cudaEventsDeviceT* prepareCudaEventDevice(const std::vector<cudaEventsDeviceT> & h_events);
+        CUDA_HOST void* prepareStack(SolversEnableE solverType,
+                                     size_t generatedSolversCount,
+                                     size_t cellsCount);
+        CUDA_HOST void prepareConstantMemory(const board::Board & board);
 
         CUDA_HOST kernelOutputT prepareHostResultArray();
 
+        // Complementary function to free generated solvers variable
+        CUDA_HOST void freeGeneratedSolversCount(cuda::uint32T* d_generatedSolversCount);
         // Complementary function to free solver array
         CUDA_HOST void freeSolvers(kernelInputT & d_solvers);
+        // Complementary function to free solver taken counter
+        CUDA_HOST void freeSolversTaken(cuda::uint32T* & d_solversTaken);
         // Complementary function to free results array
         CUDA_HOST void freeResultArray(kernelOutputT & d_outputBoards);
         // Complementary function to free results array sizes
@@ -62,6 +75,8 @@ namespace cuda
         CUDA_HOST void freeScatterArray(uint32T* & d_scatterArray);
         // Complementary function to free cudaEventDevice array
         CUDA_HOST void freeCudaEventDevice(cudaEventsDeviceT* & d_timers);
+        // Complementary function to free stack
+        CUDA_HOST void freeStack(void* & d_stack);
 
         // Complementary function to free results array
         CUDA_HOST void freeHostResultArray(kernelOutputT & h_outputBoards);
@@ -77,6 +92,7 @@ namespace cuda
         CUDA_HOST bool verifyAllocation(kernelInputT & d_solvers,
                                         kernelOutputT & d_outputBoards,
                                         uint32T* & d_outputBoardsSizes);
+        CUDA_HOST int getSharedMemorySize(SolversEnableE solverType);
     }
 }
 

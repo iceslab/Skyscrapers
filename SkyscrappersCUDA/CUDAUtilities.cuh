@@ -54,6 +54,8 @@ namespace cuda
     };
 }
 
+#define CUDA_UINT32T_MAX (cuda::uint32T(~0))
+
 //#else
 //#define CUDA_HOST
 //#define CUDA_DEVICE

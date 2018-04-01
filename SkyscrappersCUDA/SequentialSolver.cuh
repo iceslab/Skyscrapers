@@ -6,9 +6,7 @@
 #include "Stack.cuh"
 
 #define CUDA_SIZE_T_MAX (size_t(~0))
-#define CUDA_UINT32_T_MAX (cuda::uint32T(~0))
-#define CUDA_LAST_CELL_PAIR (rowAndColumnPairT(CUDA_UINT32_T_MAX, CUDA_UINT32_T_MAX))
-//#define CUDA_MAX_RESULTS_PER_THREAD (cuda::uint32T(7))
+#define CUDA_LAST_CELL_PAIR (rowAndColumnPairT(CUDA_UINT32T_MAX, CUDA_UINT32T_MAX))
 #define CUDA_MAX_RESULTS (cuda::uint32T(20))
 
 #define BT_WITH_STACK

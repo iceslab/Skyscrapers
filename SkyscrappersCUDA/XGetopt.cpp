@@ -159,6 +159,8 @@ const char* filePath;
 std::vector<bool> solversEnabled(SOLVERS_SIZE, false);
 size_t gpuAlgorithmsToRun;
 size_t boardDimension = 1;
+size_t threadsInBlock = 1;
+size_t blocksOfThreads = 1;
 size_t desiredBoards = 1;
 
 int getopt(int argc, TCHAR *argv[], TCHAR *optstring)
@@ -228,7 +230,7 @@ bool ProcessCommandLine(int argc, TCHAR *argv[])
 {
     int c;
 
-    while ((c = getopt(argc, argv, _T("f:scg:d:b:p:h"))) != EOF)
+    while ((c = getopt(argc, argv, _T("f:scg:d:t:b:p:q:h"))) != EOF)
     {
         switch (c)
         {
@@ -249,11 +251,19 @@ bool ProcessCommandLine(int argc, TCHAR *argv[])
             boardDimension = std::stoull(optarg);
             boardDimension = boardDimension < 1 ? 1 : boardDimension;
             break;
+        case _T('t'):
+            threadsInBlock = std::stoull(optarg);
+            threadsInBlock = threadsInBlock < 1 ? 1 : threadsInBlock % (CUDA_MAX_THREADS_IN_BLOCK + 1);
+            break;
         case _T('b'):
+            blocksOfThreads = std::stoull(optarg);
+            blocksOfThreads = blocksOfThreads < 1 ? 1 : blocksOfThreads % (CUDA_MAX_BLOCKS_OF_THREADS + 1);
+            break;
+        case _T('p'):
             desiredBoards = std::stoull(optarg);
             desiredBoards = desiredBoards < 1 ? 1 : desiredBoards;
             break;
-        case _T('p'):
+        case _T('q'):
             desiredFifoSize = std::stoull(optarg);
             desiredFifoSize = desiredFifoSize < 1 ? 1 : desiredFifoSize;
             break;
@@ -299,10 +309,18 @@ void printUsage()
            "      \"soa\"   - run Structure of Arrays stack algorithm\n");
     printf("   -d dimension\n"
            "      Dimensions of generated square board\n");
-    printf("   -b boards to generate\n"
-           "      Number of boards wchich program will generate when running parallel algorithm.\n"
-           "      It determines number of launched threads. Option ignored when used with -f\n");
-    printf("   -p FIFO size in bytes\n"
+    printf("   -t threads per block\n"
+           "      Number of threads in block used in parallelizing algorithm.\n"
+           "      Maximum allowed is %d\n",
+           CUDA_MAX_THREADS_IN_BLOCK);
+    printf("   -b blocks of threads\n"
+           "      Number of blocks used in parallelizing algorithm.\n"
+           "      Maximum allowed is %d\n",
+           CUDA_MAX_BLOCKS_OF_THREADS);
+    printf("   -p boards to generate\n"
+           "      Number of boards which program will generate when running parallel algorithm.\n"
+           "      Also determines number of threads in parallel CPU algorithms\n");
+    printf("   -q FIFO size in bytes\n"
            "      Determines CUDA FIFO size in bytes. Useful when debugging\n"
            "      FIFO is used to store device's printf output during kernel execution.\n"
            "      Default value is 1MB (1 048 576 bytes)\n");
@@ -321,7 +339,10 @@ void printLaunchParameters()
         printf("Generating %zux%zu board\n", boardDimension, boardDimension);
     }
 
-    printf("Number of threads in parallel algorithms: %zu\n", desiredBoards);
+    printf("Number of threads in parallel CPU algorithms: %s\n", "equal to generated boards");
+    printf("Number of threads in parallel GPU algorithms: %7zu\n", threadsInBlock * blocksOfThreads);
+    printf("Number of threads per block:                  %7zu\n", threadsInBlock);
+    printf("Number of blocks of threads:                  %7zu\n", blocksOfThreads);
     printf("Sequential algorithm:                     %s\n", boolToEnabled(solversEnabled[SEQUENTIAL]));
     printf("Parallel CPU algorithm:                   %s\n", boolToEnabled(solversEnabled[PARALLEL_CPU]));
     printf("Base parallel GPU algorithm:              %s\n", boolToEnabled(solversEnabled[PARALLEL_GPU_BASE]));
@@ -378,4 +399,58 @@ void parseGPUOptarg(const std::string & optarg)
     }
 
     gpuAlgorithmsToRun = std::count(solversEnabled.begin(), solversEnabled.end(), true);
+}
+
+const char * enumToKernelName(SolversEnableE solverType)
+{
+    const char* retVal = "";
+    switch (solverType)
+    {
+    case PARALLEL_GPU_BASE:
+        retVal = "parallelSolvingBase";
+        break;
+    case PARALLEL_GPU_INCREMENTAL:
+        retVal = "parallelSolvingIncrementalStack";
+        break;
+    case PARALLEL_GPU_SHM:
+        retVal = "parallelSolvingSharedMemory";
+        break;
+    case PARALLEL_GPU_AOS:
+        retVal = "parallelSolvingAOSStack";
+        break;
+    case PARALLEL_GPU_SOA:
+        retVal = "parallelSolvingSOAStack";
+        break;
+    default:
+        break;
+    }
+
+    return retVal;
+}
+
+const char * enumToSolverName(SolversEnableE solverType)
+{
+    const char* retVal = "";
+    switch (solverType)
+    {
+    case PARALLEL_GPU_BASE:
+        retVal = "Base ParallelGpuSolver";
+        break;
+    case PARALLEL_GPU_INCREMENTAL:
+        retVal = "Incremental ParallelGpuSolver";
+        break;
+    case PARALLEL_GPU_SHM:
+        retVal = "Shared memory ParallelGpuSolver";
+        break;
+    case PARALLEL_GPU_AOS:
+        retVal = "AOS stack ParallelGpuSolver";
+        break;
+    case PARALLEL_GPU_SOA:
+        retVal = "SOA stack ParallelGpuSolver";
+        break;
+    default:
+        break;
+    }
+
+    return retVal;
 }

@@ -4,7 +4,7 @@
 #include "CUDAUtilities.cuh"
 
 #define USE_INTEGER_INTRINSICS
-#define CUDA_BAD_INDEX (cuda::uint32T(~0))
+#define CUDA_BAD_INDEX CUDA_UINT32T_MAX
 
 namespace cuda
 {
