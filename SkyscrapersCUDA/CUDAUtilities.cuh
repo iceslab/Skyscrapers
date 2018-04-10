@@ -107,6 +107,7 @@ namespace cuda
     cudaError_t deinitDevice();
 
     std::pair<double, std::string> bytesToHumanReadable(double bytes);
+    std::pair<double, std::string> timeToHumanReadable(double time, Resolution resolution);
     double getTime(int64T start, int64T end, Resolution resolution = SECONDS);
     double getTime(int64T diff, Resolution resolution = SECONDS);
 }

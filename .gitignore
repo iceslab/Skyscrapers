@@ -5,6 +5,7 @@
 
 # Text files
 *.txt
+!CMakeLists.txt
 
 # Diagnostics
 *.diagsession

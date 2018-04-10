@@ -2,7 +2,7 @@
 #define __INCLUDED_BOARD_H__
 
 #include "CUDAUtilities.cuh"
-#include "asserts.h"
+#include "../Utilities/asserts.h"
 #include "SquareMatrix.cuh"
 #include <vector>
 

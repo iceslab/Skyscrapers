@@ -1,5 +1,5 @@
 #include "Board.cuh"
-#include "../Skyscrappers/Board.h"
+#include "../Skyscrapers/Board.h"
 
 namespace cuda
 {

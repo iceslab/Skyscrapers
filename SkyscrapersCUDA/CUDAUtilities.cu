@@ -57,7 +57,7 @@ namespace cuda
 
     std::pair<double, std::string> bytesToHumanReadable(double bytes)
     {
-        const std::vector<std::string> postfixes = { "B", "KB", "MB", "GB", "TB", "PB", "EB" };
+        static const std::vector<std::string> postfixes = { "B", "kB", "MB", "GB", "TB", "PB", "EB" };
         const double factor = 1024.0;
 
         size_t i = 0;
@@ -71,6 +71,51 @@ namespace cuda
         }
 
         return std::make_pair(bytes, postfixes[i]);
+    }
+
+    std::pair<double, std::string> timeToHumanReadable(double time, Resolution resolution)
+    {
+        static const std::vector<std::string> postfixes = { "ns", "us", "ms", "s", "min", "h" };
+        static const std::vector<double> factors = { 1000.0, 1000.0, 1000.0, 1000.0, 60.0, 60.0 };
+
+        size_t i = 0;
+        switch (resolution)
+        {
+        case NANOSECONDS:
+            i = 0;
+            break;
+        case MICROSECONDS:
+            i = 1;
+            break;
+        case MILLISECONDS:
+            i = 2;
+            break;
+        case SECONDS:
+            i = 3;
+            break;
+        }
+
+        int direction = 0;
+
+        for (; i > 0 && i < postfixes.size() - 1; i += direction)
+        {
+            if (time < factors[i + 1] && time >= 1.0)
+            {
+                break;
+            }
+            else if (time < 1.0)
+            {
+                time *= factors[i];
+                direction = -1;
+            }
+            else if (time >= factors[i + 1])
+            {
+                time /= factors[i + 1];
+                direction = 1;
+            }
+        }
+
+        return std::make_pair(time, postfixes[i]);
     }
 
     double getTime(int64T start, int64T end, Resolution resolution)

@@ -333,6 +333,30 @@ namespace board
         outFile.close();
     }
 
+    ValidationResultsT Board::validateResults(std::vector<board::Board> boards)
+    {
+        ValidationResultsT retVal = {0};
+        retVal.allBoards = boards.size();
+
+        for (size_t i = 0; i < retVal.allBoards; i++)
+        {
+            if (boards[i].checkValidityWithHints())
+            {
+                retVal.validSolutions++;
+            }
+
+            for (size_t j = i + 1; j < retVal.allBoards; j++)
+            {
+                if (boards[i] == boards[j])
+                {
+                    retVal.repeatedSolutions++;
+                }
+            }
+        }
+
+        return retVal;
+    }
+
     void Board::resize(const size_t boardSize)
     {
         if (boardSize == getSize())

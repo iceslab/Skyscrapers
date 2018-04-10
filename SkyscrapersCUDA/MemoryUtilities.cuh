@@ -2,11 +2,11 @@
 #define __INCLUDED_PARALLEL_SOLVER_CUH__
 
 #include <vector>
-#include "../Skyscrappers/Board.h"
+#include "../Skyscrapers/Board.h"
 #include "SequentialSolver.cuh"
 #include "XGetopt.h"
 
-extern CUDA_CONSTANT cuda::boardFieldT constantMemoryPtr[];
+extern CUDA_CONSTANT cuda::boardFieldT constantMemoryPtr[(16 << 10) >> 2];
 
 namespace cuda
 {

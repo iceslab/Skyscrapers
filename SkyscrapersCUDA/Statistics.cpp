@@ -11,7 +11,8 @@ void Statistics::print() const
     {
         for (const auto & el : *this)
         {
-            std::cout << el.first.c_str() << el.second << " ms" << std::endl;
+            auto time = cuda::timeToHumanReadable(el.second, cuda::MILLISECONDS);
+            printf("%s%.2f %s\n", el.first.c_str(), time.first, time.second.c_str());
         }
     }
 }

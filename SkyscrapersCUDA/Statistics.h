@@ -2,6 +2,7 @@
 #include <vector>
 #include <tuple>
 #include <iostream>
+#include "CUDAUtilities.cuh"
 
 class Statistics : public std::vector<std::pair<std::string, double>>
 {

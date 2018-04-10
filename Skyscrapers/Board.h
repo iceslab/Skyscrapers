@@ -26,6 +26,12 @@ namespace board
     typedef std::vector<boardFieldT> setIntersectionT;
     typedef std::vector<std::vector<bool>> memoizedSetValuesT;
 
+    typedef struct ValidationResults
+    {
+        size_t allBoards;
+        size_t validSolutions;
+        size_t repeatedSolutions;
+    } ValidationResultsT;
 
     class Board : public matrix::SquareMatrix<boardFieldT>
     {
@@ -106,6 +112,8 @@ namespace board
         /// Output
         void print() const;
         void printToFile() const;
+
+        static ValidationResultsT validateResults(std::vector<board::Board> boards);
     private:
         static const std::array<matrix::SideE, 4> validSides;
         // Contains which values are set in each row and column

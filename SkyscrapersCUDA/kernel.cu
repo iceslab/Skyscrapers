@@ -1,7 +1,7 @@
-#include "asserts.h"
-#include "Timer.h"
-#include "../Skyscrappers/SequentialSolver.h"
-#include "../Skyscrappers/ParallelCpuSolver.h"
+#include "../Utilities/asserts.h"
+#include "../Utilities/Timer.h"
+#include "../Skyscrapers/SequentialSolver.h"
+#include "../Skyscrapers/ParallelCpuSolver.h"
 #include <stdio.h>
 #include "XGetopt.h"
 #include "Statistics.h"
@@ -83,7 +83,16 @@ Statistics launchSequentialSolver(const board::Board & board)
         time.start();
         const auto cResult = c.solve();
         cMilliseconds = time.stop(Resolution::MILLISECONDS);
-        std::cout << "SequentialSolver result size: " << cResult.size() << std::endl;
+
+        auto validStats = board::Board::validateResults(cResult);
+        std::cout
+            << "SequentialSolver result size: "
+            << validStats.allBoards
+            << ", valid solutions: "
+            << validStats.validSolutions
+            << ", repeated solutions: "
+            << validStats.repeatedSolutions
+            << std::endl;
     }
     retVal.emplace_back("+ SequentialSolver solving time: ", cMilliseconds);
     return retVal;
@@ -108,7 +117,21 @@ Statistics launchParallelCpuSolver(const board::Board & board)
                                        threadsLaunchMilliseconds,
                                        threadsSyncMilliseconds);
         pcMilliseconds = time.stop(Resolution::MILLISECONDS);
-        std::cout << "ParallelCpuSolver result size: " << pcResult.size() << std::endl;
+        auto validStats = board::Board::validateResults(pcResult);
+
+        for (size_t i = 0; i < pcResult.size(); i++)
+        {
+            pcResult[i].saveToFile("res_board_" + std::to_string(i) + ".txt");
+        }
+
+        std::cout
+            << "ParallelCpuSolver result size: "
+            << validStats.allBoards
+            << ", valid solutions: "
+            << validStats.validSolutions
+            << ", repeated solutions: "
+            << validStats.repeatedSolutions
+            << std::endl;
     }
     retVal.emplace_back("+ ParallelCpuSolver solving time: ", pcMilliseconds);
     retVal.emplace_back("\nDevice initialize time: ", initMilliseconds);
@@ -303,17 +326,28 @@ Statistics launchGenericGpuSolver(const board::Board board, SolversEnableE solve
                                                    d_outputBoards,
                                                    generatedSolversCount);
                     cuda::solver::copyResultsArraySize(&h_outputBoardsSize, d_outputBoardsSize);
+
+                    std::vector<board::Board> h_resultBoards;
+                    h_resultBoards.reserve(h_outputBoardsSize);
+
                     for (size_t i = 0; i <= h_outputBoardsSize && i < CUDA_MAX_RESULTS; i++)
                     {
                         board::Board b(h_outputBoards[i].getHostVector());
                         b.calculateHints();
+                        h_resultBoards.emplace_back(b);
                         //b.print();
                     }
+
+                    auto validStats = board::Board::validateResults(h_resultBoards);
 
                     std::cout
                         << enumToSolverName(solverType)
                         << " result size: "
-                        << h_outputBoardsSize
+                        << validStats.allBoards
+                        << ", valid solutions: "
+                        << validStats.validSolutions
+                        << ", repeated solutions: "
+                        << validStats.repeatedSolutions
                         << std::endl;
                 }
             }
