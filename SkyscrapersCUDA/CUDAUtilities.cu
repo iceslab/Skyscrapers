@@ -11,14 +11,27 @@ namespace cuda
         cudaError_t cudaStatus = cudaSuccess;
         if (!hasBeenInitialized)
         {
+            hasBeenInitialized = true;
+
             // Choose which GPU to run on, change this on a multi-GPU system.
             cudaStatus = cudaSetDevice(0);
             if (cudaStatus != cudaSuccess)
             {
                 fprintf(stderr, "cudaSetDevice failed! Do you have a CUDA-capable GPU installed?\n");
+                hasBeenInitialized = false;
             }
 
-            if (fifoSize != CUDA_DEFAULT_FIFO_SIZE)
+            // Uses blocking version instead of default spinlock
+            // Decreases CPU usage during waiting
+            // Can be set, because there are no background CPU threads in parallel
+            cudaStatus = cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync);
+            if (cudaStatus != cudaSuccess && hasBeenInitialized)
+            {
+                fprintf(stderr, "cudaSetDeviceFlags failed! Do you have a CUDA-capable GPU installed?\n");
+                hasBeenInitialized = false;
+            }
+
+            if (fifoSize != CUDA_DEFAULT_FIFO_SIZE && hasBeenInitialized)
             {
                 size_t fifoSizeRef = 0;
                 cudaDeviceGetLimit(&fifoSizeRef, cudaLimitPrintfFifoSize);
@@ -31,8 +44,6 @@ namespace cuda
                 converted = bytesToHumanReadable(fifoSizeRef);
                 fprintf(stderr, "FIFO size (printf): %5.1f %s\n", converted.first, converted.second.c_str());
             }
-
-            hasBeenInitialized = true;
         }
         return cudaStatus;
     }

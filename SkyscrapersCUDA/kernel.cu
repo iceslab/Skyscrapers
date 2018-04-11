@@ -144,10 +144,10 @@ Statistics launchParallelCpuSolver(const board::Board & board)
         pcMilliseconds = time.stop(Resolution::MILLISECONDS);
         auto validStats = board::Board::validateResults(pcResult);
 
-        for (size_t i = 0; i < pcResult.size(); i++)
-        {
-            pcResult[i].saveToFile("res_board_" + std::to_string(i) + ".txt");
-        }
+        // for (size_t i = 0; i < pcResult.size(); i++)
+        // {
+        //     pcResult[i].saveToFile("res_board_" + std::to_string(i) + ".txt");
+        // }
 
         std::cout
             << "ParallelCpuSolver result size: "
