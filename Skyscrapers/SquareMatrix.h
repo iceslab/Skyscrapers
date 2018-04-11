@@ -2,6 +2,7 @@
 #include <vector>
 #include <functional>
 #include <iterator>
+#include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
@@ -77,7 +78,8 @@ namespace matrix
     template<class T>
     bool SquareMatrix<T>::saveToFile(const std::string & path) const
     {
-        return saveToFile(std::ofstream(path));
+        std::ofstream stream(path);
+        return this->saveToFile(stream);
     }
 
     template<class T>
@@ -91,7 +93,7 @@ namespace matrix
             std::string space = " ";
 
             // Whole board
-            for (size_t rowIdx = 0; rowIdx < size(); rowIdx++)
+            for (size_t rowIdx = 0; rowIdx < getSize(); rowIdx++)
             {
                 // Board fields
                 std::copy((*this)[rowIdx].begin(), (*this)[rowIdx].end(), field_it);
@@ -105,7 +107,8 @@ namespace matrix
     template<class T>
     bool SquareMatrix<T>::readFromFile(const std::string & path)
     {
-        return readFromFile(std::ifstream(path));
+        std::ifstream stream(path);
+        return this->readFromFile(stream);
     }
 
     template<class T>
@@ -115,7 +118,7 @@ namespace matrix
 
         if (retVal == true)
         {
-            clear();
+            std::vector<std::vector<T>>::clear();
             std::string line;
             std::getline(stream, line);
 
@@ -134,11 +137,11 @@ namespace matrix
                     row.emplace_back(token);
                     lineStream >> token;
                 }
-                emplace_back(row);
+                this->emplace_back(row);
                 std::getline(stream, line);
             }
 
-            size_t maxSize = size();
+            size_t maxSize = getSize();
             for (const auto& row : *this)
             {
                 if (maxSize < row.size())
@@ -148,7 +151,7 @@ namespace matrix
             }
 
             // Ensure that it's square matrix
-            resize(maxSize);
+            std::vector<std::vector<T>>::resize(maxSize);
             for (auto& row : *this)
             {
                 row.resize(maxSize);
@@ -174,7 +177,7 @@ namespace matrix
     inline typename SquareMatrix<T>::columnConstT SquareMatrix<T>::getColumn(size_t index) const
     {
         columnConstT column;
-        column.reserve(size());
+        column.reserve(getSize());
 
         for (auto& row : *this)
         {
@@ -188,7 +191,7 @@ namespace matrix
     inline typename SquareMatrix<T>::columnT SquareMatrix<T>::getColumn(size_t index)
     {
         columnT column;
-        column.reserve(size());
+        column.reserve(getSize());
 
         for (auto& row : *this)
         {
@@ -219,7 +222,7 @@ namespace matrix
     template<class T>
     inline size_t SquareMatrix<T>::getSize() const
     {
-        return size();
+        return std::vector<std::vector<T>>::size();
     }
 
     template<class T>
@@ -229,7 +232,7 @@ namespace matrix
         {
             return TOP;
         }
-        else if (row == (size() - 1))
+        else if (row == (getSize() - 1))
         {
             return BOTTOM;
         }
@@ -246,7 +249,7 @@ namespace matrix
         {
             return LEFT;
         }
-        else if (column == (size() - 1))
+        else if (column == (getSize() - 1))
         {
             return RIGHT;
         }
@@ -259,9 +262,9 @@ namespace matrix
     template<class T>
     inline void SquareMatrix<T>::forEachCell(std::function<void(size_t, size_t)> function)
     {
-        for (size_t row = 0; row < size(); row++)
+        for (size_t row = 0; row < getSize(); row++)
         {
-            for (size_t column = 0; column < size(); column++)
+            for (size_t column = 0; column < getSize(); column++)
             {
                 function(row, column);
             }
@@ -271,7 +274,7 @@ namespace matrix
     template<class T>
     inline void SquareMatrix<T>::forEachVector(std::function<void(size_t, size_t)> function)
     {
-        for (size_t rowAndColumn = 0; rowAndColumn < size(); rowAndColumn++)
+        for (size_t rowAndColumn = 0; rowAndColumn < getSize(); rowAndColumn++)
         {
             function(rowAndColumn, rowAndColumn);
         }

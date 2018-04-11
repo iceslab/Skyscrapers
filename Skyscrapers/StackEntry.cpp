@@ -68,8 +68,8 @@ namespace solver
         auto retVal = badIndex;
         if (!all())
         {
-            const auto it = std::find(begin(), end(), false);
-            if (it != end())
+            const auto it = std::find(this->begin(), this->end(), false);
+            if (it != this->end())
             {
                 retVal = it - begin();
             }

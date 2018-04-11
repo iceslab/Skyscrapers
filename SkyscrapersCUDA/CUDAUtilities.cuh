@@ -1,12 +1,14 @@
 #ifndef __INCLUDED_CUDA_UTILITIES_CUH__
 #define __INCLUDED_CUDA_UTILITIES_CUH__
 
+#include "../Utilities/asserts.h"
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include <cstdio>
 #include <tuple>
 #include <string>
 #include <vector>
+#include <limits>
 
 //#ifdef __CUDACC__
 #define CUDA_HOST __host__
@@ -17,6 +19,22 @@
 #define CUDA_CONSTANT __constant__
 
 #define CUDA_DEFAULT_FIFO_SIZE (1 << 20) // default FIFO size in bytes
+#define CUDA_MAX_THREADS_IN_BLOCK (1024)
+#define CUDA_MAX_BLOCKS_OF_THREADS (1024)
+
+enum SolversEnableE
+{
+    SEQUENTIAL = 0,
+    PARALLEL_CPU,
+    PARALLEL_GPU_BEGIN,
+    PARALLEL_GPU_BASE = PARALLEL_GPU_BEGIN,
+    PARALLEL_GPU_INCREMENTAL,
+    PARALLEL_GPU_SHM,
+    PARALLEL_GPU_AOS,
+    PARALLEL_GPU_SOA,
+    PARALLEL_GPU_END,
+    SOLVERS_SIZE = PARALLEL_GPU_END
+};
 
 namespace cuda
 {
@@ -66,7 +84,7 @@ namespace cuda
 
 #define CUDA_PRINT_ERROR(description, errorCode) \
 do{ \
-    printf("%s %s: %s\n", __FUNCSIG__, description, cudaGetErrorString(errorCode)); \
+    printf("%s %s: %s\n", DESCRIPTIVE_FUNCNAME, description, cudaGetErrorString(errorCode)); \
 } while (false);
 
 #define CUDA_PRINT(...) \
@@ -76,7 +94,7 @@ do{ \
 
 #define HOST_PRINT_ERROR(description) \
 do{ \
-    printf("%s %s\n", __FUNCSIG__, description); \
+    printf("%s %s\n", DESCRIPTIVE_FUNCNAME, description); \
 } while (false);
 
 #define CUDA_SOFT_ASSERT(expr) \

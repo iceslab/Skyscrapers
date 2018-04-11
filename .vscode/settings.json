@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "*.cu": "cpp",
+        "*.cuh": "c",
+        "array": "cpp",
+        "slist": "cpp",
+        "initializer_list": "cpp",
+        "iosfwd": "cpp",
+        "cassert": "cpp"
+    }
+}

@@ -371,16 +371,5 @@ namespace cuda
             }
             return retVal;
         }
-
-        //CUDA_GLOBAL void parallelBoardSolving(kernelInputT d_solvers,
-        //                                      kernelOutputT d_outputBoards,
-        //                                      kernelOutputSizesT d_outputBoardsSizes,
-        //                                      stackT d_stack)
-        //{
-        //    // It denotes thread index and array index
-        //    const auto idx = threadIdx.x;
-        //    printf("Thread idx: %u\n");
-        //    //d_outputBoardsSizes[idx] = d_solvers[idx].solve(d_outputBoards + idx * maxResultsPerThread, d_stack + idx);
-        //}
     }
 }

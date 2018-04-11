@@ -66,7 +66,7 @@ int EfficientIncidenceCube::shuffle()
 
 int EfficientIncidenceCube::getEmptySpace(lowerArrayT& arr)
 {
-    auto predicate = [](int el)->auto{ return el == nullInt; };
+    auto predicate = [](int el)->bool{ return el == nullInt; };
     auto it = std::find_if(arr.begin(), arr.end(), predicate);
     if (it == arr.end())
     {
@@ -104,7 +104,7 @@ int EfficientIncidenceCube::plusOneZCoordOf(int x, int y)
 int EfficientIncidenceCube::secondPlusOneZCoordOf(int x, int y)
 {
     auto& array = xyMatrix[x][y];
-    auto predicate = [](int el)->auto{ return el >= 0; };
+    auto predicate = [](int el)->bool{ return el >= 0; };
     auto it = std::find_if(array.begin(), array.end(), predicate);
     it = std::find_if(it + 1, array.end(), predicate);
 
@@ -121,7 +121,7 @@ int EfficientIncidenceCube::secondPlusOneZCoordOf(int x, int y)
 int EfficientIncidenceCube::plusOneCoordOf(const matrixT & matrix, int first, int second)
 {
     auto& array = matrix[first][second];
-    auto predicate = [](int el)->auto{ return el >= 0; };
+    auto predicate = [](int el)->bool{ return el >= 0; };
     auto it = std::find_if(array.begin(), array.end(), predicate);
 
     int pos = -1;
@@ -147,7 +147,7 @@ int EfficientIncidenceCube::plusOneYCoordOf(int x, int z)
 int EfficientIncidenceCube::minusOneCoordOf(int x, int y)
 {
     auto& array = xyMatrix[x][y];
-    auto predicate = [](int el)->auto{ return el < 0 && el != nullInt; };
+    auto predicate = [](int el)->bool{ return el < 0 && el != nullInt; };
     auto it = std::find_if(array.begin(), array.end(), predicate);
 
     int z = -1;

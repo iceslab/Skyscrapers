@@ -1,6 +1,6 @@
 #include "CUDAUtilities.cuh"
 
-size_t desiredFifoSize = CUDA_DEFAULT_FIFO_SIZE;
+extern size_t desiredFifoSize;
 static bool hasBeenInitialized = false;
 extern size_t gpuAlgorithmsToRun;
 

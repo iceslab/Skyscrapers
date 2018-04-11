@@ -152,8 +152,8 @@ void solver::SequentialSolver::findCluesOfOne(size_t row, size_t column)
     auto columnEdge = board.whichEdgeColumn(column);
 
     // There is only one building seen from row or column
-    if (rowEdge != matrix::NONE && board.hints[rowEdge][column] == 1 ||
-        columnEdge != matrix::NONE && board.hints[columnEdge][row] == 1)
+    if ((rowEdge != matrix::NONE && board.hints[rowEdge][column] == 1) ||
+        (columnEdge != matrix::NONE && board.hints[columnEdge][row] == 1))
     {
         constraints[row][column].insert(static_cast<board::boardFieldT>(board.size()));
     }

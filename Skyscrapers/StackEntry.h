@@ -1,5 +1,9 @@
-#pragma once
+#ifndef __INCLUDED_STACK_ENTRY_H__
+#define __INCLUDED_STACK_ENTRY_H__
+#include <cstdlib>
+#include <limits>
 #include <vector>
+#include <algorithm>
 
 namespace solver
 {
@@ -27,3 +31,4 @@ namespace solver
         
     };
 }
+#endif //!__INCLUDED_STACK_ENTRY_H__
