@@ -459,16 +459,13 @@ bool ProcessCommandLine(int argc, char *argv[])
             break;
         case 'h':
             return false;
-            break;
         case '?':
             printf("ERROR: illegal option %s\n", argv[optind - 1]);
             return false;
-            break;
         default:
             printUsage();
             printf("WARNING: no handler for option %c\n", c);
             return false;
-            break;
         }
     }
 

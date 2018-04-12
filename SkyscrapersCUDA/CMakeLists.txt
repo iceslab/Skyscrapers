@@ -8,6 +8,7 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_CXX_EXTENSIONS OFF)
 
 file(GLOB CPP_FILES *.cpp)
+file(GLOB C_FILES *.c)
 file(GLOB H_FILES *.h)
 file(GLOB CU_FILES *.cu)
 file(GLOB CUH_FILES *.cuh)
@@ -21,7 +22,7 @@ set(CUDA_64_BIT_DEVICE_CODE ON)
 
 include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
-add_library(${PROJECT_LIB_NAME} ${CPP_FILES} ${H_FILES} ${CU_FILES} ${CUH_FILES})
+add_library(${PROJECT_LIB_NAME} ${CPP_FILES} ${C_FILES} ${H_FILES} ${CU_FILES} ${CUH_FILES})
 set_target_properties(${PROJECT_LIB_NAME} PROPERTIES CUDA_SEPARABLE_COMPILATION ON
                                                      CXX_STANDARD 11
                                                      CUDA_STANDARD 11)
