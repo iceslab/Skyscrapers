@@ -17,6 +17,14 @@ set(PROJECT_LIB_NAME "${PROJECT_NAME}_Static")
 
 list(FILTER CU_FILES EXCLUDE REGEX ".*kernel.cu$")
 
+# Remove MinGW when not on Windows
+if(WIN32)
+    # Nothing to do
+else()
+    list(FILTER C_FILES EXCLUDE REGEX ".*getopt.c$")
+    list(FILTER H_FILES EXCLUDE REGEX ".*getopt.h$")
+endif()
+
 add_definitions(-DVERBOSITY_LEVEL=4)
 set(CUDA_64_BIT_DEVICE_CODE ON)
 
