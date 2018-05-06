@@ -26,6 +26,8 @@ function runAlgorithm {
 	BLOCKS=$4
 	THREADS=$5
 
+	HEADERS=$6
+
 	ALG_SHORT=${ALGORITHMS_SHORT_NAMES[ALGORITHM]}
 
 	OUTPUT_FILE=$(basename -- "$INPUT_FILE")
@@ -39,7 +41,7 @@ function runAlgorithm {
 		OUTPUT_FILE="${OUTPUT_FILE}_${BLOCKS}b_${THREADS}t_gpu.txt"
 	fi
 
-	BASE_COMMAND="timeout -k 1 $TIMEOUT_SEC optirun $TEST_PROGRAM"
+	BASE_COMMAND="timeout -k 1 $TIMEOUT_SEC optirun $TEST_PROGRAM $HEADERS"
 	WHOLE_COMMAND=""
 
 	if [ $ALGORITHM -eq 0 ]
@@ -77,6 +79,12 @@ then
 					do
 						echo "Repeat #$repeats"
 						runAlgorithm $algorithm $file $RESULT_DIR 0 0
+						if [ $repeats -eq 1 ]
+						then
+							runAlgorithm $algorithm $file $RESULT_DIR 0 0 "-v"
+						else
+							runAlgorithm $algorithm $file $RESULT_DIR 0 0 ""
+						fi
 					done
 				else
 					for blocks in $BLOCKS_NUM
@@ -87,8 +95,12 @@ then
 							for (( repeats=1; repeats<=10; repeats++ ))
 							do
 								echo "Repeat #$repeats"
-								runAlgorithm $algorithm $file $RESULT_DIR $blocks $threads
-								exit 0
+								if [ $repeats -eq 1 ]
+								then
+									runAlgorithm $algorithm $file $RESULT_DIR $blocks $threads "-v"
+								else
+									runAlgorithm $algorithm $file $RESULT_DIR $blocks $threads ""
+								fi
 							done
 						done
 					done
