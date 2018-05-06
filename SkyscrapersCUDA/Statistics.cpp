@@ -35,7 +35,7 @@ void Statistics::writeToFile(std::string path, bool printHeaders) const
 {
     if (printable)
     {
-        std::ofstream ofs(path);
+        std::ofstream ofs(path, std::ios_base::app);
 
         if(ofs.is_open())
         {
