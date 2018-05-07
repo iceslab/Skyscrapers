@@ -71,13 +71,13 @@ int main(int argc, char** argv)
 
     if(resultsToFile)
     {
-        sStats.writeToFile(resultsPath);
-        pcStats.writeToFile(resultsPath);
-        bpgStats.writeToFile(resultsPath);
-        isgStats.writeToFile(resultsPath);
-        shmgStats.writeToFile(resultsPath);
-        aosgStats.writeToFile(resultsPath);
-        soagStats.writeToFile(resultsPath);
+        sStats.writeToFile(resultsPath, columnHeaders);
+        pcStats.writeToFile(resultsPath, columnHeaders);
+        bpgStats.writeToFile(resultsPath, columnHeaders);
+        isgStats.writeToFile(resultsPath, columnHeaders);
+        shmgStats.writeToFile(resultsPath, columnHeaders);
+        aosgStats.writeToFile(resultsPath, columnHeaders);
+        soagStats.writeToFile(resultsPath, columnHeaders);
     }
     //system("pause");
     return 0;

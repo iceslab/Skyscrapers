@@ -24,9 +24,6 @@ namespace solver
         timeGeneration.start();
         auto solvers = prepareSolvers(stopLevel);
         generationMilliseconds = timeGeneration.stop(Resolution::MILLISECONDS);
-        printf("Generated %zu solvers\n", solvers.size());
-        fflush(stdout);
-        fflush(stderr);
         retVal.reserve(solvers.size());
         std::vector<std::future<std::vector<board::Board>>> results;
         results.reserve(solvers.size());

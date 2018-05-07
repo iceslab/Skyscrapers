@@ -21,25 +21,14 @@ THREADS_NUM=(1 2 4 8 16 32 64 128 256 512 1024)
 function runAlgorithm {
 	ALGORITHM=$1
 	INPUT_FILE=$2
-	OUTPUT_DIR=$3
+	OUTPUT_FILE=$3
 
 	BLOCKS=$4
 	THREADS=$5
 
 	HEADERS=$6
 
-	ALG_SHORT=${ALGORITHMS_SHORT_NAMES[ALGORITHM]}
-
-	OUTPUT_FILE=$(basename -- "$INPUT_FILE")
-	OUTPUT_FILE=${OUTPUT_FILE%.*}
-	OUTPUT_FILE="${OUTPUT_DIR}/${OUTPUT_FILE}_${ALG_SHORT}"
-
-	if [ $1 -le 1 ]
-	then
-		OUTPUT_FILE="${OUTPUT_FILE}_cpu.txt"
-	else
-		OUTPUT_FILE="${OUTPUT_FILE}_${BLOCKS}b_${THREADS}t_gpu.txt"
-	fi
+	ALG_SHORT=${ALGORITHMS_SHORT_NAMES[$ALGORITHM]}
 
 	BASE_COMMAND="timeout -k 1 $TIMEOUT_SEC optirun $TEST_PROGRAM $HEADERS"
 	WHOLE_COMMAND=""
@@ -65,46 +54,66 @@ if [ -e $TEST_PROGRAM ]
 then
 	if [ -d $INPUT_DIR ]
 	then 
+		# Create result directory if not exists
 		[ -d $RESULT_DIR ] || mkdir $RESULT_DIR
-		echo "RESULT_DIR=${RESULT_DIR}"
 		for (( algorithm=0; algorithm<7; algorithm++ ))
 		do
 			for file in ${INPUT_DIR}/*
 			do
-				[ -e "$file" ] || continue
+				# Skip directories and invalid paths
+				[ -f "$file" ] || continue
+
+				ALG_SHORT=${ALGORITHMS_SHORT_NAMES[$algorithm]}
+				OUTPUT_FILE=$(basename -- "$file")
+				OUTPUT_FILE="${RESULT_DIR}/${OUTPUT_FILE%.*}_${ALG_SHORT}"
+
 				echo "Running ${ALGORITHMS_LONG_NAMES[$algorithm]} algorithm"
 				if [ $algorithm -le 1 ]
 				then
-					for (( repeats=1; repeats<=10; repeats++ ))
-					do
-						echo "Repeat #$repeats"
-						runAlgorithm $algorithm $file $RESULT_DIR 0 0
-						if [ $repeats -eq 1 ]
-						then
-							runAlgorithm $algorithm $file $RESULT_DIR 0 0 "-v"
-						else
-							runAlgorithm $algorithm $file $RESULT_DIR 0 0 ""
-						fi
-					done
+					OUTPUT_FILE="${OUTPUT_FILE}_cpu.txt"
+					if [ -f $OUTPUT_FILE ]
+					then
+						echo "File $OUTPUT_FILE exists. Skipping..."
+					else
+						for (( repeats=1; repeats<=10; repeats++ ))
+						do
+							echo "Repeat #$repeats"
+							if [ $repeats -eq 1 ]
+							then
+								runAlgorithm $algorithm $file $OUTPUT_FILE 0 0 "-v"
+							else
+								runAlgorithm $algorithm $file $OUTPUT_FILE 0 0 ""
+							fi
+						done
+					fi
 				else
 					for blocks in $BLOCKS_NUM
 					do
 						for threads in $THREADS_NUM
 						do
-							echo "Number of blocks: $blocks, threads $threads"
-							for (( repeats=1; repeats<=10; repeats++ ))
-							do
-								echo "Repeat #$repeats"
-								if [ $repeats -eq 1 ]
-								then
-									runAlgorithm $algorithm $file $RESULT_DIR $blocks $threads "-v"
-								else
-									runAlgorithm $algorithm $file $RESULT_DIR $blocks $threads ""
-								fi
-							done
+							OUTPUT_FILE="${OUTPUT_FILE}_${blocks}b_${threads}t_gpu.txt"
+							if [ -f $OUTPUT_FILE ]
+							then
+								echo "File $OUTPUT_FILE exists. Skipping..."
+							else
+								echo "Number of blocks: $blocks, threads $threads"
+								for (( repeats=1; repeats<=10; repeats++ ))
+								do
+									echo "Repeat #$repeats"
+									if [ $repeats -eq 1 ]
+									then
+										runAlgorithm $algorithm $file $OUTPUT_FILE $blocks $threads "-v"
+									else
+										runAlgorithm $algorithm $file $OUTPUT_FILE $blocks $threads ""
+									fi
+								done
+							fi
 						done
 					done
 				fi
+
+					# If there was a timeout it creates empty file
+					touch $OUTPUT_FILE
 			done
 		done
 		rm -f "./lastRun.txt"
