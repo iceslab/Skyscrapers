@@ -67,13 +67,13 @@ then
 				[ -f "$file" ] || continue
 
 				ALG_SHORT=${ALGORITHMS_SHORT_NAMES[$algorithm]}
-				OUTPUT_FILE=$(basename -- "$file")
-				OUTPUT_FILE="${RESULT_DIR}/${OUTPUT_FILE%.*}_${ALG_SHORT}"
+				OUTPUT_FILE_BASE=$(basename -- "$file")
+				OUTPUT_FILE_BASE="${RESULT_DIR}/${OUTPUT_FILE_BASE%.*}_${ALG_SHORT}"
 
 				echo "Running ${ALGORITHMS_LONG_NAMES[$algorithm]} algorithm"
 				if [ $algorithm -eq 0 ]
 				then
-					OUTPUT_FILE="${OUTPUT_FILE}_cpu.txt"
+					OUTPUT_FILE="${OUTPUT_FILE_BASE}_cpu.txt"
 					if [ -f $OUTPUT_FILE ]
 					then
 						echo "File $OUTPUT_FILE exists. Skipping..."
@@ -93,7 +93,7 @@ then
 				then
 					for step in "${STEPS_NUM[@]}"
 					do
-						OUTPUT_FILE="${OUTPUT_FILE}_${step}s_cpu.txt"
+						OUTPUT_FILE="${OUTPUT_FILE_BASE}_${step}s_cpu.txt"
 						if [ -f $OUTPUT_FILE ]
 						then
 							echo "File $OUTPUT_FILE exists. Skipping..."
@@ -117,7 +117,7 @@ then
 						do
 							for threads in "${THREADS_NUM[@]}"
 							do
-								OUTPUT_FILE="${OUTPUT_FILE}_${step}s_${blocks}b_${threads}t_gpu.txt"
+								OUTPUT_FILE="${OUTPUT_FILE_BASE}_${step}s_${blocks}b_${threads}t_gpu.txt"
 								if [ -f $OUTPUT_FILE ]
 								then
 									echo "File $OUTPUT_FILE exists. Skipping..."
