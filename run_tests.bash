@@ -17,6 +17,7 @@ ALGORITHMS_SHORT_NAMES=("seq" "par" "basic" "inc" "shm" "aos" "soa")
 
 BLOCKS_NUM=(1 2 4 8 16 32 64 128 256 512 1024)
 THREADS_NUM=(1 2 4 8 16 32 64 128 256 512 1024)
+STEPS_NUM=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15)
 
 function runAlgorithm {
 	ALGORITHM=$1
@@ -28,6 +29,8 @@ function runAlgorithm {
 
 	HEADERS=$6
 
+	STEPS=$7
+
 	ALG_SHORT=${ALGORITHMS_SHORT_NAMES[$ALGORITHM]}
 
 	BASE_COMMAND="timeout -k 1 $TIMEOUT_SEC optirun $TEST_PROGRAM $HEADERS"
@@ -38,10 +41,10 @@ function runAlgorithm {
 		WHOLE_COMMAND="$BASE_COMMAND -ms -f ${INPUT_FILE} -r ${OUTPUT_FILE}"
 	elif [ $ALGORITHM -eq 1 ]
 	then
-		WHOLE_COMMAND="$BASE_COMMAND -mc -f ${INPUT_FILE} -r ${OUTPUT_FILE}"
+		WHOLE_COMMAND="$BASE_COMMAND -mc -p ${STEPS} -f ${INPUT_FILE} -r ${OUTPUT_FILE}"
 	elif [ $ALGORITHM -le 7 ]
 	then
-		WHOLE_COMMAND="$BASE_COMMAND -mg ${ALG_SHORT} -b ${BLOCKS} -t ${THREADS} -f ${INPUT_FILE} -r ${OUTPUT_FILE}"
+		WHOLE_COMMAND="$BASE_COMMAND -mg ${ALG_SHORT} -p ${STEPS} -b ${BLOCKS} -t ${THREADS} -f ${INPUT_FILE} -r ${OUTPUT_FILE}"
 	else
 		echo "Algorithm #$ALGORITHM (${ALGORITHMS_LONG_NAMES[$ALGORITHM]}) is not processed"
 	fi
@@ -68,7 +71,7 @@ then
 				OUTPUT_FILE="${RESULT_DIR}/${OUTPUT_FILE%.*}_${ALG_SHORT}"
 
 				echo "Running ${ALGORITHMS_LONG_NAMES[$algorithm]} algorithm"
-				if [ $algorithm -le 1 ]
+				if [ $algorithm -eq 0 ]
 				then
 					OUTPUT_FILE="${OUTPUT_FILE}_cpu.txt"
 					if [ -f $OUTPUT_FILE ]
@@ -86,28 +89,52 @@ then
 							fi
 						done
 					fi
-				else
-					for blocks in $BLOCKS_NUM
+				elif [ $algorithm -eq 1 ]
+				then
+					for step in "${STEPS_NUM[@]}"
 					do
-						for threads in $THREADS_NUM
+						OUTPUT_FILE="${OUTPUT_FILE}_${step}s_cpu.txt"
+						if [ -f $OUTPUT_FILE ]
+						then
+							echo "File $OUTPUT_FILE exists. Skipping..."
+						else
+							for (( repeats=1; repeats<=10; repeats++ ))
+							do
+								echo "Repeat #$repeats"
+								if [ $repeats -eq 1 ]
+								then
+									runAlgorithm $algorithm $file $OUTPUT_FILE 0 0 "-v" $step
+								else
+									runAlgorithm $algorithm $file $OUTPUT_FILE 0 0 "" $step
+								fi
+							done
+						fi
+					done
+				else
+					for step in "${STEPS_NUM[@]}"
+					do
+						for blocks in "${BLOCKS_NUM[@]}"
 						do
-							OUTPUT_FILE="${OUTPUT_FILE}_${blocks}b_${threads}t_gpu.txt"
-							if [ -f $OUTPUT_FILE ]
-							then
-								echo "File $OUTPUT_FILE exists. Skipping..."
-							else
-								echo "Number of blocks: $blocks, threads $threads"
-								for (( repeats=1; repeats<=10; repeats++ ))
-								do
-									echo "Repeat #$repeats"
-									if [ $repeats -eq 1 ]
-									then
-										runAlgorithm $algorithm $file $OUTPUT_FILE $blocks $threads "-v"
-									else
-										runAlgorithm $algorithm $file $OUTPUT_FILE $blocks $threads ""
-									fi
-								done
-							fi
+							for threads in "${THREADS_NUM[@]}"
+							do
+								OUTPUT_FILE="${OUTPUT_FILE}_${step}s_${blocks}b_${threads}t_gpu.txt"
+								if [ -f $OUTPUT_FILE ]
+								then
+									echo "File $OUTPUT_FILE exists. Skipping..."
+								else
+									echo "Number of blocks: $blocks, threads $threads"
+									for (( repeats=1; repeats<=10; repeats++ ))
+									do
+										echo "Repeat #$repeats"
+										if [ $repeats -eq 1 ]
+										then
+											runAlgorithm $algorithm $file $OUTPUT_FILE $blocks $threads "-v" $step
+										else
+											runAlgorithm $algorithm $file $OUTPUT_FILE $blocks $threads "" $step
+										fi
+									done
+								fi
+							done
 						done
 					done
 				fi
